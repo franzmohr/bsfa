@@ -29,12 +29,6 @@
       "scheme": "url"
     },
     {
-      "identifier": "https://franzmohr.github.io/bsfa/",
-      "relation": "isDocumentedBy",
-      "resource_type": "publication-softwaredocumentation",
-      "scheme": "url"
-    },
-    {
       "identifier": "10.1016/0304-4076(94)90087-6",
       "relation": "cites",
       "resource_type": "publication-article",

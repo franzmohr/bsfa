@@ -30,7 +30,6 @@ Econometrics}, 61(2), 273--303.
 Useful links:
 \itemize{
   \item \url{https://github.com/franzmohr/bsfa}
-  \item \url{https://franzmohr.github.io/bsfa/}
   \item Report bugs at \url{https://github.com/franzmohr/bsfa/issues}
 }
 

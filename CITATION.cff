@@ -19,7 +19,6 @@ version: 0.1.0
 date-released: "2026-09-18"
 license: GPL-2.0-or-later
 repository-code: "https://github.com/franzmohr/bsfa"
-url: "https://franzmohr.github.io/bsfa/"
 authors:
   - family-names: Mohr
     given-names: "Franz X."

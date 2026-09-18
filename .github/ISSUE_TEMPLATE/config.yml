@@ -4,7 +4,7 @@ contact_links:
     url: https://github.com/franzmohr/bsfa/discussions
     about: For how-to questions and specification advice, rather than defects.
   - name: Which model to fit
-    url: https://franzmohr.github.io/bsfa/articles/four-component.html
+    url: https://github.com/franzmohr/bsfa/blob/main/vignettes/four-component.Rmd
     about: >
       Whether inefficiency should be time invariant, and whether a unit effect
       is needed alongside it, is a modelling question the vignettes address
