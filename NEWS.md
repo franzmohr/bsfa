@@ -18,3 +18,10 @@ First development version.
 * `summary()`, `plot()` and `efficiency()` report the results. `plot()` takes
   a `type` of `"hist"`, `"trace"`, `"boxplot"` or `"efficiency"`.
 * `sim_sf()` generates artificial data from the model.
+* `create_sfmodel4_exp()` and `create_sfmodel4_hn()` set up the four-component
+  model of Kumbhakar, Lien and Hjalmarsson (2014), which separates a unit
+  effect, persistent inefficiency, noise and transient inefficiency. Its
+  `efficiency()` method takes a `type` of `"overall"`, `"persistent"` or
+  `"transient"`, and `sim_sf4()` generates artificial data from it. The
+  pointwise log-likelihood, and with it `selection_criteria()`, is not
+  available for this model.

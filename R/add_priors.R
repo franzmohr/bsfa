@@ -75,11 +75,10 @@ add_priors.sfmodel_exp <- function(object,
                                    ...) {
 
   lambda <- merge_prior_list(lambda, list(r_star = 0.75, shape = 1), "lambda")
-  check_r_star(lambda$r_star)
+  el <- elicit_exp(lambda)
 
   object$priors <- c(prior_coef_sigma(object, coef, sigma),
-                     list(shape_u = lambda$shape,
-                          rate_u = -log(lambda$r_star),
+                     list(shape_u = el$shape, rate_u = el$rate,
                           r_star = lambda$r_star))
   object
 }
@@ -94,21 +93,44 @@ add_priors.sfmodel_hn <- function(object,
 
   sigma_u <- merge_prior_list(sigma_u, list(r_star = 0.75, shape = 2.5),
                               "sigma_u")
-  check_r_star(sigma_u$r_star)
-  if (sigma_u$shape <= 1) {
-    stop("The shape of the prior on sigma_u must exceed 1, so that the prior ",
-         "mean of sigma_u^2 exists.")
-  }
-
-  # Match the prior mean of sigma_u^2 to the scale that places the median of a
-  # half-normal variate at -log(r_star). See the details section.
-  scale_u <- (-log(sigma_u$r_star) / stats::qnorm(0.75))^2
+  el <- elicit_hn(sigma_u)
 
   object$priors <- c(prior_coef_sigma(object, coef, sigma),
-                     list(shape_u = sigma_u$shape,
-                          rate_u = scale_u * (sigma_u$shape - 1),
+                     list(shape_u = el$shape, rate_u = el$rate,
                           r_star = sigma_u$r_star))
   object
+}
+
+#' Elicit the gamma prior on an exponential inefficiency rate
+#'
+#' @param spec a list with elements \code{r_star} and \code{shape}.
+#'
+#' @return A list with \code{shape} and \code{rate}.
+#'
+#' @keywords internal
+elicit_exp <- function(spec) {
+  check_r_star(spec$r_star)
+  list(shape = spec$shape, rate = -log(spec$r_star))
+}
+
+#' Elicit the gamma prior on a half-normal inefficiency scale
+#'
+#' Matches the prior mean of the squared scale to the value that places the
+#' median of a half-normal variate at \code{-log(r_star)}.
+#'
+#' @param spec a list with elements \code{r_star} and \code{shape}.
+#'
+#' @return A list with \code{shape} and \code{rate}.
+#'
+#' @keywords internal
+elicit_hn <- function(spec) {
+  check_r_star(spec$r_star)
+  if (spec$shape <= 1) {
+    stop("The shape of a half-normal scale prior must exceed 1, so that the ",
+         "prior mean of its square exists.")
+  }
+  scale2 <- (-log(spec$r_star) / stats::qnorm(0.75))^2
+  list(shape = spec$shape, rate = scale2 * (spec$shape - 1))
 }
 
 #' Build the prior blocks shared by both inefficiency distributions

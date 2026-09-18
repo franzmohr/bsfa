@@ -149,6 +149,7 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
   list(data = list(y = y, X = X, g = g, n_units = length(unique(g)),
                    unit_labels = unit_labels),
        model = list(ineff = ineff, type = type, panel = panel,
+                    components = 2L,
                     par_u_name = if (ineff == "exponential") "lambda" else
                       "sigma_u"),
        formula = formula,
@@ -167,9 +168,13 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
 #' @export
 print.sfmodel <- function(x, ...) {
 
-  cat("Bayesian stochastic frontier model\n\n")
+  cat(if (identical(x$model$components, 4L))
+        "Four-component Bayesian stochastic frontier model\n\n" else
+        "Bayesian stochastic frontier model\n\n")
   cat("Frontier:           ", x$model$type, "\n", sep = "")
-  cat("Inefficiency:       ", x$model$ineff, "\n", sep = "")
+  cat("Inefficiency:       ", x$model$ineff,
+      if (identical(x$model$components, 4L))
+        ", persistent and transient" else "", "\n", sep = "")
   cat("Observations:       ", x$n, "\n", sep = "")
   cat("Coefficients:       ", x$k, "\n", sep = "")
   cat("Inefficiency terms: ", x$data$n_units,
@@ -190,7 +195,13 @@ print.sfmodel <- function(x, ...) {
       "\n", sep = "")
 
   if (!is.null(x$priors)) {
-    cat("\nPrior median efficiency: ", format(x$priors$r_star), "\n", sep = "")
+    r_star <- x$priors$r_star
+    if (length(r_star) > 1L) {
+      cat("\nPrior median efficiency, per component:\n")
+      print(r_star)
+    } else {
+      cat("\nPrior median efficiency: ", format(r_star), "\n", sep = "")
+    }
   }
 
   invisible(x)

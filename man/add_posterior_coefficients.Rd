@@ -116,6 +116,7 @@ Econometrics}, 61(2), 273--303.
   \code{\link{summary.sfmodel}}
 
 Other posterior simulation:
-\code{\link[=add_posterior_loglik]{add_posterior_loglik()}}
+\code{\link[=add_posterior_coefficients.sfmodel4_exp]{add_posterior_coefficients.sfmodel4_exp()}},
+\code{\link[=add_posterior_loglik.sfmodel4]{add_posterior_loglik.sfmodel4()}}
 }
 \concept{posterior simulation}

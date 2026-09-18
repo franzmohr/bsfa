@@ -56,9 +56,12 @@ summary.sfmodel <- function(object, ci = 0.95, ...) {
                sd = apply(pars, 2, stats::sd),
                qs)
 
+  # For a four-component model the efficiency method returns the overall score,
+  # which is the one a two-component model would report; the split between the
+  # persistent and transient parts is left to efficiency() itself.
   eff <- NULL
   if (!is.null(object$posterior$u$coeffs)) {
-    r <- colMeans(exp(-as.matrix(object$posterior$u$coeffs)))
+    r <- efficiency(object)$mean
     eff <- c(mean = mean(r), stats::quantile(r, probs = c(0, 0.5, 1)))
     names(eff) <- c("mean", "min", "median", "max")
   }
@@ -69,6 +72,7 @@ summary.sfmodel <- function(object, ci = 0.95, ...) {
          specifications = list(type = object$model$type,
                                ineff = object$model$ineff,
                                panel = object$model$panel,
+                               components = object$model$components,
                                n = object$n,
                                k = object$k,
                                n_units = object$data$n_units,
@@ -86,15 +90,17 @@ print.summary.sfmodel <- function(x, digits = 4, ...) {
 
   spec <- x$specifications
 
-  cat("Bayesian stochastic frontier model\n\n")
+  four <- identical(spec$components, 4L)
+
+  cat(if (four) "Four-component Bayesian stochastic frontier model\n\n" else
+        "Bayesian stochastic frontier model\n\n")
   cat("Call:\n")
   print(spec$call)
   cat("\nFrontier:           ", spec$type,
       "\nInefficiency:       ", spec$ineff,
+      if (four) ", persistent and transient" else "",
       "\nObservations:       ", spec$n,
-      "\nInefficiency terms: ", spec$n_units,
-      if (spec$panel) " (one per unit, time invariant)" else
-        " (one per observation)",
+      "\nUnits:              ", spec$n_units,
       "\nDraws:              ", spec$iterations, " after ", spec$burnin,
       " burn-in, thinning ", spec$thin, "\n", sep = "")
 
@@ -103,7 +109,10 @@ print.summary.sfmodel <- function(x, digits = 4, ...) {
   print(round(x$coefficients, digits))
 
   if (!is.null(x$efficiency)) {
-    cat("\nPosterior mean efficiency per unit:\n")
+    cat("\nPosterior mean ", if (four) "overall " else "",
+        "efficiency, per ",
+        if (four || !x$specifications$panel) "observation" else "unit", ":\n",
+        sep = "")
     print(round(x$efficiency, digits))
   }
 

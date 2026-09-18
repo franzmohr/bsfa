@@ -39,3 +39,50 @@ gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, s
     .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose)
 }
 
+#' Gibbs sampler for the four-component stochastic frontier model
+#'
+#' Workhorse behind \code{\link{add_posterior_coefficients}} for objects of
+#' class \code{"sfmodel4_exp"} and \code{"sfmodel4_hn"}. Not intended to be
+#' called directly, since it performs no input checking.
+#'
+#' @param y vector of observations on the dependent variable.
+#' @param X matrix of regressors.
+#' @param g zero-based integer vector mapping each observation to its unit.
+#' @param n_units number of distinct units in \code{g}.
+#' @param b0 prior mean of the frontier coefficients.
+#' @param B0i prior precision matrix of the frontier coefficients.
+#' @param a_v shape of the gamma prior on the error precision.
+#' @param b_v rate of the gamma prior on the error precision.
+#' @param a_mu shape of the gamma prior on the precision of the unit effect.
+#' @param b_mu rate of the gamma prior on the precision of the unit effect.
+#' @param a_eta shape of the gamma prior on the persistent inefficiency
+#'   parameter.
+#' @param b_eta rate of the gamma prior on the persistent inefficiency
+#'   parameter.
+#' @param a_u shape of the gamma prior on the transient inefficiency
+#'   parameter.
+#' @param b_u rate of the gamma prior on the transient inefficiency parameter.
+#' @param beta_init starting values of the frontier coefficients.
+#' @param sigma_v2_init starting value of the error variance.
+#' @param sigma_mu2_init starting value of the variance of the unit effect.
+#' @param par_eta_init starting value of the persistent inefficiency
+#'   parameter.
+#' @param par_u_init starting value of the transient inefficiency parameter.
+#' @param mu_init starting values of the unit effects.
+#' @param eta_init starting values of the persistent inefficiency terms.
+#' @param u_init starting values of the transient inefficiency terms.
+#' @param ineff 0 for half-normal, 1 for exponential inefficiency.
+#' @param s -1 for a production frontier, 1 for a cost frontier.
+#' @param draws number of retained iterations before thinning.
+#' @param burnin number of discarded iterations.
+#' @param thin thinning interval.
+#' @param keep_u whether to store the augmented terms.
+#' @param verbose how often to report progress; 0 for no reporting.
+#'
+#' @return A named list of draw matrices.
+#'
+#' @keywords internal
+gibbs_sf4 <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose) {
+    .Call(`_bsfa_gibbs_sf4`, y, X, g, n_units, b0, B0i, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose)
+}
+

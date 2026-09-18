@@ -61,6 +61,8 @@ than by an argument, so each variant gets its own methods:
 |---|---|---|
 | `create_sfmodel_exp()` | `sfmodel_exp` | exponential, rate `lambda` |
 | `create_sfmodel_hn()` | `sfmodel_hn` | half-normal, scale `sigma_u` |
+| `create_sfmodel4_exp()` | `sfmodel4_exp` | four-component, exponential |
+| `create_sfmodel4_hn()` | `sfmodel4_hn` | four-component, half-normal |
 
 That split is not cosmetic. The prior on the inefficiency term is elicited from
 a prior median efficiency `r_star`, and the two models map that anchor
@@ -83,30 +85,56 @@ matched only in expectation.
 |---|---|
 | Inefficiency | exponential, half-normal |
 | Frontier | production, cost |
-| Data | cross-section, time-invariant panel (Pitt and Lee, 1981) |
+| Data | cross-section, time-invariant panel (Pitt and Lee, 1981), four-component panel (Kumbhakar, Lien and Hjalmarsson, 2014) |
 | Output | posterior draws of coefficients, variances and unit-level efficiency |
 | Inference | `summary()`, `plot()`, `efficiency()`, `selection_criteria()` (LL, AIC, BIC, HQ, WAIC) |
 
+## The four-component model
+
+`create_sfmodel4_exp()` and `create_sfmodel4_hn()` split the disturbance into a
+unit effect, persistent inefficiency, noise and transient inefficiency:
+
+```r
+model <- create_sfmodel4_exp(y ~ x1 + x2, data = d, id = "id",
+                             iterations = 5000, burnin = 2000)
+model <- add_posterior_coefficients(add_priors(model))
+
+efficiency(model, type = "persistent")   # one score per unit
+efficiency(model, type = "transient")    # one per observation
+efficiency(model, type = "overall")      # the product of the two
+```
+
+The unit effect enters none of the three scores, which is the point: in the
+time-invariant panel model every persistent difference between units — funding
+structure, soil quality, vintage of equipment — has nowhere to go but into
+inefficiency.
+
+The combination `mu_i - eta_i` is determined sharply by the data, but how it
+divides between the two depends on which of them has the wider spread: where the
+unit effect dominates it is recovered well and the persistent term is not, and
+where it is small the reverse holds. That is a property of the model rather than
+of the sampler, so a prior sensitivity check on `sigma_mu` and the persistent
+inefficiency parameter is worth running before reading much into the split. The
+frontier and the transient scores are unaffected. See the `four-component`
+vignette.
+
 ## Roadmap
 
-The time-invariant panel model attributes *all* persistent heterogeneity between
-units to inefficiency, which is a strong assumption whenever units differ for
-reasons unrelated to efficiency. The planned extensions, roughly in order:
+The planned extensions, roughly in order:
 
-1. **Time-varying inefficiency** — `u_it` rather than `u_i`, so that the model
-   can speak to cyclical rather than only structural variation in efficiency.
-2. **Four-component model** (Kumbhakar, Lien and Hjalmarsson, 2014) — separating
-   a unit effect, persistent inefficiency, noise and transient inefficiency. All
-   full conditionals remain standard, so this is a hierarchical extension of the
-   present sampler rather than a new algorithm.
-3. **Inefficiency determinants** — a Battese and Coelli (1995) style regression
+1. **Inefficiency determinants** — a Battese and Coelli (1995) style regression
    in the mean or scale of the inefficiency distribution, estimated jointly with
    the frontier rather than in an inconsistent second step.
-4. **Heteroskedasticity** in both error components, which matters whenever unit
+2. **Heteroskedasticity** in both error components, which matters whenever unit
    size is widely dispersed.
-5. **Latent class / regime switching**, with class membership driven by
+3. **Latent class / regime switching**, with class membership driven by
    covariates. Gibbs handles the discrete membership indicator naturally, where
    Hamiltonian Monte Carlo would not.
+4. **The closed skew normal likelihood** of Colombi et al. (2014), which would
+   make information criteria available for the four-component model. It needs
+   normal distribution functions of dimension `T_i + 1`.
+5. **LOOIC**, once the Pareto smoothed importance sampling it needs has had its
+   own testing pass.
 
 Each of these is a block of the specification rather than an argument to an
 estimator, which is why the package is organised around a model object.

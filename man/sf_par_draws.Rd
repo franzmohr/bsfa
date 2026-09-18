@@ -13,9 +13,15 @@ sf_par_draws(object)
 A matrix with one row per draw and one column per parameter.
 }
 \description{
-Assembles the frontier coefficients, the error standard deviation and the
-inefficiency parameter into one matrix. For the half-normal model the
-signal-to-noise ratio is appended, which is only defined there, because both
-components are then scale parameters of the same kind.
+Assembles the frontier coefficients and the scalar parameters into one
+matrix: the error standard deviation and the inefficiency parameter for a
+two-component model, and in addition the standard deviation of the unit
+effect and the second inefficiency parameter for a four-component one.
+}
+\details{
+For the two-component half-normal model the signal-to-noise ratio is
+appended. It is only defined there, because both components are then scale
+parameters of the same kind, and because the four-component model has two
+one-sided terms with no single such ratio between them.
 }
 \keyword{internal}

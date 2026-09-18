@@ -80,10 +80,15 @@ plot.sfmodel <- function(x, type = c("hist", "trace", "boxplot", "efficiency"),
 
 #' Collect the parameter draws of a stochastic frontier model
 #'
-#' Assembles the frontier coefficients, the error standard deviation and the
-#' inefficiency parameter into one matrix. For the half-normal model the
-#' signal-to-noise ratio is appended, which is only defined there, because both
-#' components are then scale parameters of the same kind.
+#' Assembles the frontier coefficients and the scalar parameters into one
+#' matrix: the error standard deviation and the inefficiency parameter for a
+#' two-component model, and in addition the standard deviation of the unit
+#' effect and the second inefficiency parameter for a four-component one.
+#'
+#' For the two-component half-normal model the signal-to-noise ratio is
+#' appended. It is only defined there, because both components are then scale
+#' parameters of the same kind, and because the four-component model has two
+#' one-sided terms with no single such ratio between them.
 #'
 #' @param object a model object carrying posterior draws.
 #'
@@ -92,14 +97,23 @@ plot.sfmodel <- function(x, type = c("hist", "trace", "boxplot", "efficiency"),
 #' @keywords internal
 sf_par_draws <- function(object) {
 
-  par_u_name <- object$model$par_u_name
+  four <- identical(object$model$components, 4L)
 
-  out <- cbind(as.matrix(object$posterior$beta$coeffs),
-               as.matrix(object$posterior$sigma_v$coeffs),
-               as.matrix(object$posterior[[par_u_name]]$coeffs))
+  blocks <- if (four) {
+    c("sigma_v", "sigma_mu", object$model$par_eta_name,
+      object$model$par_u_name)
+  } else {
+    c("sigma_v", object$model$par_u_name)
+  }
 
-  if (object$model$ineff == "halfnormal") {
-    out <- cbind(out, lambda = out[, par_u_name] / out[, "sigma_v"])
+  out <- as.matrix(object$posterior$beta$coeffs)
+  for (b in blocks) {
+    out <- cbind(out, as.matrix(object$posterior[[b]]$coeffs))
+  }
+
+  if (object$model$ineff == "halfnormal" && !four) {
+    out <- cbind(out,
+                 lambda = out[, object$model$par_u_name] / out[, "sigma_v"])
   }
 
   out
@@ -130,18 +144,18 @@ grid_dim <- function(n, max_cols) {
 #' @keywords internal
 plot_sf_efficiency <- function(object, ci, units, ...) {
 
-  if (is.null(object$posterior$u$coeffs)) {
-    stop("No inefficiency draws stored. Re-run add_posterior_coefficients() ",
-         "with keep_u = TRUE.")
-  }
   if (length(ci) != 1L || ci <= 0 || ci >= 1) {
     stop("'ci' must be a single number strictly between 0 and 1.")
   }
 
   probs <- c((1 - ci) / 2, 0.5, 1 - (1 - ci) / 2)
+  # For a four-component model this is the overall efficiency, the default of
+  # its efficiency method and the quantity a two-component model would report.
   eff <- efficiency(object, probs = probs)
-  low <- eff[[3 + 1]]
-  high <- eff[[3 + 3]]
+
+  band <- paste0(format(100 * probs[c(1, 3)], trim = TRUE), "%")
+  low <- eff[[band[1]]]
+  high <- eff[[band[2]]]
 
   old_par <- graphics::par(no.readonly = TRUE)
   on.exit(graphics::par(old_par), add = TRUE)
