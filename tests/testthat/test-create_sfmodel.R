@@ -132,3 +132,23 @@ test_that("printing reports which blocks have been set", {
   expect_output(print(add_priors(m)), "priors\\s+set")
   expect_output(print(add_seed(m, 1)), "seed\\s+set")
 })
+
+test_that("the MCMC settings must be whole numbers an integer can hold", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  build <- function(...) create_sfmodel_exp(y ~ x1, data = d, ...)
+
+  # Left unchecked these reach as.integer(), which truncates a fractional
+  # value and turns one beyond the integer range into NA, neither with an
+  # error of its own.
+  expect_error(build(iterations = 100.5), "whole number")
+  expect_error(build(iterations = 3e9), "whole number")
+  expect_error(build(iterations = "100"), "whole number")
+  expect_error(build(iterations = NA), "whole number")
+  expect_error(build(iterations = c(100, 200)), "whole number")
+  expect_error(build(burnin = 1.5), "'burnin'")
+  expect_error(build(thin = NaN), "'thin'")
+
+  # The bounds are still reported separately from the type.
+  expect_error(build(iterations = 0), "must be positive")
+  expect_error(build(burnin = -1), "non-negative")
+})

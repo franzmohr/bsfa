@@ -72,7 +72,7 @@ add_priors.sfmodel4_exp <- function(object,
   u <- merge_prior_list(lambda_u, defaults, "lambda_u")
 
   prior_four(object, coef, sigma, sigma_mu,
-             elicit_exp(eta), elicit_exp(u),
+             elicit_exp(eta, "lambda_eta"), elicit_exp(u, "lambda_u"),
              c(persistent = eta$r_star, transient = u$r_star))
 }
 
@@ -92,7 +92,7 @@ add_priors.sfmodel4_hn <- function(object,
   u <- merge_prior_list(sigma_u, defaults, "sigma_u")
 
   prior_four(object, coef, sigma, sigma_mu,
-             elicit_hn(eta), elicit_hn(u),
+             elicit_hn(eta, "sigma_eta"), elicit_hn(u, "sigma_u"),
              c(persistent = eta$r_star, transient = u$r_star))
 }
 
@@ -113,7 +113,10 @@ prior_four <- function(object, coef, sigma, sigma_mu, eta, u, r_star) {
 
   sigma_mu <- merge_prior_list(sigma_mu, list(shape = 0.01, rate = 0.01),
                                "sigma_mu")
-  if (sigma_mu$shape <= 0 || sigma_mu$rate <= 0) {
+  if (length(sigma_mu$shape) != 1L || length(sigma_mu$rate) != 1L ||
+      !is.numeric(sigma_mu$shape) || !is.numeric(sigma_mu$rate) ||
+      !is.finite(sigma_mu$shape) || !is.finite(sigma_mu$rate) ||
+      sigma_mu$shape <= 0 || sigma_mu$rate <= 0) {
     stop("The shape and rate of the prior on the precision of the unit ",
          "effect must be positive. Unlike the error precision, this one is ",
          "not identified without a proper prior when the number of units is ",

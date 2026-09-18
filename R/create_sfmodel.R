@@ -114,6 +114,9 @@ create_sfmodel_hn <- function(formula,
 sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
                              thin, ineff, cl) {
 
+  check_count(iterations, "iterations")
+  check_count(burnin, "burnin")
+  check_count(thin, "thin")
   if (iterations < 1 || burnin < 0 || thin < 1) {
     stop("'iterations' and 'thin' must be positive and 'burnin' ",
          "non-negative.")

@@ -15,7 +15,8 @@
 #' @param ... unused, for compatibility with the generic.
 #'
 #' @return The model object with the element \code{seed} of \code{model}
-#'   replaced.
+#'   replaced. Any posterior draws it carried are discarded, since they were
+#'   simulated under the seed that has just been replaced.
 #'
 #' @examples
 #' set.seed(1234)
@@ -35,10 +36,17 @@ add_seed <- function(object, ...) {
 add_seed.sfmodel <- function(object, seed, ...) {
 
   if (missing(seed) || length(seed) != 1L || !is.numeric(seed) ||
-      is.na(seed)) {
+      !is.finite(seed)) {
     stop("'seed' must be a single number.")
+  }
+  # set.seed() takes the seed as an integer, so a fractional value would be
+  # truncated and one beyond the integer range would become NA, in both cases
+  # leaving the model carrying a seed that is not the one it was given.
+  if (seed != trunc(seed) || abs(seed) > .Machine$integer.max) {
+    stop("'seed' must be a whole number within the range of an integer, ",
+         "since set.seed() reads it as one.")
   }
 
   object$model$seed <- seed
-  object
+  drop_stale_posterior(object)
 }

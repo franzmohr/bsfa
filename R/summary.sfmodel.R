@@ -36,9 +36,7 @@
 #' @export
 summary.sfmodel <- function(object, ci = 0.95, ...) {
 
-  if (length(ci) != 1L || ci <= 0 || ci >= 1) {
-    stop("'ci' must be a single number strictly between 0 and 1.")
-  }
+  check_probability(ci, "ci")
 
   pars <- sf_par_draws(object)
 

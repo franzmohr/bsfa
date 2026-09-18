@@ -81,7 +81,7 @@ add_priors.sfmodel_exp <- function(object,
                                    ...) {
 
   lambda <- merge_prior_list(lambda, list(r_star = 0.75, shape = 1), "lambda")
-  el <- elicit_exp(lambda)
+  el <- elicit_exp(lambda, "lambda")
 
   object$priors <- c(prior_coef_sigma(object, coef, sigma),
                      list(shape_u = el$shape, rate_u = el$rate,
@@ -99,7 +99,7 @@ add_priors.sfmodel_hn <- function(object,
 
   sigma_u <- merge_prior_list(sigma_u, list(r_star = 0.75, shape = 2.5),
                               "sigma_u")
-  el <- elicit_hn(sigma_u)
+  el <- elicit_hn(sigma_u, "sigma_u")
 
   object$priors <- c(prior_coef_sigma(object, coef, sigma),
                      list(shape_u = el$shape, rate_u = el$rate,
@@ -110,12 +110,15 @@ add_priors.sfmodel_hn <- function(object,
 #' Elicit the gamma prior on an exponential inefficiency rate
 #'
 #' @param spec a list with elements \code{r_star} and \code{shape}.
+#' @param what the name of the argument the specification came from, used in
+#'   error messages.
 #'
 #' @return A list with \code{shape} and \code{rate}.
 #'
 #' @keywords internal
-elicit_exp <- function(spec) {
-  check_r_star(spec$r_star)
+elicit_exp <- function(spec, what) {
+  check_probability(spec$r_star, paste0(what, "$r_star"))
+  check_shape(spec$shape, what, min = 0)
   list(shape = spec$shape, rate = -log(spec$r_star))
 }
 
@@ -125,18 +128,43 @@ elicit_exp <- function(spec) {
 #' median of a half-normal variate at \code{-log(r_star)}.
 #'
 #' @param spec a list with elements \code{r_star} and \code{shape}.
+#' @param what the name of the argument the specification came from, used in
+#'   error messages.
 #'
 #' @return A list with \code{shape} and \code{rate}.
 #'
 #' @keywords internal
-elicit_hn <- function(spec) {
-  check_r_star(spec$r_star)
-  if (spec$shape <= 1) {
-    stop("The shape of a half-normal scale prior must exceed 1, so that the ",
-         "prior mean of its square exists.")
-  }
+elicit_hn <- function(spec, what) {
+  check_probability(spec$r_star, paste0(what, "$r_star"))
+  check_shape(spec$shape, what, min = 1)
   scale2 <- (-log(spec$r_star) / stats::qnorm(0.75))^2
   list(shape = spec$shape, rate = scale2 * (spec$shape - 1))
+}
+
+#' Check the shape of a gamma prior on an inefficiency parameter
+#'
+#' The exponential model needs a positive shape for the prior to be proper.
+#' The half-normal model needs one above 1 as well, because its anchor is
+#' matched through the prior mean of the squared scale, which is the ratio
+#' \code{rate / (shape - 1)} and exists only then.
+#'
+#' @param shape the value to check.
+#' @param what the name of the argument it came from.
+#' @param min the value the shape has to exceed, 0 or 1.
+#'
+#' @return Invisibly \code{TRUE}; called for the error it raises.
+#'
+#' @keywords internal
+check_shape <- function(shape, what, min) {
+  if (length(shape) != 1L || !is.numeric(shape) || !is.finite(shape) ||
+      shape <= min) {
+    stop("The shape of a ",
+         if (min == 0) "gamma prior on an exponential rate must be positive"
+         else paste("half-normal scale prior must exceed 1, so that the",
+                    "prior mean of its square exists"),
+         "; '", what, "$shape' is not.")
+  }
+  invisible(TRUE)
 }
 
 #' Build the prior blocks shared by both inefficiency distributions
@@ -156,6 +184,9 @@ prior_coef_sigma <- function(object, coef, sigma) {
   sigma <- merge_prior_list(sigma, list(shape = 0.01, rate = 0.01), "sigma")
 
   b0 <- coef$mu
+  if (!is.numeric(b0) || !all(is.finite(b0))) {
+    stop("'coef$mu' must be finite numbers.")
+  }
   if (length(b0) == 1L) {
     b0 <- rep(b0, k)
   }
@@ -164,6 +195,9 @@ prior_coef_sigma <- function(object, coef, sigma) {
   }
 
   B0i <- coef$v_i
+  if (!is.numeric(B0i) || !all(is.finite(B0i))) {
+    stop("'coef$v_i' must be finite numbers.")
+  }
   if (length(B0i) == 1L) {
     B0i <- diag(B0i, k)
   }
@@ -171,16 +205,54 @@ prior_coef_sigma <- function(object, coef, sigma) {
   if (!identical(dim(B0i), c(as.integer(k), as.integer(k)))) {
     stop("'coef$v_i' must be a scalar or a ", k, " x ", k, " matrix.")
   }
+  check_precision(B0i)
 
   # Zeros are allowed: they give the improper limiting prior p(h) proportional
   # to 1/h, which is the non-informative choice used in much of the literature
   # and still leaves a proper posterior here.
-  if (sigma$shape < 0 || sigma$rate < 0) {
+  if (length(sigma$shape) != 1L || length(sigma$rate) != 1L ||
+      !is.numeric(sigma$shape) || !is.numeric(sigma$rate) ||
+      !is.finite(sigma$shape) || !is.finite(sigma$rate) ||
+      sigma$shape < 0 || sigma$rate < 0) {
     stop("The shape and rate of the prior on the error precision must be ",
          "non-negative.")
   }
 
   list(b0 = b0, B0i = B0i, shape_v = sigma$shape, rate_v = sigma$rate)
+}
+
+#' Check that a prior precision matrix is one
+#'
+#' A precision matrix has to be symmetric and positive semi-definite. Neither
+#' is checked by the sampler, which reaches \code{inv_sympd()} with whatever it
+#' is given: an asymmetric matrix draws one Armadillo warning per sweep and
+#' then samples from a prior that is not the one asked for, and an indefinite
+#' one aborts part way through a run with a message about the inverse rather
+#' than about the prior.
+#'
+#' A matrix of zeros passes, since it is the flat limiting prior on the
+#' coefficients, the counterpart of the improper prior the error precision
+#' already allows.
+#'
+#' @param B0i the matrix to check.
+#'
+#' @return Invisibly \code{TRUE}; called for the error it raises.
+#'
+#' @keywords internal
+check_precision <- function(B0i) {
+
+  if (!isSymmetric(unname(B0i))) {
+    stop("'coef$v_i' must be symmetric, since it is a precision matrix.")
+  }
+
+  ev <- eigen(B0i, symmetric = TRUE, only.values = TRUE)$values
+  tol <- sqrt(.Machine$double.eps) * max(1, max(abs(ev)))
+  if (min(ev) < -tol) {
+    stop("'coef$v_i' must be positive semi-definite, since it is a precision ",
+         "matrix; its smallest eigenvalue is ", format(min(ev)), ".")
+  }
+
+  invisible(TRUE)
 }
 
 #' Merge a user-supplied prior list into its defaults
@@ -214,18 +286,4 @@ merge_prior_list <- function(user, default, what) {
 
   default[names(user)] <- user
   default
-}
-
-#' Check that a prior median efficiency is a valid probability
-#'
-#' @param r_star the value to check.
-#'
-#' @return Invisibly \code{TRUE}; called for the error it raises.
-#'
-#' @keywords internal
-check_r_star <- function(r_star) {
-  if (length(r_star) != 1L || is.na(r_star) || r_star <= 0 || r_star >= 1) {
-    stop("'r_star' must be a single number strictly between 0 and 1.")
-  }
-  invisible(TRUE)
 }

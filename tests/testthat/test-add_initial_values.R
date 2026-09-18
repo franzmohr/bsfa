@@ -53,3 +53,31 @@ test_that("a seed is stored and validated", {
   expect_error(add_seed(m, "a"), "single number")
   expect_error(add_seed(m, c(1, 2)), "single number")
 })
+
+test_that("replacing the seed discards draws it did not produce", {
+  set.seed(63)
+  d <- sim_sf(n = 80, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 100, burnin = 50)))
+
+  expect_message(reseeded <- add_seed(est, 999), "Dropping posterior draws")
+  expect_null(reseeded$posterior)
+  expect_equal(reseeded$model$seed, 999)
+
+  # A model without draws has nothing to drop and says nothing.
+  expect_silent(add_seed(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 100, burnin = 50)), 999))
+})
+
+test_that("a seed set.seed() cannot take is rejected", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- create_sfmodel_exp(y ~ x1, data = d)
+
+  expect_error(add_seed(m, NA), "single number")
+  expect_error(add_seed(m, Inf), "single number")
+  # Accepted before, then silently coerced to NA when the sampler ran.
+  expect_error(add_seed(m, 2^31), "range of an integer")
+  expect_error(add_seed(m, 1.5), "whole number")
+
+  expect_equal(add_seed(m, -99)$model$seed, -99)
+})

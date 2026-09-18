@@ -76,14 +76,5 @@ efficiency.sfmodel4 <- function(object,
     unit <- object$data$unit_labels[g]
   }
 
-  qs <- t(apply(r, 2, stats::quantile, probs = probs))
-  colnames(qs) <- paste0(format(100 * probs, trim = TRUE), "%")
-
-  data.frame(unit = unit,
-             mean = colMeans(r),
-             sd = apply(r, 2, stats::sd),
-             qs,
-             row.names = NULL,
-             check.names = FALSE,
-             stringsAsFactors = FALSE)
+  efficiency_table(r, unit, probs)
 }

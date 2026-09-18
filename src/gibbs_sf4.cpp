@@ -235,7 +235,10 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
     }
 
     // --- Store ---------------------------------------------------------------
-    if (iter >= burnin && ((iter - burnin) % thin == 0) && store < n_keep) {
+    // The draw kept is the last sweep of each thinning block, so that the
+    // retained draws carry the iteration index that .mcmc_draws() attaches
+    // to them in R.
+    if (iter >= burnin && ((iter - burnin + 1) % thin == 0) && store < n_keep) {
       beta_store.col(store) = beta;
       sigma_v_store(store) = std::sqrt(sigma_v2);
       sigma_mu_store(store) = std::sqrt(sigma_mu2);

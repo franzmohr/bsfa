@@ -102,9 +102,7 @@ selection_criteria.sfmodel <- function(object, ci = 0.95, ...) {
                  "over a unit's observations.") else
            "See ?add_posterior_loglik.")
   }
-  if (length(ci) != 1L || ci <= 0 || ci >= 1) {
-    stop("'ci' must be a single number strictly between 0 and 1.")
-  }
+  check_probability(ci, "ci")
 
   ll <- as.matrix(object$posterior$loglik)
   tt <- ncol(ll)

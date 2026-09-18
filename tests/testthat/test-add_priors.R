@@ -99,3 +99,74 @@ test_that("prior arguments are validated", {
   expect_error(add_priors(m_exp, coef = list(v_i = matrix(1, 3, 3))),
                "2 x 2 matrix")
 })
+
+test_that("the shape of an inefficiency prior is validated", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m_exp <- create_sfmodel_exp(y ~ x1, data = d)
+  m_hn <- create_sfmodel_hn(y ~ x1, data = d)
+
+  # An exponential rate prior needs a positive shape to be proper. Without the
+  # check a negative one reaches the sampler, and the prior mean it implies is
+  # a negative starting value for a rate.
+  for (bad in list(-1, 0, NA_real_, Inf, "a", c(1, 2))) {
+    expect_error(add_priors(m_exp, lambda = list(shape = bad)),
+                 "must be positive")
+  }
+  expect_silent(add_priors(m_exp, lambda = list(shape = 0.5)))
+
+  for (bad in list(1, 0.5, NA_real_, Inf, "a", c(2, 3))) {
+    expect_error(add_priors(m_hn, sigma_u = list(shape = bad)),
+                 "must exceed 1")
+  }
+
+  # The four-component model elicits two of them, and names the one at fault.
+  d4 <- sim_sf4(n = 20, n_time = 3, beta = c(1, 0.5))
+  m4 <- create_sfmodel4_exp(y ~ x1, data = d4, id = "id")
+  expect_error(add_priors(m4, lambda_eta = list(shape = -1)), "lambda_eta")
+  expect_error(add_priors(m4, lambda_u = list(shape = -1)), "lambda_u")
+})
+
+test_that("a non-finite prior median efficiency is rejected by name", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- create_sfmodel_exp(y ~ x1, data = d)
+
+  for (bad in list(NA_real_, NaN, Inf, "a", c(0.5, 0.6))) {
+    expect_error(add_priors(m, lambda = list(r_star = bad)),
+                 "between 0 and 1")
+  }
+  expect_error(add_priors(m, lambda = list(r_star = NA)),
+               "lambda$r_star", fixed = TRUE)
+})
+
+test_that("the coefficient precision must be a precision matrix", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- create_sfmodel_exp(y ~ x1, data = d)
+
+  expect_error(add_priors(m, coef = list(v_i = matrix(c(1, 2, 3, 4), 2))),
+               "must be symmetric")
+  expect_error(add_priors(m, coef = list(v_i = diag(-1, 2))),
+               "positive semi-definite")
+  expect_error(add_priors(m, coef = list(v_i = matrix(c(1, 2, 2, 1), 2))),
+               "positive semi-definite")
+  expect_error(add_priors(m, coef = list(v_i = diag(NA_real_, 2))),
+               "finite numbers")
+  expect_error(add_priors(m, coef = list(mu = c(1, NA))), "finite numbers")
+
+  # Zero is the flat limiting prior and stays allowed, as it is for sigma.
+  expect_equal(add_priors(m, coef = list(v_i = 0))$priors$B0i, diag(0, 2))
+  expect_equal(add_priors(m, coef = list(v_i = diag(0, 2)))$priors$B0i,
+               diag(0, 2))
+})
+
+test_that("a non-finite prior on the error precision is rejected", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- create_sfmodel_exp(y ~ x1, data = d)
+
+  expect_error(add_priors(m, sigma = list(shape = NA)), "must be non-negative")
+  expect_error(add_priors(m, sigma = list(rate = Inf)), "must be non-negative")
+
+  m4 <- create_sfmodel4_exp(y ~ x1, data = sim_sf4(n = 20, n_time = 3,
+                                                   beta = c(1, 0.5)),
+                            id = "id")
+  expect_error(add_priors(m4, sigma_mu = list(shape = NA)), "must be positive")
+})

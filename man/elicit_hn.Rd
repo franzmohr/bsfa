@@ -4,10 +4,13 @@
 \alias{elicit_hn}
 \title{Elicit the gamma prior on a half-normal inefficiency scale}
 \usage{
-elicit_hn(spec)
+elicit_hn(spec, what)
 }
 \arguments{
 \item{spec}{a list with elements \code{r_star} and \code{shape}.}
+
+\item{what}{the name of the argument the specification came from, used in
+error messages.}
 }
 \value{
 A list with \code{shape} and \code{rate}.

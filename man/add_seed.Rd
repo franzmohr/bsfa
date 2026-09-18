@@ -18,7 +18,8 @@ add_seed(object, ...)
 }
 \value{
 The model object with the element \code{seed} of \code{model}
-  replaced.
+  replaced. Any posterior draws it carried are discarded, since they were
+  simulated under the seed that has just been replaced.
 }
 \description{
 Replaces the seed that \code{\link{add_posterior_coefficients}} sets before

@@ -268,3 +268,44 @@ test_that("summary requires draws and a valid credible band", {
   expect_equal(colnames(summary(est, ci = 0.9)$coefficients),
                c("mean", "sd", "5%", "median", "95%"))
 })
+
+test_that("thinning keeps the last sweep of each block", {
+  set.seed(61)
+  d <- sim_sf(n = 80, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+
+  fit <- function(iterations, burnin, thin) {
+    add_posterior_coefficients(add_seed(add_priors(
+      create_sfmodel_exp(y ~ x1, data = d, iterations = iterations,
+                         burnin = burnin, thin = thin)), 4321))
+  }
+
+  # Ten sweeps thinned to one draw must return the tenth sweep, not the first.
+  thinned <- fit(iterations = 10, burnin = 0, thin = 10)
+  first <- fit(iterations = 1, burnin = 0, thin = 1)
+  last <- fit(iterations = 1, burnin = 9, thin = 1)
+
+  expect_equal(nrow(as.matrix(thinned$posterior$beta$coeffs)), 1L)
+  expect_equal(as.numeric(thinned$posterior$beta$coeffs),
+               as.numeric(last$posterior$beta$coeffs))
+  expect_false(isTRUE(all.equal(as.numeric(thinned$posterior$beta$coeffs),
+                                as.numeric(first$posterior$beta$coeffs))))
+})
+
+test_that("the iteration index names the sweeps the draws came from", {
+  set.seed(62)
+  d <- sim_sf(n = 80, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+
+  est <- add_posterior_coefficients(add_seed(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 20, burnin = 10,
+                       thin = 5)), 4321))
+
+  expect_equal(as.numeric(stats::time(est$posterior$beta$coeffs)),
+               c(15, 20, 25, 30))
+
+  # The draw labelled 30 is the state after the thirtieth sweep, which is the
+  # last one the sampler runs.
+  full <- add_posterior_coefficients(add_seed(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 20, burnin = 10)), 4321))
+  expect_equal(as.numeric(tail(as.matrix(est$posterior$beta$coeffs), 1)),
+               as.numeric(tail(as.matrix(full$posterior$beta$coeffs), 1)))
+})

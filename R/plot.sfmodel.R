@@ -134,9 +134,7 @@ grid_dim <- function(n, max_cols) {
 #' @keywords internal
 plot_sf_efficiency <- function(object, ci, units, ...) {
 
-  if (length(ci) != 1L || ci <= 0 || ci >= 1) {
-    stop("'ci' must be a single number strictly between 0 and 1.")
-  }
+  check_probability(ci, "ci")
 
   probs <- c((1 - ci) / 2, 0.5, 1 - (1 - ci) / 2)
   # For a four-component model this is the overall efficiency, the default of

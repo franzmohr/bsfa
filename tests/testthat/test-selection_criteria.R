@@ -139,3 +139,18 @@ test_that("printing lays the criteria out as a table", {
   expect_output(print(crit), "WAIC")
   expect_output(print(crit), "exponential")
 })
+
+test_that("a non-finite credible band names the argument at fault", {
+  set.seed(64)
+  d <- sim_sf(n = 60, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  est <- add_posterior_loglik(add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 200, burnin = 100))))
+
+  # NA compares to NA, not to FALSE, so a guard written as a chain of
+  # comparisons used to raise R's own error instead of this one.
+  for (bad in list(NA, NaN, Inf, "a", c(0.9, 0.95))) {
+    expect_error(selection_criteria(est, ci = bad), "between 0 and 1")
+    expect_error(summary(est, ci = bad), "between 0 and 1")
+    expect_error(plot(est, type = "efficiency", ci = bad), "between 0 and 1")
+  }
+})

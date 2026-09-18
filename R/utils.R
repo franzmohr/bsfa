@@ -86,3 +86,83 @@ sf_scalar_blocks <- function(object) {
     c("sigma_v", object$model$par_u_name)
   }
 }
+
+#' Summarise a matrix of efficiency draws
+#'
+#' Both \code{efficiency} methods report the same statistics and differ only in
+#' which draws they hand over and how the rows are labelled, so the table is
+#' built in one place.
+#'
+#' The quantiles are given their shape explicitly rather than by transposing
+#' the result of \code{apply}. For more than one probability \code{apply}
+#' returns a matrix with one row per probability, but for a single one it
+#' returns a plain vector, and transposing that yields a one-row matrix whose
+#' columns are the units.
+#'
+#' @param r a matrix of efficiency draws, one row per draw and one column per
+#'   unit or observation.
+#' @param unit the labels of the columns of \code{r}.
+#' @param probs quantiles of the posterior to report.
+#'
+#' @return A data frame with one row per column of \code{r}.
+#'
+#' @keywords internal
+efficiency_table <- function(r, unit, probs) {
+
+  qs <- matrix(apply(r, 2, stats::quantile, probs = probs),
+               nrow = ncol(r), byrow = TRUE,
+               dimnames = list(NULL,
+                               paste0(format(100 * probs, trim = TRUE), "%")))
+
+  data.frame(unit = unit,
+             mean = colMeans(r),
+             sd = apply(r, 2, stats::sd),
+             qs,
+             row.names = NULL,
+             check.names = FALSE,
+             stringsAsFactors = FALSE)
+}
+
+#' Check that a value is a single number strictly between zero and one
+#'
+#' Used for the prior median efficiency and for the credible band of every
+#' function that reports one. A copy of the test per call site is how one of
+#' them came to accept \code{NA}: a comparison with \code{NA} is \code{NA}
+#' rather than \code{FALSE}, so a guard written as \code{x <= 0 || x >= 1}
+#' raises R's own "missing value where TRUE/FALSE needed" instead of naming the
+#' argument at fault.
+#'
+#' @param x the value to check.
+#' @param what the argument name, used in the error message.
+#'
+#' @return Invisibly \code{TRUE}; called for the error it raises.
+#'
+#' @keywords internal
+check_probability <- function(x, what) {
+  if (length(x) != 1L || !is.numeric(x) || !is.finite(x) || x <= 0 || x >= 1) {
+    stop("'", what, "' must be a single number strictly between 0 and 1.")
+  }
+  invisible(TRUE)
+}
+
+#' Check that a value is a single whole number an integer can hold
+#'
+#' The MCMC settings reach the sampler through \code{as.integer()}, which
+#' truncates a fractional value and turns anything beyond the integer range
+#' into \code{NA}, neither of them with an error. They are therefore checked
+#' here rather than left to fail somewhere inside C++.
+#'
+#' @param x the value to check.
+#' @param what the argument name, used in the error message.
+#'
+#' @return Invisibly \code{TRUE}; called for the error it raises.
+#'
+#' @keywords internal
+check_count <- function(x, what) {
+  if (length(x) != 1L || !is.numeric(x) || !is.finite(x) ||
+      x != trunc(x) || abs(x) > .Machine$integer.max) {
+    stop("'", what, "' must be a single whole number no larger than ",
+         .Machine$integer.max, ".")
+  }
+  invisible(TRUE)
+}

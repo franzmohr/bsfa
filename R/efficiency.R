@@ -53,14 +53,6 @@ efficiency.sfmodel <- function(object, probs = c(0.05, 0.5, 0.95), ...) {
   }
 
   r <- exp(-as.matrix(object$posterior$u$coeffs))
-  qs <- t(apply(r, 2, stats::quantile, probs = probs))
-  colnames(qs) <- paste0(format(100 * probs, trim = TRUE), "%")
 
-  data.frame(unit = object$data$unit_labels,
-             mean = colMeans(r),
-             sd = apply(r, 2, stats::sd),
-             qs,
-             row.names = NULL,
-             check.names = FALSE,
-             stringsAsFactors = FALSE)
+  efficiency_table(r, object$data$unit_labels, probs)
 }
