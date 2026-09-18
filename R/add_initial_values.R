@@ -110,10 +110,16 @@ initial_common <- function(object, method) {
   y <- object$data$y
   X <- object$data$X
 
+  # The least squares fit is wanted either way: as the starting point itself
+  # under one method, and as the scale a draw from the prior is judged against
+  # under the other.
+  ols <- stats::.lm.fit(X, y)
+  beta_ols <- as.numeric(ols$coefficients)
+  s2_ols <- sum(as.numeric(ols$residuals)^2) / (object$n - object$k)
+
   if (method == "ols") {
-    beta <- as.numeric(stats::.lm.fit(X, y)$coefficients)
-    resid <- y - X %*% beta
-    sigma_v2 <- sum(resid^2) / (object$n - object$k)
+    beta <- beta_ols
+    sigma_v2 <- s2_ols
   } else {
     # A flat prior on the coefficients has no draw, so a singular precision is
     # reported as the improper prior it is rather than as a LAPACK failure.
@@ -127,14 +133,15 @@ initial_common <- function(object, method) {
     })
     beta <- as.numeric(object$priors$b0 +
                          backsolve(U, stats::rnorm(object$k)))
-    sigma_v2 <- draw_finite(
+    sigma_v2 <- draw_start(
       function() 1 / stats::rgamma(1, shape = object$priors$shape_v,
                                    rate = object$priors$rate_v),
-      "sigma_v2")
+      "sigma_v2", s2_ols)
   }
 
   list(beta = beta,
        sigma_v2 = sigma_v2,
+       ols_var = s2_ols,
        u = rep(0, object$data$n_units),
        method = method)
 }

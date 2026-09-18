@@ -173,3 +173,46 @@ test_that("a prior no draw can come from is reported rather than retried", {
   # Least squares does not consult the prior and still works.
   expect_silent(add_initial_values(hopeless))
 })
+
+test_that("a prior draw is kept within reach of the data", {
+  d <- sim_sf(n = 200, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d, iterations = 100))
+  s2 <- add_initial_values(m)$initial$sigma_v2
+
+  # Under the default vague prior the median raw draw is some twenty-three
+  # orders of magnitude above the least squares value, and the sampler does
+  # not always survive one: the precision of a unit's inefficiency term
+  # underflows, its mean overflows, and the first sweep turns to NaN.
+  set.seed(180)
+  v <- replicate(300, add_initial_values(m, method = "prior")$initial$sigma_v2)
+  expect_true(all(v <= s2 * 1e6))
+  expect_true(all(v >= s2 / 1e6))
+
+  # Held at the edge rather than drawn, the chains would all start together,
+  # which disperses nothing. They must still differ.
+  expect_equal(length(unique(v)), 300L)
+  expect_lt(mean(v > 0.999 * s2 * 1e6), 0.05)
+  # And still span orders of magnitude, which is the point of the method.
+  expect_gt(log10(max(v) / min(v)), 3)
+})
+
+test_that("chains started from the prior run", {
+  set.seed(181)
+  d <- sim_sf(n = 200, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d, iterations = 200,
+                                     burnin = 100))
+  for (i in 1:25) {
+    fit <- add_posterior_coefficients(
+      add_seed(add_initial_values(m, method = "prior"), i), keep_u = FALSE)
+    expect_true(all(is.finite(as.matrix(fit$posterior$beta$coeffs))))
+  }
+
+  d4 <- sim_sf4(n = 30, n_time = 4, beta = c(1, 0.5))
+  m4 <- add_priors(create_sfmodel4_exp(y ~ x1, data = d4, id = "id",
+                                       iterations = 200, burnin = 100))
+  for (i in 1:15) {
+    fit <- add_posterior_coefficients(
+      add_seed(add_initial_values(m4, method = "prior"), i), keep_u = FALSE)
+    expect_true(all(is.finite(as.matrix(fit$posterior$sigma_mu$coeffs))))
+  }
+})

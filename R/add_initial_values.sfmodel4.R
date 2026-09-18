@@ -67,10 +67,10 @@ initial_four <- function(object, method, ineff) {
     init$sigma_mu2 <- init$sigma_v2 / 4
     init$sigma_v2 <- init$sigma_v2 / 2
   } else {
-    init$sigma_mu2 <- draw_finite(
+    init$sigma_mu2 <- draw_start(
       function() 1 / stats::rgamma(1, shape = object$priors$shape_mu,
                                    rate = object$priors$rate_mu),
-      "sigma_mu2")
+      "sigma_mu2", init$ols_var)
   }
 
   from_prior <- function(shape, rate, what) {
