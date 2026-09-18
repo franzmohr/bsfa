@@ -50,7 +50,9 @@
 <url><loc>/reference/posterior_coefficients_sf4.html</loc></url>
 <url><loc>/reference/prior_coef_sigma.html</loc></url>
 <url><loc>/reference/prior_four.html</loc></url>
+<url><loc>/reference/prior_sensitivity.html</loc></url>
 <url><loc>/reference/selection_criteria.html</loc></url>
+<url><loc>/reference/sensitivity_priors.html</loc></url>
 <url><loc>/reference/sf_ess.html</loc></url>
 <url><loc>/reference/sf_frontier.html</loc></url>
 <url><loc>/reference/sf_loglik_point.html</loc></url>
@@ -61,6 +63,7 @@
 <url><loc>/reference/sfmodel_skeleton.html</loc></url>
 <url><loc>/reference/sim_sf.html</loc></url>
 <url><loc>/reference/sim_sf4.html</loc></url>
+<url><loc>/reference/skewness_test.html</loc></url>
 <url><loc>/reference/summary.sfmodel.html</loc></url>
 <url><loc>/reference/verbose_interval.html</loc></url>
 <url><loc>/reference/warn_augmented_size.html</loc></url>

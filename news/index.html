@@ -96,6 +96,11 @@
 <code><a href="../reference/selection_criteria.html">selection_criteria()</a></code> returns LL, AIC, BIC, HQ and WAIC from the log-likelihood draws. Like the log-likelihood itself, it is unavailable for panel and four-component models.</li>
 </ul></div>
 <div class="section level3">
+<h3 id="diagnostics-0-1-0">Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics-0-1-0"></a></h3>
+<ul><li><p><code><a href="../reference/skewness_test.html">skewness_test()</a></code> tests the least squares residuals for skewness in the direction the frontier implies, which is the standard check for whether a sample supports a one-sided term at all. It matters more here than for a maximum likelihood fit: that one collapses onto least squares and says so, whereas a posterior cannot, and returns plausible looking efficiency scores read off the prior instead. Its standard error comes from a bootstrap over the units rather than from the closed form, which assumes the residuals are independent and so rejects too often on a panel.</p></li>
+<li><p><code><a href="../reference/prior_sensitivity.html">prior_sensitivity()</a></code> refits the model across a grid of prior median efficiencies and reports how far the scores follow the anchor, which is the same question asked of the posterior rather than of the residuals. Every fit uses one seed, so that the table shows the prior moving the answer rather than the sampler.</p></li>
+</ul></div>
+<div class="section level3">
 <h3 id="simulation-0-1-0">Simulation<a class="anchor" aria-label="anchor" href="#simulation-0-1-0"></a></h3>
 <ul><li>
 <code><a href="../reference/sim_sf.html">sim_sf()</a></code> and <code><a href="../reference/sim_sf4.html">sim_sf4()</a></code> generate artificial data from the two- and four-component models, for examples, tests and prior predictive checks.</li>

@@ -245,15 +245,15 @@ the other.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
 <span><span class="co">#&gt;               mean     sd   2.5% median  97.5%  ESS</span></span>
-<span><span class="co">#&gt; (Intercept) 1.0435 0.0201 1.0027 1.0439 1.0818  246</span></span>
-<span><span class="co">#&gt; x1          0.5088 0.0129 0.4833 0.5091 0.5337 1023</span></span>
-<span><span class="co">#&gt; x2          0.2892 0.0134 0.2633 0.2891 0.3157 1140</span></span>
-<span><span class="co">#&gt; sigma_v     0.1891 0.0144 0.1638 0.1885 0.2187  250</span></span>
-<span><span class="co">#&gt; lambda      3.3660 0.2572 2.9200 3.3520 3.9170  314</span></span>
+<span><span class="co">#&gt; (Intercept) 1.0434 0.0196 1.0046 1.0441 1.0824  265</span></span>
+<span><span class="co">#&gt; x1          0.5082 0.0127 0.4823 0.5082 0.5325 1311</span></span>
+<span><span class="co">#&gt; x2          0.2893 0.0133 0.2634 0.2892 0.3154 1124</span></span>
+<span><span class="co">#&gt; sigma_v     0.1888 0.0139 0.1631 0.1882 0.2167  279</span></span>
+<span><span class="co">#&gt; lambda      3.3635 0.2517 2.9161 3.3497 3.8912  338</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior mean efficiency, per observation:</span></span>
 <span><span class="co">#&gt;   mean    min median    max </span></span>
-<span><span class="co">#&gt; 0.7697 0.2013 0.8256 0.9547</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.7698 0.1999 0.8248 0.9563</span></span></code></pre></div>
 <p>The simulated data used
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0.5</mn><mo>,</mo><mn>0.3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\beta = (1, 0.5, 0.3)</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>v</mi></msub><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\sigma_v = 0.2</annotation></semantics></math>
@@ -264,33 +264,99 @@ intercept, which has to be separated from the mean of the one-sided term
 using only the asymmetry of the residuals. That is a feature of the
 model rather than of the sampler, and it is worth keeping in mind
 whenever the level of the frontier is itself of interest.</p>
-<p>The draws are kept as <code>coda</code> objects, one block per
-parameter, so anything that reads <code>mcmc</code> objects works on
-them directly:</p>
+<p>The <code>ESS</code> column is the effective sample size of each
+block: the number of independent draws the chain is worth, which is what
+the width of a credible band should be read against. The draws are kept
+as <code>coda</code> objects, one block per parameter, so anything that
+reads <code>mcmc</code> objects works on them directly if more is
+wanted:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/effectiveSize.html" class="external-link">effectiveSize</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">lambda</span><span class="op">$</span><span class="va">coeffs</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   lambda </span></span>
-<span><span class="co">#&gt; 314.1991</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">coda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/coda/man/autocorr.diag.html" class="external-link">autocorr.diag</a></span><span class="op">(</span><span class="va">model</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">lambda</span><span class="op">$</span><span class="va">coeffs</span>, lags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           lambda</span></span>
+<span><span class="co">#&gt; Lag 1  0.6399448</span></span>
+<span><span class="co">#&gt; Lag 5  0.4033362</span></span>
+<span><span class="co">#&gt; Lag 10 0.2038971</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"trace"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="bsfa_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level2">
+<h2 id="is-there-inefficiency-to-find">Is there inefficiency to find?<a class="anchor" aria-label="anchor" href="#is-there-inefficiency-to-find"></a>
+</h2>
+<p>Before reading the scores, it is worth asking whether the sample says
+anything about the one-sided term. A production frontier skews the
+composed error to the left, and if the least squares residuals carry no
+such skew then there is no evidence of inefficiency in the data.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/skewness_test.html">skewness_test</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Skewness of the least squares residuals</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Frontier:     production (implies negative skewness)</span></span>
+<span><span class="co">#&gt; Observations: 500</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   skewness       -0.9514</span></span>
+<span><span class="co">#&gt;   M3T statistic  -4.8507</span></span>
+<span><span class="co">#&gt;   p-value        0</span></span>
+<span><span class="co">#&gt;   standard error from 299 resamples of the observations</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; The residuals are skewed as the frontier implies, so the sample carries</span></span>
+<span><span class="co">#&gt; information about the one-sided term and the efficiency scores are</span></span>
+<span><span class="co">#&gt; estimated from it.</span></span></code></pre></div>
+<p>Maximum likelihood answers this loudly, by collapsing onto least
+squares. A posterior cannot: the prior holds the inefficiency term away
+from zero, so the sampler returns plausible looking scores whether or
+not the data support them. A verdict of <code>weak</code> or
+<code>wrong</code> does not mean the model should be abandoned, but it
+does mean the scores below are largely the prior, and should be reported
+as such.</p>
+<p>The test is a proxy, and a test, with an error rate of its own. The
+quantity it stands for can be measured directly, by moving the anchor
+and seeing how far the scores follow:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/prior_sensitivity.html">prior_sensitivity</a></span><span class="op">(</span><span class="va">model</span>, r_star <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>, <span class="fl">0.75</span>, <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Sensitivity of the efficiency scores to the prior</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Frontier:     production</span></span>
+<span><span class="co">#&gt; Inefficiency: exponential</span></span>
+<span><span class="co">#&gt; Seed:         5555 for every fit</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Mean efficiency by prior median efficiency:</span></span>
+<span><span class="co">#&gt;   r_star   mean     sd    min    max</span></span>
+<span><span class="co">#&gt; 1   0.60 0.7703 0.1525 0.2012 0.9564</span></span>
+<span><span class="co">#&gt; 2   0.75 0.7698 0.1531 0.1999 0.9563</span></span>
+<span><span class="co">#&gt; 3   0.90 0.7692 0.1534 0.2004 0.9574</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Frontier coefficients:</span></span>
+<span><span class="co">#&gt;      (Intercept)     x1     x2</span></span>
+<span><span class="co">#&gt; 0.60      1.0423 0.5089 0.2875</span></span>
+<span><span class="co">#&gt; 0.75      1.0434 0.5082 0.2893</span></span>
+<span><span class="co">#&gt; 0.90      1.0444 0.5087 0.2881</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   scores move by  0.0011 across the grid</span></span>
+<span><span class="co">#&gt;   coefficients by 0.0021 at most</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; The scores barely move with the anchor, so they are estimated from the</span></span>
+<span><span class="co">#&gt; data rather than carried over from the prior.</span></span></code></pre></div>
+<p>The frontier coefficients hold still while the scores are free to
+move, which is the pattern to expect: what the data determine sharply is
+the frontier, and what they determine least is the distance to it.</p>
+</div>
+<div class="section level2">
 <h2 id="efficiency-scores">Efficiency scores<a class="anchor" aria-label="anchor" href="#efficiency-scores"></a>
 </h2>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">eff</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">eff</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   unit      mean         sd        5%       50%       95%</span></span>
-<span><span class="co">#&gt; 1    1 0.7094378 0.12299293 0.5170301 0.7042552 0.9261822</span></span>
-<span><span class="co">#&gt; 2    2 0.9114381 0.07039856 0.7737064 0.9278182 0.9938610</span></span>
-<span><span class="co">#&gt; 3    3 0.6114491 0.11724224 0.4381306 0.5995937 0.8269979</span></span>
-<span><span class="co">#&gt; 4    4 0.8677322 0.09346136 0.6946099 0.8828770 0.9888700</span></span>
-<span><span class="co">#&gt; 5    5 0.6139863 0.11916403 0.4395678 0.6022961 0.8398675</span></span>
-<span><span class="co">#&gt; 6    6 0.3595737 0.07295438 0.2568848 0.3501903 0.4913793</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt; 1    1 0.7116944 0.12265205 0.5171881 0.7058558 0.9274100</span></span>
+<span><span class="co">#&gt; 2    2 0.9119789 0.07025439 0.7737776 0.9292155 0.9937740</span></span>
+<span><span class="co">#&gt; 3    3 0.6124371 0.11898755 0.4381727 0.6003177 0.8297582</span></span>
+<span><span class="co">#&gt; 4    4 0.8691899 0.09197750 0.6964914 0.8829123 0.9880946</span></span>
+<span><span class="co">#&gt; 5    5 0.6136645 0.11782545 0.4407402 0.6001720 0.8249348</span></span>
+<span><span class="co">#&gt; 6    6 0.3611094 0.07021075 0.2572907 0.3531609 0.4880977</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"efficiency"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="bsfa_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="bsfa_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="672"></p>
 <p>The left panel is the summary usually reported. The right one is the
 reason to look further: with one observation per unit there is very
 little information about any individual
@@ -299,10 +365,10 @@ and the bands are wide enough to cover much of the range the histogram
 spreads over. That uncertainty is real, and it is what the maximum
 likelihood route cannot report, since the Jondrow et al. (1982)
 conditional mean is a point predictor of an unobserved quantity.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">eff</span><span class="op">[[</span><span class="st">"95%"</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">eff</span><span class="op">[[</span><span class="st">"5%"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;  0.1266  0.2657  0.3237  0.3162  0.3762  0.4161</span></span></code></pre></div>
+<span><span class="co">#&gt;  0.1234  0.2646  0.3234  0.3155  0.3764  0.4185</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="comparing-specifications">Comparing specifications<a class="anchor" aria-label="anchor" href="#comparing-specifications"></a>
@@ -311,7 +377,7 @@ conditional mean is a point predictor of an unobserved quantity.</p>
 log-likelihood with the inefficiency term integrated out, and
 <code><a href="../reference/selection_criteria.html">selection_criteria()</a></code> turns those draws into information
 criteria.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">model</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="../reference/add_posterior_loglik.html">add_posterior_loglik</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
@@ -328,12 +394,12 @@ criteria.</p>
 <span><span class="co">#&gt; Frontier:     production</span></span>
 <span><span class="co">#&gt; Inefficiency: exponential</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;           mean    median    qlower    qupper</span></span>
-<span><span class="co">#&gt; LL   -145.4511 -145.1015 -149.4958 -143.2675</span></span>
-<span><span class="co">#&gt; AIC   295.8183        NA        NA        NA</span></span>
-<span><span class="co">#&gt; BIC   316.8914        NA        NA        NA</span></span>
-<span><span class="co">#&gt; HQ    304.0874        NA        NA        NA</span></span>
-<span><span class="co">#&gt; WAIC  296.3228        NA  220.7609  371.8848</span></span>
+<span><span class="co">#&gt;           mean   median    qlower    qupper</span></span>
+<span><span class="co">#&gt; LL   -145.4363 -145.097 -149.6214 -143.2815</span></span>
+<span><span class="co">#&gt; AIC   295.8537       NA        NA        NA</span></span>
+<span><span class="co">#&gt; BIC   316.9268       NA        NA        NA</span></span>
+<span><span class="co">#&gt; HQ    304.1228       NA        NA        NA</span></span>
+<span><span class="co">#&gt; WAIC  296.2428       NA  220.7916  371.6939</span></span>
 <span><span class="fu"><a href="../reference/selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">m_hn</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Selection criteria for a Bayesian stochastic frontier model</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -341,11 +407,11 @@ criteria.</p>
 <span><span class="co">#&gt; Inefficiency: halfnormal</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;           mean    median    qlower    qupper</span></span>
-<span><span class="co">#&gt; LL   -149.5492 -149.2037 -153.5593 -147.4063</span></span>
-<span><span class="co">#&gt; AIC   304.0618        NA        NA        NA</span></span>
-<span><span class="co">#&gt; BIC   325.1348        NA        NA        NA</span></span>
-<span><span class="co">#&gt; HQ    312.3308        NA        NA        NA</span></span>
-<span><span class="co">#&gt; WAIC  304.9671        NA  229.5992  380.3351</span></span></code></pre></div>
+<span><span class="co">#&gt; LL   -149.5353 -149.1716 -153.6604 -147.4099</span></span>
+<span><span class="co">#&gt; AIC   304.1215        NA        NA        NA</span></span>
+<span><span class="co">#&gt; BIC   325.1946        NA        NA        NA</span></span>
+<span><span class="co">#&gt; HQ    312.3906        NA        NA        NA</span></span>
+<span><span class="co">#&gt; WAIC  304.8269        NA  229.3410  380.3128</span></span></code></pre></div>
 <p>The data were generated with exponential inefficiency, and the
 criteria prefer that specification. They are not always so decisive: the
 two distributions are hard to tell apart when inefficiency is small
@@ -358,7 +424,7 @@ relative to noise, which is the usual situation.</p>
 held fixed over its observations, the time-invariant model of Pitt and
 Lee (1981). Repeated observations sharpen the individual scores
 considerably.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sim_sf.html">sim_sf</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.5</span>, <span class="fl">0.3</span><span class="op">)</span>, sigma_v <span class="op">=</span> <span class="fl">0.2</span>, par_u <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>             n_time <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
 <span></span>
@@ -369,9 +435,9 @@ considerably.</p>
 <span><span class="va">effp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">estp</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">effp</span><span class="op">[[</span><span class="st">"95%"</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">effp</span><span class="op">[[</span><span class="st">"5%"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt; 0.07202 0.13398 0.17059 0.15989 0.18845 0.20137</span></span>
+<span><span class="co">#&gt; 0.07094 0.13550 0.17102 0.16009 0.18716 0.20524</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">effp</span><span class="op">$</span><span class="va">mean</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">dp</span>, <span class="st">"efficiency"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.9511015</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.9512272</span></span></code></pre></div>
 <p>The price is a strong assumption. Since
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>i</mi></msub><annotation encoding="application/x-tex">u_i</annotation></semantics></math>
 is the only unit-specific term in the model, every persistent difference
@@ -393,7 +459,7 @@ cross-sectional one this way.</p>
 values from the prior instead of anchoring them on a least squares fit,
 which is the more useful choice when running several chains: the
 starting points are then dispersed rather than identical.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="fu"><a href="../reference/create_sfmodel_exp.html">create_sfmodel_exp</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, data <span class="op">=</span> <span class="va">d</span>,</span>
 <span>                                      iterations <span class="op">=</span> <span class="fl">2000</span>, burnin <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -403,9 +469,9 @@ starting points are then dispersed rather than identical.</p>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">chains</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      (Intercept)        x1        x2</span></span>
-<span><span class="co">#&gt; [1,]    1.044143 0.5094920 0.2888411</span></span>
-<span><span class="co">#&gt; [2,]    1.044264 0.5078699 0.2886534</span></span>
-<span><span class="co">#&gt; [3,]    1.046073 0.5098665 0.2877335</span></span></code></pre></div>
+<span><span class="co">#&gt; [1,]    1.041948 0.5086454 0.2880717</span></span>
+<span><span class="co">#&gt; [2,]    1.039729 0.5084949 0.2873258</span></span>
+<span><span class="co">#&gt; [3,]    1.046566 0.5080353 0.2881696</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

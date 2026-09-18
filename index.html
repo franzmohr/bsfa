@@ -143,11 +143,28 @@
 <span><span class="co">#&gt; 0.7681 0.1995 0.8229 0.9549</span></span></code></pre></div>
 <p>The data were simulated with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0.5</mn><mo>,</mo><mn>0.3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\beta = (1, 0.5, 0.3)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>v</mi></msub><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\sigma_v = 0.2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">\lambda = 4</annotation></semantics></math>. The slopes come back sharply; the intercept is the loose one, because it has to be separated from the mean of the one-sided term using only the asymmetry of the residuals.</p>
 <p>The draws are attached to the same object rather than returned as a separate result, and are stored as <code>coda</code> objects, one block per parameter. Printing the model reports which blocks have been set, which is worth a glance before committing to a long run.</p>
+<p>Before reading any of it, ask whether the sample supports a one-sided term at all. A production frontier skews the residuals to the left; if they are not skewed, there is no inefficiency in the data to estimate.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/skewness_test.html">skewness_test</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Skewness of the least squares residuals</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Frontier:     production (implies negative skewness)</span></span>
+<span><span class="co">#&gt; Observations: 500</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   skewness       -0.9514</span></span>
+<span><span class="co">#&gt;   M3T statistic  -4.8507</span></span>
+<span><span class="co">#&gt;   p-value        0</span></span>
+<span><span class="co">#&gt;   standard error from 299 resamples of the observations</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; The residuals are skewed as the frontier implies, so the sample carries</span></span>
+<span><span class="co">#&gt; information about the one-sided term and the efficiency scores are</span></span>
+<span><span class="co">#&gt; estimated from it.</span></span></code></pre></div>
+<p>This matters more for a Bayesian fit than for a maximum likelihood one. Maximum likelihood collapses onto least squares and says so. A posterior cannot: the prior holds the inefficiency term away from zero, so the sampler returns efficiency scores of ordinary appearance that are a reading of the prior rather than of the data. On a sample simulated with no inefficiency whatsoever this package reports a mean efficiency near 0.89 without complaint.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"efficiency"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-efficiency-plot-1.png" alt="" width="100%"></p>
 <p>The left panel is the summary usually reported. The right one is the reason to look further: with one observation per unit there is very little information about any individual score, and the bands cover much of the range the histogram spreads over. That uncertainty is what the maximum likelihood route cannot report.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Selection criteria for a Bayesian stochastic frontier model</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -202,7 +219,7 @@
 </tbody>
 </table>
 <p>That split is not cosmetic. The prior on the inefficiency term is elicited from a prior median efficiency <code>r_star</code>, and the two distributions map that anchor differently, so the argument is named after the parameter it governs:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>, lambda <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span><span class="op">)</span>   <span class="co"># sfmodel_exp</span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>, sigma_u <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span><span class="op">)</span>  <span class="co"># sfmodel_hn</span></span></code></pre></div>
 <p>For the exponential model the mapping is exact. With a gamma prior of shape 1 and rate <code>c = -log(r_star)</code> on the rate parameter, the implied marginal prior density of <code>u</code> is <code>c / (u + c)^2</code>, whose median is <code>c</code>, so the prior median of <code>exp(-u)</code> is exactly <code>r_star</code>. For the half-normal model the same target is matched only in expectation.</p>
@@ -244,7 +261,7 @@
 <h2 id="the-four-component-model">The four-component model<a class="anchor" aria-label="anchor" href="#the-four-component-model"></a>
 </h2>
 <p><code><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_exp()</a></code> and <code><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_hn()</a></code> split the disturbance into a unit effect, persistent inefficiency, noise and transient inefficiency. It needs panel data, so <code>id</code> is required.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sim_sf4.html">sim_sf4</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">120</span>, n_time <span class="op">=</span> <span class="fl">8</span>, beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.5</span>, <span class="fl">0.3</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">m4</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_exp</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, data <span class="op">=</span> <span class="va">dp</span>, id <span class="op">=</span> <span class="st">"id"</span>,</span>
@@ -306,7 +323,7 @@
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"bsfa"</span><span class="op">)</span></span></code></pre></div>
 <p>Released versions are archived on Zenodo, which mints a DOI for each release and a concept DOI that always resolves to the latest one. Please cite the software alongside van den Broeck, Koop, Osiewalski and Steel (1994), whose sampler it follows.</p>
 </div>
