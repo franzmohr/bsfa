@@ -108,7 +108,9 @@ need the draws, but an interval may be given to thin them.</p></dd>
     <p>A list of class <code>"sfsens"</code>, with <code>efficiency</code>, a data
   frame of the score summaries by anchor; <code>coefficients</code>, the posterior
   means of the frontier coefficients by anchor; <code>spread</code>, the range of
-  the mean score; <code>coef_spread</code>; and the <code>seed</code> used throughout.</p>
+  the mean score; <code>relative</code>, that range over the spread of the scores
+  between units, which is the figure to read; <code>coef_spread</code>; and the
+  <code>seed</code> used throughout.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -127,6 +129,16 @@ distribution to get wrong. On a sample simulated with no inefficiency at
 all, the mean score moved by 0.036 as the anchor ran from 0.5 to 0.9,
 against 0.005 for a sample that had plenty; the skewness test called that
 same empty sample informative.</p>
+<p>Read <code>relative</code> rather than <code>spread</code>. The movement of the mean
+matters in proportion to how far the scores are spread between units in the
+first place, and the absolute figure cannot tell a mean that moves a lot
+among tightly packed scores from one that moves a little among widely
+spread ones. Over fifteen simulated samples the absolute figure overlapped
+between the informative and the empty case; the relative one did not.</p>
+<p>No threshold separates the two cleanly in every sample, and none should be
+expected to: where the one-sided term is about the size of the noise, the
+data genuinely do not pin the level down, and a middling figure is the
+honest answer rather than a failure of the diagnostic.</p>
 <p>Every fit uses one seed, the model's own where it has one, so that the table
 shows the prior moving the answer rather than the sampler doing it. The rest
 of the prior specification is carried over unchanged, so a model that
@@ -168,10 +180,12 @@ distance to it is.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0.9      1.0123 0.4949</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   scores move by  9e-04 across the grid</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   that is         0.01 times their own spread across units</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   coefficients by 0.0036 at most</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> The scores barely move with the anchor, so they are estimated from the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> data rather than carried over from the prior.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> The anchor moves the scores by little beside the spread between units,</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> so they are estimated from the data rather than carried over from the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prior.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
