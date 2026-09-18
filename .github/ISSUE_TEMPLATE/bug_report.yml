@@ -1,0 +1,86 @@
+name: Bug report
+description: Something does not work, or produces the wrong numbers
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. A reproducible example is
+        by far the most useful thing you can include.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reprex
+    attributes:
+      label: Reproducible example
+      description: >
+        Self-contained code, built on `sim_sf()` or `sim_sf4()` or on data
+        simulated in the example itself. Include the whole chain, priors
+        included: which code paths run depends on the model class, on whether
+        `id` was supplied, and on whether the frontier is a production or a
+        cost frontier.
+      render: r
+      placeholder: |
+        library(bsfa)
+        set.seed(1234)
+        d <- sim_sf(n = 200, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4)
+
+        model <- create_sfmodel_exp(y ~ x1 + x2, data = d,
+                                    iterations = 500, burnin = 200)
+        model <- add_priors(model)
+        model <- add_initial_values(model)
+        model <- add_posterior_coefficients(model)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem is it?
+      options:
+        - An error or a warning
+        - The draws look wrong
+        - Documentation is wrong or missing
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: draws
+    attributes:
+      label: If the draws look wrong
+      description: >
+        Say which parameter block, and at what number of units and periods. The
+        frontier intercept and the parameters of the one-sided distributions are
+        the weakly determined part of every model here, and in the
+        four-component model the split between the unit effect and persistent
+        inefficiency depends on which of the two has the wider spread. The help
+        page of each model says which quantities that applies to, so it is worth
+        checking there first — the behaviour may be the shape of the problem
+        rather than a defect.
+    validations:
+      required: false
+
+  - type: textarea
+    id: session
+    attributes:
+      label: sessionInfo()
+      description: Output of `sessionInfo()`, which pins the R and bsfa versions.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: install
+    attributes:
+      label: How was bsfa installed?
+      placeholder: "remotes::install_github(\"franzmohr/bsfa\"), commit abc1234"
+    validations:
+      required: false

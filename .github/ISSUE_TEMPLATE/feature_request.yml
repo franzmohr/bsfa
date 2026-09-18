@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a model specification, method or convenience function
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do that you cannot do now?
+      description: The analysis you are trying to run, rather than the function you imagine.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What might it look like?
+      description: >
+        Sketch the call, if you have one in mind. A new step in the workflow is
+        an `add_*` generic and a new model variant is a class with its own
+        methods, so it helps to say where in the chain the proposal sits.
+      render: r
+    validations:
+      required: false
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference
+      description: >
+        A paper or textbook treatment, if the request is for a new
+        specification. Most useful is whether its full conditionals stay
+        standard: a block that leaves them normal, truncated normal or gamma
+        extends the existing sampler, while one that needs a Metropolis step or
+        a numerical integral changes what the sampler has to guarantee.
+    validations:
+      required: false
