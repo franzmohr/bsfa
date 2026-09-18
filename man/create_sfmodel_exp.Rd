@@ -109,5 +109,6 @@ Development Economics}, 9(1), 43--64.
 }
 \seealso{
 \code{\link{add_priors}}, \code{\link{add_initial_values}},
-  \code{\link{add_seed}}, \code{\link{add_posterior_coefficients}}
+  \code{\link{add_seed}}, \code{\link{add_posterior_coefficients}},
+  \code{\link{skewness_test}}
 }

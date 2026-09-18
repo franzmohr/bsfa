@@ -49,6 +49,15 @@ First release.
   log-likelihood draws. Like the log-likelihood itself, it is unavailable for
   panel and four-component models.
 
+## Diagnostics
+
+* `skewness_test()` tests the least squares residuals for skewness in the
+  direction the frontier implies, which is the standard check for whether a
+  sample supports a one-sided term at all. It matters more here than for a
+  maximum likelihood fit: that one collapses onto least squares and says so,
+  whereas a posterior cannot, and returns plausible looking efficiency scores
+  read off the prior instead.
+
 ## Simulation
 
 * `sim_sf()` and `sim_sf4()` generate artificial data from the two- and

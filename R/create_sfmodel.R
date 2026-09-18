@@ -59,7 +59,8 @@
 #'   supplied.
 #'
 #' @seealso \code{\link{add_priors}}, \code{\link{add_initial_values}},
-#'   \code{\link{add_seed}}, \code{\link{add_posterior_coefficients}}
+#'   \code{\link{add_seed}}, \code{\link{add_posterior_coefficients}},
+#'   \code{\link{skewness_test}}
 #'
 #' @references
 #' Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical

@@ -19,6 +19,10 @@
 #' @return A data frame with one row per unit, giving the posterior mean,
 #'   standard deviation and the requested quantiles of the efficiency score.
 #'
+#' @seealso \code{\link{skewness_test}}, which says whether the sample carries
+#'   information about the one-sided term at all. Scores can be returned, and
+#'   look reasonable, for data that contain no inefficiency.
+#'
 #' @references
 #' Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On the
 #' estimation of technical inefficiency in the stochastic frontier production
