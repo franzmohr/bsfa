@@ -5,8 +5,8 @@ message: >-
 type: software
 title: "bsfa: Bayesian Stochastic Frontier Analysis"
 abstract: >-
-  Markov chain Monte Carlo methods for the Bayesian estimation of stochastic
-  frontier models. Gibbs samplers with data augmentation are provided for
+  Bayesian inference for stochastic frontier models by Markov chain Monte
+  Carlo. Gibbs samplers with data augmentation are provided for
   composed-error frontier models in the tradition of van den Broeck, Koop,
   Osiewalski and Steel (1994), covering exponential and half-normal
   inefficiency, production and cost frontiers, and cross-sectional,
@@ -16,9 +16,10 @@ abstract: >-
   are obtained directly from the augmented draws rather than from point
   predictors.
 version: 0.1.0
-date-released: "2026-09-18"
+date-released: "2026-09-19"
 license: GPL-2.0-or-later
 repository-code: "https://github.com/franzmohr/bsfa"
+url: "https://franzmohr.github.io/bsfa/"
 authors:
   - family-names: Mohr
     given-names: "Franz X."
@@ -33,9 +34,20 @@ keywords:
   - technical efficiency
   - productivity analysis
   - R
+preferred-citation:
+  type: manual
+  title: "bsfa: Bayesian Stochastic Frontier Analysis"
+  authors:
+    - family-names: Mohr
+      given-names: "Franz X."
+      orcid: "https://orcid.org/0009-0003-8890-7781"
+  year: 2026
+  notes: "R package version 0.1.0"
+  url: "https://github.com/franzmohr/bsfa"
 references:
   - type: article
-    title: "Stochastic frontier models: A Bayesian perspective"
+    title: >-
+      Stochastic frontier models: A Bayesian perspective
     authors:
       - family-names: "van den Broeck"
         given-names: Julien

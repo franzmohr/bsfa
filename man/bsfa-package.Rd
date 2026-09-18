@@ -6,7 +6,7 @@
 \alias{bsfa-package}
 \title{bsfa: Bayesian Stochastic Frontier Analysis}
 \description{
-Markov chain Monte Carlo methods for the Bayesian estimation of stochastic frontier models. Gibbs samplers with data augmentation are provided for composed-error frontier models in the tradition of van den Broeck, Koop, Osiewalski and Steel (1994), covering exponential and half-normal inefficiency, production and cost frontiers, and cross-sectional, time-invariant panel and four-component panel specifications. A model is built up step by step, by creating a model object and then adding priors, initial values and a seed to it before the posterior is drawn. Posterior distributions of unit-specific efficiency scores are obtained directly from the augmented draws rather than from point predictors.
+Bayesian inference for stochastic frontier models by Markov chain Monte Carlo. Gibbs samplers with data augmentation are provided for composed-error frontier models in the tradition of van den Broeck, Koop, Osiewalski and Steel (1994), covering exponential and half-normal inefficiency, production and cost frontiers, and cross-sectional, time-invariant panel and four-component panel specifications. A model is built up step by step, by creating a model object and then adding priors, initial values and a seed to it before the posterior is drawn. Posterior distributions of unit-specific efficiency scores are obtained directly from the augmented draws rather than from point predictors.
 }
 \references{
 Aigner, D., Lovell, C. A. K., & Schmidt, P. (1977). Formulation and
@@ -30,6 +30,7 @@ Econometrics}, 61(2), 273--303.
 Useful links:
 \itemize{
   \item \url{https://github.com/franzmohr/bsfa}
+  \item \url{https://franzmohr.github.io/bsfa/}
   \item Report bugs at \url{https://github.com/franzmohr/bsfa/issues}
 }
 

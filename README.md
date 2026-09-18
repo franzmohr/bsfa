@@ -19,7 +19,7 @@ Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-spon
 Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/franzmohr)
 <!-- badges: end -->
 
-Bayesian estimation of stochastic frontier models in R.
+Bayesian inference of stochastic frontier models in R.
 
 The package implements Gibbs samplers with data augmentation for
 composed-error frontier models in the tradition of van den Broeck, Koop,
@@ -292,8 +292,9 @@ inefficiency effects in a stochastic frontier production function for
 panel data. *Empirical Economics*, 20(2), 325–332.
 
 Colombi, R., Kumbhakar, S. C., Martini, G., & Vittadini, G. (2014).
-Closed skew normal distribution and efficiency analysis. *Journal of
-Productivity Analysis*, 42(2), 123–136.
+Closed-skew normality in stochastic frontiers with individual effects
+and long/short-run efficiency. *Journal of Productivity Analysis*,
+42(2), 123–136.
 
 Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On
 the estimation of technical inefficiency in the stochastic frontier

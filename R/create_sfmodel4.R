@@ -70,9 +70,10 @@
 #'   \code{\link{add_priors}}, \code{\link{efficiency}}, \code{\link{sim_sf4}}
 #'
 #' @references
-#' Colombi, R., Kumbhakar, S. C., Martini, G., & Vittadini, G. (2014). Closed
-#' skew normal distribution and efficiency analysis. \emph{Journal of
-#' Productivity Analysis}, 42(2), 123--136.
+#' Colombi, R., Kumbhakar, S. C., Martini, G., & Vittadini, G. (2014).
+#' Closed-skew normality in stochastic frontiers with individual effects and
+#' long/short-run efficiency. \emph{Journal of Productivity Analysis}, 42(2),
+#' 123--136.
 #'
 #' Kumbhakar, S. C., Lien, G., & Hjalmarsson, L. (2014). Technical efficiency
 #' in competing panel data models: A study of Norwegian grain farming.
