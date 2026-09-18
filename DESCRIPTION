@@ -1,0 +1,29 @@
+Package: bsfa
+Type: Package
+Title: Bayesian Stochastic Frontier Analysis
+Version: 0.0.0.9000
+Authors@R: person(given = "Franz X.",
+                  family = "Mohr",
+                  email = "franz.x.mohr@gmail.com",
+                  role = c("aut", "cre"))
+Description: Markov chain Monte Carlo methods for the Bayesian estimation of
+    stochastic frontier models. Gibbs samplers with data augmentation are
+    provided for composed-error frontier models in the tradition of
+    van den Broeck, Koop, Osiewalski and Steel (1994), covering exponential
+    and half-normal inefficiency, production and cost frontiers, and
+    cross-sectional as well as time-invariant panel specifications. A model is
+    built up step by step, by creating a model object and then adding priors,
+    initial values and a seed to it before the posterior is drawn. Posterior
+    distributions of unit-specific efficiency scores are obtained directly
+    from the augmented draws rather than from point predictors.
+License: GPL (>= 2)
+Encoding: UTF-8
+Depends: R (>= 3.5.0)
+Imports: Rcpp (>= 1.0.0), stats
+LinkingTo: Rcpp, RcppArmadillo
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+VignetteBuilder: knitr
+URL: https://github.com/franzmohr/bsfa
+BugReports: https://github.com/franzmohr/bsfa/issues
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.0

@@ -1,0 +1,189 @@
+---
+title: "Bayesian stochastic frontier analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Bayesian stochastic frontier analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6,
+                      fig.height = 4)
+```
+
+```{r setup}
+library(bsfa)
+set.seed(1234)
+```
+
+## The model
+
+A stochastic frontier model splits the disturbance of a regression into a
+symmetric noise term and a one-sided term that measures the distance to a
+frontier. For a production frontier,
+
+$$y_i = x_i' \beta - u_i + v_i, \qquad v_i \sim N(0, \sigma_v^2), \quad u_i \ge 0,$$
+
+so that $x_i'\beta$ traces the maximum output attainable with the inputs $x_i$
+and $r_i = \exp(-u_i)$ is the efficiency with which unit $i$ reaches it. For a
+cost frontier the sign of $u_i$ is reversed and the frontier becomes a lower
+envelope.
+
+The package supports two distributions for $u_i$: exponential with rate
+$\lambda$, and half-normal with scale $\sigma_u$.
+
+## Building a model
+
+A model is assembled step by step rather than in a single call. The constructor
+fixes the data, the frontier and the MCMC settings; the `add_*` functions attach
+the remaining blocks; `draw_posterior()` runs the sampler.
+
+```{r}
+d <- sim_sf(n = 500, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4)
+
+model <- create_sfmodel_exp(y ~ x1 + x2, data = d,
+                            iterations = 4000, burnin = 1000)
+model
+```
+
+Printing the object reports what is still missing. That seam is worth having:
+these samplers take a while on a real panel, and it is cheaper to check the
+specification here than to discover a mistake after the run.
+
+```{r}
+model <- add_priors(model)
+model <- add_initial_values(model)
+model <- add_seed(model, 5555)
+model
+```
+
+The distribution of the inefficiency term is carried by the class of the object,
+`sfmodel_exp` here and `sfmodel_hn` for the half-normal alternative, so
+`add_priors()` and `draw_posterior()` dispatch on it. The next section shows why
+that matters more than it might appear.
+
+## Choosing a prior
+
+The inefficiency parameter is hard to reason about directly, so its prior is
+anchored on `r_star`, the efficiency score one considers equally likely to be
+exceeded as not, a priori.
+
+For the exponential model the mapping is exact. Placing a gamma prior with shape
+1 and rate $c = -\log(r^*)$ on $\lambda$ implies the marginal prior density
+
+$$p(u) = \int_0^\infty \lambda e^{-\lambda u} \, c\, e^{-c \lambda} \, d\lambda
+        = \frac{c}{(u + c)^2},$$
+
+whose median is exactly $c$, so that the prior median of $\exp(-u)$ is $r^*$.
+A quick check:
+
+```{r}
+m <- add_priors(create_sfmodel_exp(y ~ x1 + x2, data = d),
+                lambda = list(r_star = 0.75))
+lambda <- rgamma(1e5, shape = m$priors$shape_u, rate = m$priors$rate_u)
+median(exp(-rexp(length(lambda), rate = lambda)))
+```
+
+No such closed form is available for the half-normal model, where the anchor is
+matched only in expectation: the prior mean of $\sigma_u^2$ is set to the value
+that would place the median of $u$ at $-\log(r^*)$. The two models therefore
+need different elicitations of the same quantity, which is exactly what the
+separate `add_priors()` methods provide — and why the argument is named after
+the parameter it governs, `lambda` for one model and `sigma_u` for the other.
+
+## A cross-sectional example
+
+```{r}
+est <- draw_posterior(model)
+summary(est)
+```
+
+The simulated data used $\beta = (1, 0.5, 0.3)$, $\sigma_v = 0.2$ and
+$\lambda = 4$. Note that the slopes are pinned down far more sharply than the
+intercept, which has to be separated from the mean of the one-sided term using
+only the asymmetry of the residuals. That is a feature of the model rather than
+of the sampler, and it is worth keeping in mind whenever the level of the
+frontier is itself of interest.
+
+Efficiency scores, with their posterior uncertainty:
+
+```{r}
+eff <- efficiency(est)
+head(eff)
+```
+
+```{r}
+plot(attr(d, "efficiency"), eff$mean,
+     xlab = "Simulated efficiency", ylab = "Posterior mean",
+     pch = 16, col = grey(0.3, 0.5))
+abline(0, 1)
+```
+
+The scatter around the 45-degree line is genuine, not a defect: with one
+observation per unit there is very little information about any individual
+$u_i$, and the posterior shrinks each score towards the prior. The width of the
+intervals in `eff` reports exactly how much.
+
+```{r}
+summary(eff[["95%"]] - eff[["5%"]])
+```
+
+## Panel data
+
+Supplying `id` gives each unit a single inefficiency term held fixed over its
+observations, the time-invariant model of Pitt and Lee (1981). Repeated
+observations sharpen the individual scores considerably.
+
+```{r}
+dp <- sim_sf(n = 100, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4,
+             n_time = 8)
+
+estp <- create_sfmodel_exp(y ~ x1 + x2, data = dp, id = "id",
+                           iterations = 4000, burnin = 1000)
+estp <- draw_posterior(add_priors(estp))
+
+effp <- efficiency(estp)
+summary(effp[["95%"]] - effp[["5%"]])
+cor(effp$mean, attr(dp, "efficiency"))
+```
+
+The price is a strong assumption. Since $u_i$ is the only unit-specific term in
+the model, every persistent difference between units — technology, market,
+business model — is booked as inefficiency. Separating those two requires a
+model with both a unit effect and a persistent inefficiency component, which is
+on the roadmap rather than in the package today.
+
+## Checking convergence
+
+`add_initial_values(method = "prior")` draws the starting values from the prior
+instead of anchoring them on a least squares fit, which is the more useful
+choice when running several chains: the starting points are then dispersed
+rather than identical.
+
+```{r}
+base <- add_priors(create_sfmodel_exp(y ~ x1 + x2, data = d,
+                                      iterations = 2000, burnin = 1000))
+
+chains <- lapply(1:3, function(i) {
+  m <- add_seed(add_initial_values(base, method = "prior"), i)
+  colMeans(draw_posterior(m, keep_u = FALSE)$draws$beta)
+})
+do.call(rbind, chains)
+```
+
+## References
+
+Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On the
+estimation of technical inefficiency in the stochastic frontier production
+function model. *Journal of Econometrics*, 19(2–3), 233–238.
+
+Koop, G. (2003). *Bayesian Econometrics*. Chichester: Wiley.
+
+Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical
+inefficiency in the Indonesian weaving industry. *Journal of Development
+Economics*, 9(1), 43–64.
+
+van den Broeck, J., Koop, G., Osiewalski, J., & Steel, M. F. J. (1994).
+Stochastic frontier models: A Bayesian perspective. *Journal of Econometrics*,
+61(2), 273–303.

@@ -1,0 +1,60 @@
+#' Posterior efficiency scores
+#'
+#' Summarises the posterior distribution of the efficiency scores
+#' \eqn{r_j = \exp(-u_j)} implied by the augmented draws of an estimated model.
+#'
+#' Because the sampler treats \eqn{u} as a latent variable, every retained
+#' iteration carries a complete set of efficiency scores. The summaries below
+#' are therefore posterior summaries in the ordinary sense, and the intervals
+#' have their usual interpretation. This is the practical advantage of the
+#' Bayesian approach here: the maximum likelihood counterpart has to report the
+#' Jondrow et al. (1982) conditional mean, which is a point predictor of an
+#' unobserved quantity and carries no comparable measure of uncertainty.
+#'
+#' @param object an object of class \code{"bsfa"}, estimated with
+#'   \code{keep_u = TRUE}.
+#' @param probs quantiles of the posterior to report.
+#' @param ... unused, for compatibility with the generic.
+#'
+#' @return A data frame with one row per unit, giving the posterior mean,
+#'   standard deviation and the requested quantiles of the efficiency score.
+#'
+#' @references
+#' Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On the
+#' estimation of technical inefficiency in the stochastic frontier production
+#' function model. \emph{Journal of Econometrics}, 19(2--3), 233--238.
+#'
+#' @examples
+#' set.seed(1234)
+#' d <- sim_sf(n = 100, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+#'
+#' est <- create_sfmodel_exp(y ~ x1, data = d,
+#'                           iterations = 500, burnin = 200)
+#' est <- draw_posterior(add_priors(est))
+#' head(efficiency(est))
+#'
+#' @export
+efficiency <- function(object, ...) {
+  UseMethod("efficiency")
+}
+
+#' @rdname efficiency
+#' @export
+efficiency.bsfa <- function(object, probs = c(0.05, 0.5, 0.95), ...) {
+
+  if (is.null(object$u)) {
+    stop("No inefficiency draws stored. Re-estimate with keep_u = TRUE.")
+  }
+
+  r <- exp(-object$u)
+  qs <- t(apply(r, 2, stats::quantile, probs = probs))
+  colnames(qs) <- paste0(format(100 * probs, trim = TRUE), "%")
+
+  data.frame(unit = object$units,
+             mean = colMeans(r),
+             sd = apply(r, 2, stats::sd),
+             qs,
+             row.names = NULL,
+             check.names = FALSE,
+             stringsAsFactors = FALSE)
+}
