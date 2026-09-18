@@ -60,6 +60,12 @@ First release.
   the units rather than from the closed form, which assumes the residuals are
   independent and so rejects too often on a panel.
 
+* `prior_sensitivity()` refits the model across a grid of prior median
+  efficiencies and reports how far the scores follow the anchor, which is the
+  same question asked of the posterior rather than of the residuals. Every fit
+  uses one seed, so that the table shows the prior moving the answer rather
+  than the sampler.
+
 ## Simulation
 
 * `sim_sf()` and `sim_sf4()` generate artificial data from the two- and

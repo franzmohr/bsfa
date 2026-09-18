@@ -52,11 +52,21 @@ inefficiency terms rather than from the usual closed form
 \eqn{\sqrt{6 m_2^3 / n}}. The two agree for a cross-section, where every
 observation is its own unit, but the closed form assumes the residuals are
 independent and a panel's are not: one inefficiency term is shared by all of
-a unit's periods. Simulated on samples with no inefficiency in them, the
-closed form called sixteen per cent of sixty-unit, five-period panels
-informative at the ten per cent level, and ten per cent of them at five. The
-bootstrap holds the rate at its nominal value for panels of every shape
-tried, and loses no power in doing so.
+a unit's periods, and pretending otherwise makes the test reject too often.
+On samples simulated with no inefficiency in them at all, and a nominal rate
+of ten per cent:
+\tabular{lrr}{
+  \tab closed form \tab bootstrap \cr
+  cross-section, 300 observations \tab 8.2\% \tab 8.2\% \cr
+  panel, 150 units of 2 \tab 9.4\% \tab 9.1\% \cr
+  panel, 60 units of 5 \tab 14.4\% \tab 11.9\% \cr
+  panel, 30 units of 10 \tab 16.1\% \tab 12.5\%
+}
+The bootstrap roughly halves the excess without costing power, but it does
+not remove it. What is left is the small sample behaviour of any cluster
+bootstrap: thirty units is not many to resample from. On a panel with few
+units and many periods, read a p-value near the threshold as suggestive
+rather than decisive.
 
 The resampling runs from a fixed seed and puts R's generator back as it
 found it, so the test is a function of the data alone and repeating it gives
@@ -67,6 +77,14 @@ created. A wrong or absent skew is not a reason to abandon the model: it is
 a reason to treat the efficiency scores as prior driven, to check that the
 response really is on a logarithmic scale, and to say as much when reporting
 them.
+
+Being a test, it has the power of one, and answers whether the data can
+support the scores rather than whether the scores are right. A sample with
+no inefficiency reads as informative about a tenth of the time at the
+threshold used here, which is what a ten per cent level means. A sample
+whose inefficiency is small beside its noise is not distinguished from one
+that has none. And the statistic is asymptotic, so below about fifty
+observations it is conservative to the point of rarely firing at all.
 }
 \examples{
 set.seed(1234)
@@ -94,6 +112,8 @@ Waldman, D. M. (1982). A stationary point for the stochastic frontier
 likelihood. \emph{Journal of Econometrics}, 18(2), 275--279.
 }
 \seealso{
-\code{\link{efficiency}} for the scores this qualifies,
+\code{\link{prior_sensitivity}}, which measures directly what this
+  tests a proxy for and has no null distribution to get wrong;
+  \code{\link{efficiency}} for the scores both qualify;
   \code{\link{add_priors}} for the prior they fall back on.
 }

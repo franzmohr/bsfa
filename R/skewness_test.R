@@ -87,7 +87,9 @@
 #' Waldman, D. M. (1982). A stationary point for the stochastic frontier
 #' likelihood. \emph{Journal of Econometrics}, 18(2), 275--279.
 #'
-#' @seealso \code{\link{efficiency}} for the scores this qualifies,
+#' @seealso \code{\link{prior_sensitivity}}, which measures directly what this
+#'   tests a proxy for and has no null distribution to get wrong;
+#'   \code{\link{efficiency}} for the scores both qualify;
 #'   \code{\link{add_priors}} for the prior they fall back on.
 #'
 #' @examples

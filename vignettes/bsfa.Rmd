@@ -143,6 +143,18 @@ A verdict of `weak` or `wrong` does not mean the model should be abandoned, but
 it does mean the scores below are largely the prior, and should be reported as
 such.
 
+The test is a proxy, and a test, with an error rate of its own. The quantity it
+stands for can be measured directly, by moving the anchor and seeing how far
+the scores follow:
+
+```{r}
+prior_sensitivity(model, r_star = c(0.6, 0.75, 0.9))
+```
+
+The frontier coefficients hold still while the scores are free to move, which
+is the pattern to expect: what the data determine sharply is the frontier, and
+what they determine least is the distance to it.
+
 ## Efficiency scores
 
 ```{r}
