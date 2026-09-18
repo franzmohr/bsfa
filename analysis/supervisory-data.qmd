@@ -1,0 +1,567 @@
+---
+title: "Supervisory data for a stochastic frontier model of bank lending capacity"
+subtitle: "Sources under the ITS on supervisory reporting, variable construction, and the specifications to estimate"
+author: "Franz X. Mohr"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    embed-resources: true
+---
+
+# Purpose and scope
+
+The question is whether banks are constrained in their new lending by regulatory
+capital. The design is a stochastic frontier model in which the frontier is not
+an estimated envelope of unknown economic content but the capital constraint
+itself: given a bank's capital headroom and the risk weight density of the
+lending it originates, there is an arithmetic maximum to how much new credit it
+can extend. What the model estimates is the distance to that maximum, and how
+that distance behaves as headroom shrinks.
+
+The unit of observation is **bank × lending segment × quarter**. Segments are
+kept apart — non-financial corporations, household mortgages, household
+consumer credit — because their origination technologies and risk weights differ
+enough that pooling them imposes a technology that does not exist.
+
+This document covers three things: which supervisory sources supply each
+variable, how each variable is computed from them, and which specifications to
+estimate in what order.
+
+# Resolving the reporting positions
+
+The ITS on supervisory reporting is **Commission Implementing Regulation (EU)
+2024/3117**, which replaced Regulation (EU) 2021/451. Reporting framework
+release 4.0 applies from the March 2025 reference date and 4.2 from the fourth
+quarter of 2025; xBRL-CSV becomes the mandatory transmission format from the
+31 March 2026 reference date.
+
+The tables below give, for every variable, the **template** and the **item as
+it is labelled in that template**. That pair is what identifies a position, and
+both are stable across releases.
+
+Row and column *codes* are not stable — they shift with each amendment, and a
+row number that was right for framework 3.2 can point at a different datapoint
+in 4.2. They are therefore not asserted here. The one artefact that resolves
+them all, for a given release, is:
+
+> **`annotated_templates.zip`** — "DPM table layout and data point
+> categorization", published on the EBA reporting framework page for each
+> release. It maps template + row + column to datapoint identifiers.
+
+The working method is: take the template and item label from the tables below,
+look the pair up in the annotated table layout for the release in force, and
+record the resulting row, column and datapoint ID in a version-controlled
+mapping table. The extraction code then reads that table rather than carrying
+literal coordinates, which is what makes a framework upgrade a data change
+rather than a code change.
+
+Supporting artefacts on the same page, in decreasing order of usefulness here:
+the **DPM database** (4.0 in versions 1.0 and 2.0) for programmatic lookups,
+the **DPM dictionary glossary** for the item definitions, the **validation
+rules** packages, and `eba_identical_cells_4.x.xlsx`, which lists datapoints
+reported in more than one place and is worth consulting before choosing between
+two templates that appear to carry the same figure.
+
+# Reporting frameworks in scope
+
+| Framework | Legal act | Frequency | Reporting level | Used for |
+|---|---|---|---|---|
+| COREP Own Funds (C 01.00–C 05.01) | CIR (EU) 2024/3117 | Quarterly | Consolidated and solo | Own funds, requirements, ratios, buffers |
+| COREP Credit Risk SA (C 07.00) | CIR (EU) 2024/3117 | Quarterly | Consolidated and solo | Exposure and RWA by exposure class, standardised |
+| COREP Credit Risk IRB (C 08.01, C 08.02) | CIR (EU) 2024/3117 | Quarterly | Consolidated and solo | Exposure, RWA, PD/LGD bands, internal models |
+| COREP Countercyclical buffer (C 09.02, C 09.04) | CIR (EU) 2024/3117 | Quarterly | Consolidated | Institution-specific countercyclical buffer rate |
+| COREP Leverage (C 47.00) | CIR (EU) 2024/3117 | Quarterly | Consolidated and solo | Leverage exposure measure, the competing constraint |
+| COREP LCR (C 72.00–C 76.00) | CIR (EU) 2024/3117 | Monthly | Consolidated and solo | Liquidity buffer, net outflows |
+| COREP ALMM (C 66.00–C 71.00) | CIR (EU) 2024/3117 | Monthly/quarterly | Consolidated and solo | Funding concentration, roll-over, maturity ladder |
+| COREP NSFR (C 80.00–C 84.00) | CIR (EU) 2024/3117 | Quarterly | Consolidated and solo | Available and required stable funding |
+| COREP Large exposures (C 26.00–C 30.00) | CIR (EU) 2024/3117 | Quarterly | Consolidated | Concentration headroom |
+| FINREP (F 01.xx, F 05.01, F 06.01, F 18.00, F 20.xx) | CIR (EU) 2024/3117, Annexes III–IV | Quarterly | Consolidated | Balance sheet, loans by product and sector, non-performing exposures, geography |
+| AnaCredit | Regulation (EU) 2016/867 (ECB/2016/13) | Monthly | **Observed agent / legal entity** | Loan-level new business, borrower identity, PD, collateral |
+| MIR | Regulation (EU) No 1072/2013 (ECB/2013/34) | Monthly | Solo, MFI | New business volumes and rates, including households |
+| BSI | ECB balance-sheet-items regulation | Monthly | Solo, MFI | Stocks and reclassification-adjusted flows |
+| SREP outcomes (P2R, P2G) | Supervisory decisions | Annual, ad hoc | Consolidated | Bank-specific capital requirements |
+| Macroprudential measures | ESRB notifications, national acts | Event | Jurisdiction | CCyB, O-SII, SyRB, borrower-based measures |
+
+Two of these are not reporting templates at all and are the ones most often
+missing from a first extraction: **SREP outcomes**, which arrive as supervisory
+decisions rather than as a reported datapoint, and **macroprudential measures**,
+which have to be assembled from the ESRB notification database and national
+legal acts and then mapped to the bank's exposure geography.
+
+# The dependent variable: gross new lending
+
+## Definition
+
+Gross new business originated by bank $i$ in segment $s$ during quarter $t$:
+the sum of committed amounts on credit agreements whose inception falls in the
+quarter. **Gross, not net.** Net flows go negative and cannot be logged, and
+more importantly a net flow confuses origination with amortisation of the
+existing book, which is not a decision the bank takes in the quarter.
+
+## From AnaCredit
+
+AnaCredit is the preferred source because it identifies the borrower, which is
+what makes the demand controls and the Khwaja–Mian cross-check possible.
+
+$$
+\text{NL}_{ist} = \sum_{j \,\in\, \mathcal{J}_{ist}} \text{CommitmentAmount}_{j}
+$$
+
+where $\mathcal{J}_{ist}$ is the set of instruments reported by bank $i$ with
+*inception date* in quarter $t$, whose borrower falls in segment $s$.
+
+Construction notes, each of which changes the number materially:
+
+- **Commitment amount at inception**, from the instrument dataset, not the
+  outstanding nominal amount, which is already amortised by the first reporting
+  date and understates origination.
+- **Exclude renegotiations.** A renegotiated instrument gets a new inception
+  date in some reporting practices. Identify them through the instrument's
+  status and the counterparty-instrument linkage and treat them as a separate
+  output, since a renegotiation is not new credit.
+- **Exclude revolving redraws.** Drawings under an existing credit line are not
+  a new instrument, but a newly *granted* line is. Decide explicitly and record
+  the decision: this is the single largest source of divergence between two
+  analysts' series.
+- **Exclude intra-group and purchased instruments**, which are not origination.
+- **Mind the reporting threshold.** AnaCredit covers instruments with a
+  commitment of €25,000 or more towards a given debtor, and covers **legal
+  entities only** — households are out of scope entirely.
+- **Segment from the counterparty reference data**: institutional sector and
+  NACE code for corporates, and, for the household segments, AnaCredit cannot
+  help at all.
+
+## From MIR, for the household segments
+
+MFI interest rate statistics report new business volumes by instrument category
+including households, which is the only routine source for mortgage and consumer
+credit origination. The cost is that there is no borrower identity, so
+firm × time fixed effects are unavailable and demand has to be controlled for
+with regional aggregates instead.
+
+If both sources are used, the household and corporate segments rest on
+different data and should never be pooled into a single frontier.
+
+## Zeros and sparse activity
+
+A bank with no origination in a segment in a quarter contributes a zero, which
+the log cannot take. Either restrict the estimation sample to banks
+continuously active in the segment and say so, or use a sample-selection
+frontier. Dropping the zeros without comment biases the efficiency
+distribution upward, because inactivity and low utilisation are the same
+phenomenon at the margin.
+
+# The capital-implied maximum
+
+This is the construction that turns a generic frontier into a test of the
+capital constraint.
+
+## Capital headroom in euros
+
+Headroom is the CET1 a bank holds in excess of what it must hold, measured at
+the point where a shortfall has consequences — the Maximum Distributable Amount
+trigger, which is a breach of the **combined buffer requirement**.
+
+$$
+H_{it} \;=\; \text{CET1}_{it} \;-\; \bigl(\text{P1R}^{\text{CET1}} + \text{P2R}^{\text{CET1}}_{it} + \text{CBR}_{it}\bigr)\times \text{RWA}_{it}
+$$
+
+with the combined buffer requirement
+
+$$
+\text{CBR}_{it} = \text{CCoB} + \text{CCyB}_{it} + \max\bigl(\text{O\text{-}SII}_{it},\, \text{G\text{-}SII}_{it},\, \text{SyRB}_{it}\bigr)
+$$
+
+subject to the stacking rules in force, which have changed and are not uniform
+across jurisdictions.
+
+| Component | Template | Item label to look up |
+|---|---|---|
+| CET1 capital | C 01.00 | *Common Equity Tier 1 capital* |
+| Tier 1 capital | C 01.00 | *Tier 1 capital* |
+| Total own funds | C 01.00 | *Own funds* |
+| Risk exposure amount | C 02.00 | *Total risk exposure amount* |
+| Capital ratios | C 03.00 | *CET1 capital ratio*; *Tier 1 capital ratio*; *Total capital ratio* |
+| Surplus over requirement | C 03.00 | *Surplus(+)/Deficit(-) of CET1 capital* |
+| Combined buffer requirement | C 04.00 | *Combined buffer requirement* |
+| Buffer components | C 04.00 | *Capital conservation buffer*; *Institution specific countercyclical capital buffer*; *Systemic risk buffer*; *Global/Other Systemically Important Institution buffer* |
+| Capital left over after buffers | C 04.00 | *CET1 capital available to meet buffers* |
+| Pillar 2 add-on as reported | C 04.00 | *Own funds requirements related to Pillar II adjustments* |
+| Institution-specific CCyB rate | C 09.04 | *Institution specific countercyclical buffer rate* |
+| Geographical distribution behind that rate | C 09.02 | *Own funds requirements*, by country of the exposure |
+| Pillar 2 requirement, CET1 portion and composition | Not a reported position | SREP decision; disclosed under Art. 447 CRR |
+
+*CET1 capital available to meet buffers* in C 04.00 deserves particular
+attention: it is the supervisor's own answer to the question the headroom
+formula asks, already net of the amounts absorbed by the Pillar 1 and Pillar 2
+requirements. Computing headroom independently and reconciling it against this
+item is the cheapest validation available.
+
+Three traps:
+
+1. **Use the CET1 portion of P2R.** Since CRD V, P2R is met with a prescribed
+   composition (at least 56.25% CET1). Applying the whole P2R against CET1
+   overstates the constraint.
+2. **AT1 and T2 shortfalls migrate upward.** If a bank does not fill its AT1 or
+   T2 buckets, the gap must be met with CET1, so the effective CET1 requirement
+   exceeds the nominal one. This is precisely the bank that is constrained, so
+   ignoring it removes the signal.
+3. **P2G is not part of the MDA stack** but banks manage to it. Compute headroom
+   both ways — to the MDA trigger and to P2R + CBR + P2G — and treat the
+   difference as a specification check rather than choosing one.
+
+## Risk weight density of new lending
+
+Capital does not constrain volume; it constrains risk-weighted assets. The
+bridge between the two is the risk weight density of *newly originated* lending
+in the segment, which is bank-specific and is not the bank's average density.
+
+For IRB banks, derive it from the loan-level risk parameters of the new
+instruments:
+
+$$
+rw_{ist} \;=\; \frac{\sum_{j \in \mathcal{J}_{ist}} w\bigl(\text{PD}_j, \text{LGD}_j, M_j, S_j\bigr)\cdot \text{EAD}_j}{\sum_{j \in \mathcal{J}_{ist}} \text{EAD}_j}
+$$
+
+with $w(\cdot)$ the CRR supervisory formula for the relevant exposure class.
+For standardised banks the weight follows from the exposure class and, where
+applicable, the loan-to-value band. COREP C 08.01 (IRB) and C 07.00 (SA) give
+the aggregate cross-check: the density implied by the new-business calculation
+should sit in the neighbourhood of the reported density for the same exposure
+class.
+
+::: {.callout-warning}
+## IRB and SA banks are not comparable
+
+The same exposure attracts a materially different risk weight under the two
+approaches, so the capital-implied maximum is not on a common scale across
+banks with different approaches. Either estimate separate frontiers, or include
+the approach as a frontier control and never interpret cross-approach
+differences in the efficiency score. The output floor phase-in narrows this over
+time, which is itself usable variation.
+:::
+
+## Putting them together
+
+Capital consumed per euro of new lending, and the implied maximum:
+
+$$
+c_{ist} = rw_{ist}\times k_{it}, \qquad
+\text{NL}^{\max}_{ist} = \frac{H_{i,t-1}}{c_{is,t-1}}
+$$
+
+where $k_{it}$ is the applicable total requirement ratio. A worked example, for
+a bank with €800m of headroom lending to corporates at a 75% density under a
+15% total requirement: $c = 0.75 \times 0.15 = 0.1125$, so
+$\text{NL}^{\max} = 800/0.1125 \approx €7.1$bn of new corporate lending before
+the buffer is exhausted.
+
+# The remaining variables
+
+| Variable | Template | Item label to look up | Construction |
+|---|---|---|---|
+| Stable funding | C 84.00 | *Available stable funding*; *Required stable funding*; *Net stable funding ratio* | Headroom as ASF − RSF, in euros |
+| Customer deposits | F 08.01 | *Deposits*, by counterparty sector | Level, in logs |
+| Liquidity headroom | C 76.00 | *Liquidity buffer*; *Net liquidity outflow*; *Liquidity coverage ratio* | $\text{LB} - \text{NLO}$, in euros, not the ratio |
+| Leverage headroom | C 47.00 | *Tier 1 capital*; *Total exposure measure*; *Leverage ratio* | $\text{T1} - r\times\text{LEM}$ at the applicable requirement |
+| Concentration headroom | C 26.00–C 30.00 | *Exposure value*, by counterparty, against the limit | Binding for lending to existing large borrowers |
+| Loan stock, by product | F 05.01 | *Loans and advances*, by product | Level, in logs, lagged |
+| Loan stock, corporates by sector | F 06.01 | *Loans and advances to non-financial corporations*, by NACE | Segment-level scale |
+| Risk weights, standardised | C 07.00 | *Exposure value*; *Risk weighted exposure amount*, by exposure class | Density by class, cross-check on $rw$ |
+| Risk weights, internal models | C 08.01 | *Exposure value*; *Risk weighted exposure amount*; *Exposure weighted average PD*; *Exposure weighted average LGD* | Density and risk parameters by class |
+| Operating and staff expenses | F 02.00 | *Administrative expenses*; of which *Staff expenses* | The labour input; FTE is **not** an ITS position |
+| Credit quality of the book | F 18.00 | *Performing exposures*; *Non-performing exposures*; *Accumulated impairment* | NPL ratio and coverage |
+| Risk of new lending | AnaCredit | Instrument and counterparty risk datasets | Exposure-weighted PD over $\mathcal{J}_{ist}$ |
+| Demand | AnaCredit + national accounts | Counterparty reference data for the geography | $\sum_r \omega_{irt}\,\Delta\log Y_{rt}$, $\omega$ the lagged exposure share |
+| Policy rate, term spread | Not reported | ECB and market data | Common across banks, absorbed by time effects |
+| Distance to MDA | Derived | See the headroom table | The key inefficiency determinant |
+| P2R, CCyB, borrower-based measures | Not reported as such | SREP decisions, ESRB notifications, national acts | Level and change; the identifying variation |
+
+Three remarks on this table.
+
+**Four of these are not reporting positions at all.** Full-time equivalents,
+the policy rate, the Pillar 2 requirement and the macroprudential measures have
+no datapoint in the ITS. FTE comes from national returns or annual accounts,
+which is a good reason to use *Administrative expenses* from F 02.00 as the
+labour input instead; P2R arrives as a supervisory decision and is disclosed
+under Article 447 CRR; the macroprudential measures have to be assembled from
+ESRB notifications and national legal acts and then mapped to the bank's
+exposure geography. Budget for these separately — they are the positions a
+first extraction always misses, and two of them carry the identifying
+variation.
+
+**The demand control is the single most important variable in the design.**
+Without it, a quarter in which nobody wanted to borrow is scored as bank
+inefficiency and the model measures nothing.
+
+**Check `eba_identical_cells` before choosing a template.** Several of these
+figures are reported in more than one place — own funds items appear in both
+C 01.00 and the ratios template, loan stocks in both F 01.01 and F 05.01 — and
+the identical-cells file tells you which are genuinely the same datapoint and
+which only look alike.
+
+# Alignment: what breaks when the sources are joined
+
+::: {.callout-important}
+## The consolidation mismatch is the serious one
+
+COREP and FINREP are reported on a **consolidated** basis by the group.
+AnaCredit is reported by **observed agents**, which are legal entities —
+typically the institution and its foreign branches, not the consolidated group.
+A capital headroom measured for the group and a new-lending volume measured for
+one legal entity within it are not the same bank.
+
+There is no clean fix. The options are: restrict to banks where the two
+perimeters effectively coincide, aggregate AnaCredit observed agents up to the
+group using the group structure in FINREP F 40.xx, or run the analysis at solo
+level using solo COREP where it is reported. Whichever is chosen has to be
+stated, because the choice moves the results.
+:::
+
+Further alignment work, all of it unglamorous and all of it necessary:
+
+- **Frequency.** AnaCredit and MIR are monthly, COREP and FINREP quarterly.
+  Aggregate the flows to quarters rather than interpolating the stocks.
+- **Reference date versus remittance date.** Capital variables must be lagged
+  to the previous quarter-end anyway for predeterminedness, which conveniently
+  also resolves the fact that a bank does not know its own quarter-end capital
+  when it originates during the quarter.
+- **Restatements.** Supervisory data is resubmitted. Vintage the extraction and
+  record the pull date, or results will not reproduce.
+- **Mergers and entity changes.** An LEI change or a merger breaks the panel.
+  Build an entity-mapping table and decide whether the merged entity is a new
+  unit or a continuation; for the four-component model this matters a great
+  deal, since a spurious break shows up as persistent inefficiency.
+- **Accounting framework.** FINREP has separate annexes for IFRS and national
+  GAAP reporters. Some items are not comparable across them.
+- **Currency.** Convert at the ECB reference rate for the reference date;
+  do not mix translation methods between the numerator and denominator of a
+  ratio.
+
+# How the variables enter the model
+
+Two forms are worth estimating, and they differ in whether the capital-implied
+maximum is imposed or estimated.
+
+## Estimated frontier
+
+$$
+\ln \text{NL}_{ist} = f(x_{i,t-1};\beta) + d_{ist}'\gamma + \tau_t + \mu_i - \eta_i + v_{ist} - u_{ist}
+$$
+
+with $x$ the capacity inputs (capital headroom, stable funding, liquidity
+headroom, labour, loan stock) in logs, and $d$ the demand and risk controls.
+
+## Imposed frontier: capacity utilisation
+
+$$
+\ln\!\left(\frac{\text{NL}_{ist}}{\text{NL}^{\max}_{is,t-1}}\right) = d_{ist}'\gamma + w_{ist}'\theta + \tau_t + \mu_i - \eta_i + v_{ist} - u_{ist}
+$$
+
+Here the dependent variable is already a utilisation rate, $w$ holds the
+*competing* constraints (funding, liquidity, leverage, concentration), and
+$\exp(-u)$ is capital-capacity utilisation directly.
+
+## Placement rules
+
+| Where | What goes there | Why |
+|---|---|---|
+| Frontier $f(\cdot)$ | Capacity inputs, lagged | These define the maximum |
+| Frontier controls $d$ | Demand, policy rate, competition, risk of new lending | Otherwise weak demand is scored as inefficiency |
+| Competing constraints $w$ | Funding, liquidity, leverage, concentration headroom | So that capital is not the only candidate the model can find |
+| Inefficiency mean | Distance to MDA, P2R, CCyB, borrower-based measures, NPL ratio, TLTRO participation | The policy question |
+| $\sigma_u$ scale function | Distance to MDA, log assets | Where the binding-constraint signature appears |
+| $\sigma_v$ scale function | Log assets | Bank size spans orders of magnitude |
+
+Everything on the right-hand side that the bank chooses enters **lagged one
+quarter**. Capital headroom in particular is chosen in anticipation of lending,
+so contemporaneous headroom is endogenous by construction.
+
+**Estimate on log output.** The efficiency score $\exp(-u)$ is a proportional
+shortfall only when the dependent variable is a log; fitting euro volumes makes
+the results depend on whether the data are in euros or millions.
+
+# Specifications to estimate
+
+The ladder below runs from diagnostic to answer. Each step is informative about
+whether the next one is worth running.
+
+## S0. Pooled cross-section, diagnostic only
+
+```{r}
+#| eval: false
+library(bsfa)
+
+s0 <- create_sfmodel_exp(log_nl ~ log_caphead + log_deposits + log_opex +
+                           log_stock + demand + avg_pd,
+                         data = panel, iterations = 20000, burnin = 2000)
+s0 <- add_posterior_loglik(add_posterior_coefficients(add_priors(s0)))
+summary(s0)
+selection_criteria(s0)
+```
+
+Purpose: confirm the composed error is identified at all. If the posterior for
+`lambda` piles up against zero, the one-sided term is not separating from noise
+at this frequency — aggregate to semi-annual or annual before going further.
+This is the only step at which the information criteria are available, which is
+also where the exponential and half-normal specifications should be compared.
+
+## S1. Capacity-normalised utilisation, by quarter
+
+The same call with the dependent variable replaced by
+`log(nl / nl_max_lag)` and the capacity inputs replaced by the competing
+constraints. Run it separately by quarter to trace utilisation through the
+cycle without imposing a panel structure.
+
+## S2. Time-invariant panel, structural ranking
+
+```{r}
+#| eval: false
+s2 <- create_sfmodel_exp(log_nl ~ ..., data = panel, id = "bank_id",
+                         iterations = 20000, burnin = 2000)
+s2 <- add_posterior_coefficients(add_priors(s2, lambda = list(r_star = 0.85)))
+efficiency(s2)
+```
+
+Purpose: a ranking of banks by structural origination capacity. **Not** an
+answer to the capital question, because a constraint that binds cyclically has
+nowhere to live in a model whose inefficiency term is constant per bank, and
+because business-model heterogeneity is booked as inefficiency here.
+
+## S3. Four-component — the main specification
+
+```{r}
+#| eval: false
+s3 <- create_sfmodel4_exp(log_nl ~ ..., data = panel, id = "bank_id",
+                          iterations = 40000, burnin = 5000)
+s3 <- add_priors(s3,
+                 lambda_eta = list(r_star = 0.95),   # persistent
+                 lambda_u   = list(r_star = 0.90))   # transient
+s3 <- add_posterior_coefficients(add_seed(add_initial_values(s3), 1))
+
+efficiency(s3, type = "persistent")   # structural capacity, per bank
+efficiency(s3, type = "transient")    # cyclical restraint, per bank-quarter
+```
+
+This is the specification the question needs. The mapping is:
+
+- $\mu_i$ — business model, market, client base. Not inefficiency.
+- $\eta_i$ — structural lending capacity.
+- $u_{it}$ — **cyclical restraint, which is where a binding capital constraint
+  appears.**
+
+Then relate $\hat u_{it}$ to distance-to-MDA. Note the identification caveat:
+what the data determine sharply is $\mu_i - \eta_i$, and the split between them
+depends on which has the wider spread. Run the prior sensitivity check on
+`sigma_mu` and on the persistent inefficiency parameter, and read the persistent
+scores with that in mind. The transient scores, which carry the answer, are not
+affected.
+
+## S4. Heteroskedastic inefficiency — the actual test
+
+The signature of a binding constraint is distributional: the dispersion of
+inefficiency should collapse as headroom shrinks, because a bank pressed against
+its limit has no room to vary.
+
+$$
+\sigma_{u,ist} = \exp\bigl(\psi_0 + \psi_1\,\text{MDAdist}_{i,t-1} + \psi_2 \ln \text{Assets}\bigr)
+$$
+
+A positive $\psi_1$ is the finding. A $\psi_1$ of zero says the frontier is
+measuring something other than the capital constraint, whatever else it is
+measuring. **Not yet implemented in `bsfa`** — see the roadmap.
+
+## S5. Latent class — constrained and unconstrained regimes
+
+Two classes with membership driven by distance to MDA, AT1 trigger proximity and
+recent P2R changes, giving a posterior probability that each bank-quarter is
+constrained and a direct estimate of the lending forgone. Capital constraints
+are not linear — they do nothing until they bite — so a single linear
+coefficient averages the effect towards zero. **Not yet implemented in `bsfa`.**
+
+## S6. Within-firm cross-check
+
+Not a frontier model. On the AnaCredit loan-level data, regress the change in
+credit to firm $f$ from bank $i$ on bank capital with **firm × time fixed
+effects**, which absorb credit demand entirely and identify supply from
+variation across lenders to the same borrower.
+
+This cannot give a level — firm × time effects difference out the aggregate —
+but it gives a credible elasticity. Use it to validate S3 and S4: if the
+frontier says capacity is slack while the within-firm estimator finds a strong
+capital effect, the frontier is measuring something other than the capital
+constraint, and $\psi_1$ from S4 will usually say why.
+
+## Robustness
+
+| Check | What it tests |
+|---|---|
+| Exponential versus half-normal | Sensitivity of the scores to the one-sided distribution |
+| `r_star` at 0.75, 0.85, 0.95 | Prior sensitivity of the efficiency level |
+| Gamma prior on `sigma_mu` varied | Whether the S3 split is data or prior |
+| Headroom to MDA versus to P2G | Whether banks manage to the regulatory or the market requirement |
+| IRB and SA banks separately | Whether the density construction is comparable |
+| Semi-annual aggregation | Whether the quarterly signal-to-noise ratio is adequate |
+| Excluding renegotiations versus including | The largest construction choice in the dependent variable |
+
+# Pre-estimation checks
+
+- Reconcile aggregated AnaCredit new business against MIR new business volumes
+  for the overlapping segment. A persistent gap means the exclusions are wrong.
+- Reconcile derived capital headroom against reported capital ratios in
+  C 03.00; they must imply each other.
+- Check that the new-lending risk weight density sits near the reported density
+  for the same exposure class.
+- Plot $\text{NL}/\text{NL}^{\max}$ before estimating anything. Values above one
+  mean the headroom or the density is wrong, not that the bank has broken the
+  rules.
+- Count banks by quarter and confirm the panel is not silently unbalanced by
+  entity changes.
+- Confirm that the consolidation perimeter used is the same on both sides of
+  every ratio.
+
+# What the package supports today
+
+| Specification | Status |
+|---|---|
+| S0, S1 cross-section | `create_sfmodel_exp()`, `create_sfmodel_hn()` |
+| S2 time-invariant panel | Same, with `id` |
+| S3 four-component | `create_sfmodel4_exp()`, `create_sfmodel4_hn()` |
+| S4 heteroskedastic $\sigma_u$ | Not implemented |
+| S5 latent class | Not implemented |
+| Information criteria | Cross-section only; unavailable for panel and four-component models |
+
+# References
+
+Aigner, D., Lovell, C. A. K., & Schmidt, P. (1977). Formulation and estimation
+of stochastic frontier production function models. *Journal of Econometrics*,
+6(1), 21–37.
+
+Battese, G. E., & Coelli, T. J. (1995). A model for technical inefficiency
+effects in a stochastic frontier production function for panel data.
+*Empirical Economics*, 20(2), 325–332.
+
+Commission Implementing Regulation (EU) 2024/3117 laying down implementing
+technical standards for the application of Regulation (EU) No 575/2013 with
+regard to supervisory reporting of institutions.
+
+Khwaja, A. I., & Mian, A. (2008). Tracing the impact of bank liquidity shocks:
+Evidence from an emerging market. *American Economic Review*, 98(4), 1413–1442.
+
+Kumbhakar, S. C., Lien, G., & Hjalmarsson, L. (2014). Technical efficiency in
+competing panel data models. *Journal of Productivity Analysis*, 41(2),
+321–337.
+
+Regulation (EU) 2016/867 of the European Central Bank on the collection of
+granular credit and credit risk data (ECB/2016/13).
+
+Regulation (EU) No 1072/2013 of the European Central Bank concerning statistics
+on interest rates applied by monetary financial institutions (ECB/2013/34).
+
+van den Broeck, J., Koop, G., Osiewalski, J., & Steel, M. F. J. (1994).
+Stochastic frontier models: A Bayesian perspective. *Journal of Econometrics*,
+61(2), 273–303.

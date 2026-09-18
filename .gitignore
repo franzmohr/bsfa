@@ -9,3 +9,5 @@ src/*.dll
 doc/
 Meta/
 inst/doc/
+analysis/*.html
+analysis/*_files/
