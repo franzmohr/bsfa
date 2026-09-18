@@ -45,7 +45,9 @@ thinning.}
 }
 \value{
 An object of class \code{"sfmodel_exp"} or \code{"sfmodel_hn"}, both
-  inheriting from \code{"sfmodel"}.
+  inheriting from \code{"sfmodel"}. Rows with a missing value in the model
+  frame, or with an unknown unit, are dropped with a message and recorded in
+  the element \code{na.action}.
 }
 \description{
 Sets up the model object that the \code{add_*} functions operate on. The two

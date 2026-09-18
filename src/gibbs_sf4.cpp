@@ -83,7 +83,8 @@ static double rtnorm_pos4(const double mu, const double sd) {
 //' @param draws number of retained iterations before thinning.
 //' @param burnin number of discarded iterations.
 //' @param thin thinning interval.
-//' @param keep_u whether to store the augmented terms.
+//' @param u_thin 0 not to store the augmented terms, otherwise the interval at
+//'   which the retained draws are stored.
 //' @param verbose how often to report progress; 0 for no reporting.
 //'
 //' @return A named list of draw matrices.
@@ -111,12 +112,16 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
                      const int ineff,
                      const double s,
                      const int draws, const int burnin, const int thin,
-                     const bool keep_u,
+                     const int u_thin,
                      const int verbose) {
 
   const arma::uword n = y.n_elem;
   const arma::uword k = X.n_cols;
   const int n_keep = draws / thin;
+  // The transient terms alone are one column per observation and per retained
+  // draw, so on a panel of any size they dominate everything else the sampler
+  // returns. They carry a thinning interval of their own.
+  const int n_keep_u = (u_thin > 0) ? n_keep / u_thin : 0;
 
   const arma::mat XtX = X.t() * X;
   const arma::vec B0ib0 = B0i * b0;
@@ -143,14 +148,13 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
   arma::vec sigma_mu_store(n_keep, arma::fill::zeros);
   arma::vec par_eta_store(n_keep, arma::fill::zeros);
   arma::vec par_u_store(n_keep, arma::fill::zeros);
-  arma::mat mu_store(keep_u ? n_units : 0, keep_u ? n_keep : 0,
-                     arma::fill::zeros);
-  arma::mat eta_store(keep_u ? n_units : 0, keep_u ? n_keep : 0,
-                      arma::fill::zeros);
-  arma::mat u_store(keep_u ? n : 0, keep_u ? n_keep : 0, arma::fill::zeros);
+  arma::mat mu_store(n_keep_u > 0 ? n_units : 0, n_keep_u, arma::fill::zeros);
+  arma::mat eta_store(n_keep_u > 0 ? n_units : 0, n_keep_u, arma::fill::zeros);
+  arma::mat u_store(n_keep_u > 0 ? n : 0, n_keep_u, arma::fill::zeros);
 
   const int n_iter = burnin + draws;
   int store = 0;
+  int store_u = 0;
 
   arma::vec xb(n, arma::fill::zeros);
   arma::vec unit_sum(n_units, arma::fill::zeros);
@@ -244,10 +248,11 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
       sigma_mu_store(store) = std::sqrt(sigma_mu2);
       par_eta_store(store) = (ineff == 0) ? std::sqrt(sigma_eta2) : lambda_eta;
       par_u_store(store) = (ineff == 0) ? std::sqrt(sigma_u2) : lambda_u;
-      if (keep_u) {
-        mu_store.col(store) = mu;
-        eta_store.col(store) = eta;
-        u_store.col(store) = u;
+      if (n_keep_u > 0 && ((store + 1) % u_thin == 0) && store_u < n_keep_u) {
+        mu_store.col(store_u) = mu;
+        eta_store.col(store_u) = eta;
+        u_store.col(store_u) = u;
+        store_u++;
       }
       store++;
     }
@@ -266,7 +271,7 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
     Rcpp::Named("sigma_mu") = sigma_mu_store,
     Rcpp::Named("par_eta") = par_eta_store,
     Rcpp::Named("par_u") = par_u_store,
-    Rcpp::Named("mu") = keep_u ? Rcpp::wrap(mu_store.t()) : R_NilValue,
-    Rcpp::Named("eta") = keep_u ? Rcpp::wrap(eta_store.t()) : R_NilValue,
-    Rcpp::Named("u") = keep_u ? Rcpp::wrap(u_store.t()) : R_NilValue);
+    Rcpp::Named("mu") = n_keep_u > 0 ? Rcpp::wrap(mu_store.t()) : R_NilValue,
+    Rcpp::Named("eta") = n_keep_u > 0 ? Rcpp::wrap(eta_store.t()) : R_NilValue,
+    Rcpp::Named("u") = n_keep_u > 0 ? Rcpp::wrap(u_store.t()) : R_NilValue);
 }

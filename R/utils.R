@@ -103,24 +103,32 @@ sf_scalar_blocks <- function(object) {
 #'   unit or observation.
 #' @param unit the labels of the columns of \code{r}.
 #' @param probs quantiles of the posterior to report.
+#' @param obs observation labels, for scores that are one per observation
+#'   rather than one per unit, or \code{NULL}.
 #'
 #' @return A data frame with one row per column of \code{r}.
 #'
 #' @keywords internal
-efficiency_table <- function(r, unit, probs) {
+efficiency_table <- function(r, unit, probs, obs = NULL) {
 
   qs <- matrix(apply(r, 2, stats::quantile, probs = probs),
                nrow = ncol(r), byrow = TRUE,
                dimnames = list(NULL,
                                paste0(format(100 * probs, trim = TRUE), "%")))
 
-  data.frame(unit = unit,
-             mean = colMeans(r),
-             sd = apply(r, 2, stats::sd),
-             qs,
-             row.names = NULL,
-             check.names = FALSE,
-             stringsAsFactors = FALSE)
+  out <- data.frame(unit = unit,
+                    mean = colMeans(r),
+                    sd = apply(r, 2, stats::sd),
+                    qs,
+                    row.names = NULL,
+                    check.names = FALSE,
+                    stringsAsFactors = FALSE)
+
+  if (is.null(obs)) {
+    return(out)
+  }
+  cbind(out["unit"], obs = obs, out[setdiff(names(out), "unit")],
+        stringsAsFactors = FALSE)
 }
 
 #' Check that a value is a single number strictly between zero and one
@@ -165,4 +173,77 @@ check_count <- function(x, what) {
          .Machine$integer.max, ".")
   }
   invisible(TRUE)
+}
+
+#' Resolve keep_u to a thinning interval for the augmented blocks
+#'
+#' The augmented terms are the largest thing the sampler returns, and in the
+#' four-component model they are one column per observation. Storing every
+#' retained draw of them is what makes a long chain on a wide panel run out of
+#' memory, so \code{keep_u} also accepts an interval at which to keep them.
+#'
+#' @param keep_u \code{TRUE}, \code{FALSE}, or a positive whole number.
+#'
+#' @return \code{0L} if the draws are not to be stored, otherwise the interval.
+#'
+#' @keywords internal
+augmented_thin <- function(keep_u) {
+
+  if (is.logical(keep_u)) {
+    if (length(keep_u) != 1L || is.na(keep_u)) {
+      stop("'keep_u' must be TRUE, FALSE or a positive whole number.")
+    }
+    return(if (keep_u) 1L else 0L)
+  }
+
+  if (length(keep_u) != 1L || !is.numeric(keep_u) || !is.finite(keep_u) ||
+      keep_u != trunc(keep_u) || keep_u < 0 ||
+      keep_u > .Machine$integer.max) {
+    stop("'keep_u' must be TRUE, FALSE or a positive whole number.")
+  }
+  as.integer(keep_u)
+}
+
+#' Warn before the augmented draws fill the machine
+#'
+#' The sampler allocates the whole block up front, so an over-ambitious
+#' \code{keep_u} on a wide panel fails on allocation rather than gradually.
+#' Saying so beforehand is more use than the allocation error would be.
+#'
+#' @param columns total number of columns across the stored blocks.
+#' @param n_keep_u number of draws of them that will be stored.
+#'
+#' @return Invisibly \code{NULL}; called for the warning it raises.
+#'
+#' @keywords internal
+warn_augmented_size <- function(columns, n_keep_u) {
+
+  bytes <- 8 * as.numeric(columns) * as.numeric(n_keep_u)
+  if (bytes > 1024^3) {
+    warning("The augmented draws will take about ",
+            format(round(bytes / 1024^3, 1), nsmall = 1), " GB. Pass ",
+            "'keep_u' an interval to thin them, or FALSE to drop them if ",
+            "the efficiency scores are not needed.", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+#' Iteration index of a thinned block of augmented draws
+#'
+#' The augmented blocks may be thinned beyond the chain's own \code{thin}, so
+#' their iteration index counts in steps of the two intervals multiplied.
+#'
+#' @param object a model object.
+#' @param x a matrix of stored draws.
+#' @param u_thin the interval the block was stored at.
+#'
+#' @return An \code{\link[coda]{mcmc}} object.
+#'
+#' @keywords internal
+mcmc_augmented <- function(object, x, u_thin) {
+  step <- object$thin * u_thin
+  coda::mcmc(x,
+             start = object$burnin + step,
+             end = object$burnin + step * NROW(x),
+             thin = step)
 }

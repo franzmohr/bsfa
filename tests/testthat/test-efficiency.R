@@ -45,7 +45,41 @@ test_that("the four-component method takes a single quantile too", {
 
   for (type in c("persistent", "transient", "overall")) {
     eff <- efficiency(est, type = type, probs = 0.5)
-    expect_equal(names(eff), c("unit", "mean", "sd", "50%"))
+    expect_equal(names(eff),
+                 if (type == "persistent") c("unit", "mean", "sd", "50%")
+                 else c("unit", "obs", "mean", "sd", "50%"))
     expect_equal(nrow(eff), if (type == "persistent") 20L else 80L)
   }
+})
+
+test_that("observation-level scores carry the row they came from", {
+  set.seed(79)
+  d <- sim_sf4(n = 3, n_time = 4, beta = c(1, 0.5))
+  d$bank <- rep(c("DE001", "FR002", "IT003"), each = 4)
+  d$quarter <- rep(2020:2023, times = 3)
+  rownames(d) <- paste0(d$bank, "-", d$quarter)
+
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel4_exp(y ~ x1, data = d, id = "bank",
+                        iterations = 200, burnin = 100)))
+
+  # Labelled only by the unit, a transient score cannot be told from the
+  # eleven others that unit has.
+  for (type in c("transient", "overall")) {
+    eff <- efficiency(est, type = type)
+    expect_equal(names(eff)[1:2], c("unit", "obs"))
+    expect_equal(eff$obs, rownames(d))
+    expect_equal(eff$unit, as.character(d$bank))
+    expect_equal(nrow(eff), 12L)
+  }
+
+  # One score per unit needs no such column.
+  persistent <- efficiency(est, type = "persistent")
+  expect_false("obs" %in% names(persistent))
+  expect_equal(persistent$unit, c("DE001", "FR002", "IT003"))
+
+  # The scores themselves are unchanged by the extra column.
+  eff <- efficiency(est, type = "transient")
+  expect_equal(eff$mean,
+               unname(colMeans(exp(-as.matrix(est$posterior$u$coeffs)))))
 })

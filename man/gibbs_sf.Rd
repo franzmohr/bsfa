@@ -24,7 +24,7 @@ gibbs_sf(
   draws,
   burnin,
   thin,
-  keep_u,
+  u_thin,
   verbose
 )
 }
@@ -71,7 +71,8 @@ for \code{ineff = 0} and the rate for \code{ineff = 1}.}
 
 \item{thin}{thinning interval.}
 
-\item{keep_u}{whether to store the augmented inefficiency draws.}
+\item{u_thin}{0 not to store the augmented inefficiency draws, otherwise
+the interval at which the retained draws are stored.}
 
 \item{verbose}{how often to report progress; 0 for no reporting.}
 }

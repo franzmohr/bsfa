@@ -25,7 +25,10 @@
 \value{
 A data frame with the posterior mean, standard deviation and the
   requested quantiles of the efficiency score. Its first column gives the
-  unit, which for the observation-level types repeats.
+  unit, which for the observation-level types repeats; those two carry a
+  second column \code{obs}, the row name of the observation in the model
+  frame, so that the scores can be joined back to the data they came from
+  rather than by position.
 }
 \description{
 Summarises the posterior distribution of the efficiency scores implied by

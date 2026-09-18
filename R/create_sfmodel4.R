@@ -151,10 +151,18 @@ sfmodel4_skeleton <- function(formula, data, id, type, iterations, burnin,
                              burnin = burnin, thin = thin, ineff = ineff,
                              cl = cl)
 
-  if (min(tabulate(object$data$g, nbins = object$data$n_units)) < 2) {
+  sizes <- tabulate(object$data$g, nbins = object$data$n_units)
+  if (min(sizes) < 2) {
+    short <- object$data$unit_labels[sizes < 2]
     stop("Every unit needs at least two observations. Units with a single ",
          "observation cannot contribute to the split between persistent and ",
-         "transient inefficiency.")
+         "transient inefficiency. ", length(short), " of ", length(sizes),
+         " have one: ",
+         paste(short[seq_len(min(5L, length(short)))], collapse = ", "),
+         if (length(short) > 5) ", ..." else "",
+         if (is.null(object$na.action)) "" else
+           paste0(" (", length(object$na.action),
+                  " rows were dropped for missing values first)"), ".")
   }
 
   object$model$components <- 4L

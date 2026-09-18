@@ -29,9 +29,13 @@
 argument \code{object}. If \code{NULL}, the package's own sampler is used.}
 
 \item{keep_u}{whether to store the draws of the unit effects and of both
-one-sided terms. Required by \code{\link{efficiency}}. Note that the
-transient terms alone are as many as there are observations, so the stored
-object can become large.}
+one-sided terms, which \code{\link{efficiency}} needs. The transient terms
+alone are one column per observation, so on a panel of any size this block
+dominates everything else: a hundred thousand observations and twenty
+thousand draws come to sixteen gigabytes. A positive whole number stores
+every that-many-th retained draw instead, which divides the storage by it.
+A warning is issued before anything is allocated if the block would exceed
+a gigabyte.}
 
 \item{verbose}{either \code{FALSE}, \code{TRUE} for progress at every ten
 per cent of iterations, or an integer reporting interval.}

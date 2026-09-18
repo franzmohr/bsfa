@@ -37,9 +37,12 @@ argument \code{object}. If \code{NULL}, the package's own sampler is used.
 It is called as \code{posterior_function(object)} and must return the
 object with its \code{posterior} element added.}
 
-\item{keep_u}{whether to store the inefficiency draws. Required by
-\code{\link{efficiency}}, but note that the stored object grows with the
-number of units times the number of retained draws.}
+\item{keep_u}{whether to store the inefficiency draws, which
+\code{\link{efficiency}} needs. The block is one column per unit and one
+row per retained draw, so it can be the largest part of the returned
+object. A positive whole number stores every that-many-th retained draw
+instead, which divides the storage by it and still leaves genuine
+posterior draws to summarise.}
 
 \item{verbose}{either \code{FALSE}, \code{TRUE} for progress at every ten
 per cent of iterations, or an integer reporting interval.}

@@ -152,3 +152,31 @@ test_that("the MCMC settings must be whole numbers an integer can hold", {
   expect_error(build(iterations = 0), "must be positive")
   expect_error(build(burnin = -1), "non-negative")
 })
+
+test_that("dropped rows are reported and recorded", {
+  d <- sim_sf(n = 40, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  d$x1[1:12] <- NA
+
+  expect_message(m <- create_sfmodel_exp(y ~ x1, data = d),
+                 "Dropping 12 of 40 observations")
+  expect_equal(m$n, 28L)
+  expect_s3_class(m$na.action, "omit")
+  expect_equal(unname(m$na.action), 1:12)
+  expect_output(print(m), "28 (12 dropped)", fixed = TRUE)
+
+  # Nothing is said, or recorded, when nothing is dropped.
+  expect_silent(clean <- create_sfmodel_exp(y ~ x1, data = d[13:40, ]))
+  expect_null(clean$na.action)
+})
+
+test_that("a unit left with one observation is named", {
+  d <- sim_sf4(n = 5, n_time = 4, beta = c(1, 0.5))
+  d$bank <- rep(c("DE001", "FR002", "IT003", "ES004", "NL005"), each = 4)
+  d$x1[d$bank == "IT003"][1:3] <- NA
+
+  err <- tryCatch(
+    suppressMessages(create_sfmodel4_exp(y ~ x1, data = d, id = "bank")),
+    error = function(e) conditionMessage(e))
+  expect_match(err, "IT003")
+  expect_match(err, "3 rows were dropped for missing values first")
+})

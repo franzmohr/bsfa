@@ -25,9 +25,13 @@
 #' @param posterior_function the function to be applied to the model in
 #'   argument \code{object}. If \code{NULL}, the package's own sampler is used.
 #' @param keep_u whether to store the draws of the unit effects and of both
-#'   one-sided terms. Required by \code{\link{efficiency}}. Note that the
-#'   transient terms alone are as many as there are observations, so the stored
-#'   object can become large.
+#'   one-sided terms, which \code{\link{efficiency}} needs. The transient terms
+#'   alone are one column per observation, so on a panel of any size this block
+#'   dominates everything else: a hundred thousand observations and twenty
+#'   thousand draws come to sixteen gigabytes. A positive whole number stores
+#'   every that-many-th retained draw instead, which divides the storage by it.
+#'   A warning is issued before anything is allocated if the block would exceed
+#'   a gigabyte.
 #' @param verbose either \code{FALSE}, \code{TRUE} for progress at every ten
 #'   per cent of iterations, or an integer reporting interval.
 #' @param ... further arguments passed to or from other methods.
@@ -101,6 +105,10 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
   verbose_int <- if (isTRUE(verbose)) max(1L, floor(n_iter / 10)) else
     if (isFALSE(verbose)) 0L else as.integer(verbose)
 
+  u_thin <- augmented_thin(keep_u)
+  n_keep_u <- if (u_thin > 0) (object$iterations / object$thin) %/% u_thin else 0
+  warn_augmented_size(2 * object$data$n_units + object$n, n_keep_u)
+
   out <- .with_model_seed(
     object$model$seed,
     gibbs_sf4(y = object$data$y,
@@ -130,7 +138,7 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
               draws = as.integer(object$iterations),
               burnin = as.integer(object$burnin),
               thin = as.integer(object$thin),
-              keep_u = keep_u,
+              u_thin = u_thin,
               verbose = verbose_int))
 
   colnames(out$beta) <- colnames(object$data$X)
@@ -156,9 +164,9 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
     colnames(out$mu) <- object$data$unit_labels
     colnames(out$eta) <- object$data$unit_labels
     colnames(out$u) <- rownames(object$data$X)
-    posterior$mu <- list(coeffs = .mcmc_draws(object, out$mu))
-    posterior$eta <- list(coeffs = .mcmc_draws(object, out$eta))
-    posterior$u <- list(coeffs = .mcmc_draws(object, out$u))
+    posterior$mu <- list(coeffs = mcmc_augmented(object, out$mu, u_thin))
+    posterior$eta <- list(coeffs = mcmc_augmented(object, out$eta, u_thin))
+    posterior$u <- list(coeffs = mcmc_augmented(object, out$u, u_thin))
   }
 
   object$posterior <- posterior

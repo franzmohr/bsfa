@@ -4,7 +4,7 @@
 \alias{efficiency_table}
 \title{Summarise a matrix of efficiency draws}
 \usage{
-efficiency_table(r, unit, probs)
+efficiency_table(r, unit, probs, obs = NULL)
 }
 \arguments{
 \item{r}{a matrix of efficiency draws, one row per draw and one column per
@@ -13,6 +13,9 @@ unit or observation.}
 \item{unit}{the labels of the columns of \code{r}.}
 
 \item{probs}{quantiles of the posterior to report.}
+
+\item{obs}{observation labels, for scores that are one per observation
+rather than one per unit, or \code{NULL}.}
 }
 \value{
 A data frame with one row per column of \code{r}.

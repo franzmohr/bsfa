@@ -45,7 +45,9 @@
 #' @param thin thinning interval. \code{iterations} must be a multiple of it.
 #'
 #' @return An object of class \code{"sfmodel_exp"} or \code{"sfmodel_hn"}, both
-#'   inheriting from \code{"sfmodel"}.
+#'   inheriting from \code{"sfmodel"}. Rows with a missing value in the model
+#'   frame, or with an unknown unit, are dropped with a message and recorded in
+#'   the element \code{na.action}.
 #'
 #' @seealso \code{\link{add_priors}}, \code{\link{add_initial_values}},
 #'   \code{\link{add_seed}}, \code{\link{add_posterior_coefficients}}
@@ -108,7 +110,8 @@ create_sfmodel_hn <- function(formula,
 #' @param ineff \code{"exponential"} or \code{"halfnormal"}.
 #' @param cl the originating call.
 #'
-#' @return A list with the model data and specification.
+#' @return A list with the model data and specification, and the element
+#'   \code{na.action} recording any rows that were dropped.
 #'
 #' @keywords internal
 sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
@@ -158,6 +161,19 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
   if (!any(keep)) {
     stop("No complete observations remain after dropping missing values.")
   }
+  # Dropping rows quietly is how a third of a panel goes missing unnoticed, so
+  # the omission is reported and kept on the object in the form na.omit() uses.
+  dropped <- which(!keep)
+  if (length(dropped) > 0) {
+    names(dropped) <- rownames(mf)[dropped]
+    class(dropped) <- "omit"
+    message("Dropping ", length(dropped), " of ", length(keep),
+            " observations with missing values",
+            if (!is.null(id_var) && anyNA(id_var))
+              " or an unknown unit" else "", ".")
+  } else {
+    dropped <- NULL
+  }
   mf <- mf[keep, , drop = FALSE]
   if (!is.null(id_var)) {
     id_var <- id_var[keep]
@@ -192,6 +208,7 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
                       "sigma_u"),
        formula = formula,
        terms = mt,
+       na.action = dropped,
        n = n,
        k = k,
        iterations = iterations,
@@ -213,7 +230,9 @@ print.sfmodel <- function(x, ...) {
   cat("Inefficiency:       ", x$model$ineff,
       if (identical(x$model$components, 4L))
         ", persistent and transient" else "", "\n", sep = "")
-  cat("Observations:       ", x$n, "\n", sep = "")
+  cat("Observations:       ", x$n,
+      if (is.null(x$na.action)) "" else
+        paste0(" (", length(x$na.action), " dropped)"), "\n", sep = "")
   cat("Coefficients:       ", x$k, "\n", sep = "")
   cat("Inefficiency terms: ", x$data$n_units,
       if (x$model$panel) " (one per unit, time invariant)" else

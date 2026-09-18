@@ -30,7 +30,10 @@
 #'
 #' @return A data frame with the posterior mean, standard deviation and the
 #'   requested quantiles of the efficiency score. Its first column gives the
-#'   unit, which for the observation-level types repeats.
+#'   unit, which for the observation-level types repeats; those two carry a
+#'   second column \code{obs}, the row name of the observation in the model
+#'   frame, so that the scores can be joined back to the data they came from
+#'   rather than by position.
 #'
 #' @seealso \code{\link{efficiency}} for the two-component models.
 #'
@@ -65,6 +68,7 @@ efficiency.sfmodel4 <- function(object,
   eta <- as.matrix(object$posterior$eta$coeffs)
   g <- object$data$g
 
+  obs <- NULL
   if (type == "persistent") {
     r <- exp(-eta)
     unit <- object$data$unit_labels
@@ -74,7 +78,11 @@ efficiency.sfmodel4 <- function(object,
     # observations of that unit before being combined with the transient one.
     r <- if (type == "transient") exp(-u) else exp(-(eta[, g, drop = FALSE] + u))
     unit <- object$data$unit_labels[g]
+    # A score per observation is of little use labelled only by its unit, since
+    # a unit has as many of them as it has periods. The row names of the model
+    # frame are what the scores have to be joined back on.
+    obs <- rownames(object$data$X)
   }
 
-  efficiency_table(r, unit, probs)
+  efficiency_table(r, unit, probs, obs)
 }

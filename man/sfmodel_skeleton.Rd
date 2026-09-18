@@ -22,7 +22,8 @@ sfmodel_skeleton(formula, data, id, type, iterations, burnin, thin, ineff, cl)
 \item{cl}{the originating call.}
 }
 \value{
-A list with the model data and specification.
+A list with the model data and specification, and the element
+  \code{na.action} recording any rows that were dropped.
 }
 \description{
 Assemble the common parts of a stochastic frontier model object

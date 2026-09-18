@@ -71,7 +71,8 @@ static double rtnorm_pos(const double mu, const double sd) {
 //' @param draws number of retained iterations before thinning.
 //' @param burnin number of discarded iterations.
 //' @param thin thinning interval.
-//' @param keep_u whether to store the augmented inefficiency draws.
+//' @param u_thin 0 not to store the augmented inefficiency draws, otherwise
+//'   the interval at which the retained draws are stored.
 //' @param verbose how often to report progress; 0 for no reporting.
 //'
 //' @return A named list of draw matrices.
@@ -93,12 +94,16 @@ Rcpp::List gibbs_sf(const arma::vec& y,
                     const int ineff,
                     const double s,
                     const int draws, const int burnin, const int thin,
-                    const bool keep_u,
+                    const int u_thin,
                     const int verbose) {
 
   const arma::uword n = y.n_elem;
   const arma::uword k = X.n_cols;
   const int n_keep = draws / thin;
+  // The augmented terms are one column per unit and per retained draw, which
+  // is the largest thing the sampler produces. They carry a thinning interval
+  // of their own so that a long chain need not store every one of them.
+  const int n_keep_u = (u_thin > 0) ? n_keep / u_thin : 0;
 
   // Quantities that do not change across iterations.
   const arma::mat XtX = X.t() * X;
@@ -120,10 +125,11 @@ Rcpp::List gibbs_sf(const arma::vec& y,
   arma::mat beta_store(k, n_keep, arma::fill::zeros);
   arma::vec sigma_v_store(n_keep, arma::fill::zeros);
   arma::vec par_u_store(n_keep, arma::fill::zeros);
-  arma::mat u_store(keep_u ? n_units : 0, keep_u ? n_keep : 0, arma::fill::zeros);
+  arma::mat u_store(n_keep_u > 0 ? n_units : 0, n_keep_u, arma::fill::zeros);
 
   const int n_iter = burnin + draws;
   int store = 0;
+  int store_u = 0;
 
   for (int iter = 0; iter < n_iter; iter++) {
 
@@ -182,8 +188,9 @@ Rcpp::List gibbs_sf(const arma::vec& y,
       beta_store.col(store) = beta;
       sigma_v_store(store) = std::sqrt(sigma_v2);
       par_u_store(store) = (ineff == 0) ? std::sqrt(sigma_u2) : lambda;
-      if (keep_u) {
-        u_store.col(store) = u;
+      if (n_keep_u > 0 && ((store + 1) % u_thin == 0) && store_u < n_keep_u) {
+        u_store.col(store_u) = u;
+        store_u++;
       }
       store++;
     }
@@ -200,5 +207,5 @@ Rcpp::List gibbs_sf(const arma::vec& y,
     Rcpp::Named("beta") = beta_store.t(),
     Rcpp::Named("sigma_v") = sigma_v_store,
     Rcpp::Named("par_u") = par_u_store,
-    Rcpp::Named("u") = keep_u ? Rcpp::wrap(u_store.t()) : R_NilValue);
+    Rcpp::Named("u") = n_keep_u > 0 ? Rcpp::wrap(u_store.t()) : R_NilValue);
 }

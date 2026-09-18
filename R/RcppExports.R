@@ -29,14 +29,15 @@
 #' @param draws number of retained iterations before thinning.
 #' @param burnin number of discarded iterations.
 #' @param thin thinning interval.
-#' @param keep_u whether to store the augmented inefficiency draws.
+#' @param u_thin 0 not to store the augmented inefficiency draws, otherwise
+#'   the interval at which the retained draws are stored.
 #' @param verbose how often to report progress; 0 for no reporting.
 #'
 #' @return A named list of draw matrices.
 #'
 #' @keywords internal
-gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose) {
-    .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose)
+gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
+    .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
 }
 
 #' Gibbs sampler for the four-component stochastic frontier model
@@ -76,13 +77,14 @@ gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, s
 #' @param draws number of retained iterations before thinning.
 #' @param burnin number of discarded iterations.
 #' @param thin thinning interval.
-#' @param keep_u whether to store the augmented terms.
+#' @param u_thin 0 not to store the augmented terms, otherwise the interval at
+#'   which the retained draws are stored.
 #' @param verbose how often to report progress; 0 for no reporting.
 #'
 #' @return A named list of draw matrices.
 #'
 #' @keywords internal
-gibbs_sf4 <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose) {
-    .Call(`_bsfa_gibbs_sf4`, y, X, g, n_units, b0, B0i, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose)
+gibbs_sf4 <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
+    .Call(`_bsfa_gibbs_sf4`, y, X, g, n_units, b0, B0i, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
 }
 

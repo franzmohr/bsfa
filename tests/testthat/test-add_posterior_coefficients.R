@@ -309,3 +309,59 @@ test_that("the iteration index names the sweeps the draws came from", {
   expect_equal(as.numeric(tail(as.matrix(est$posterior$beta$coeffs), 1)),
                as.numeric(tail(as.matrix(full$posterior$beta$coeffs), 1)))
 })
+
+test_that("keep_u takes a thinning interval for the augmented draws", {
+  set.seed(65)
+  d <- sim_sf(n = 40, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  fit <- function(keep_u) {
+    add_posterior_coefficients(add_seed(add_priors(
+      create_sfmodel_exp(y ~ x1, data = d, iterations = 200,
+                         burnin = 100)), 8080), keep_u = keep_u)
+  }
+
+  full <- fit(TRUE)
+  thinned <- fit(4)
+
+  expect_equal(nrow(as.matrix(full$posterior$u$coeffs)), 200L)
+  expect_equal(nrow(as.matrix(thinned$posterior$u$coeffs)), 50L)
+
+  # The scalar blocks are untouched by it, and the draws that are kept are the
+  # very draws the unthinned run kept.
+  expect_equal(nrow(as.matrix(thinned$posterior$beta$coeffs)), 200L)
+  expect_equal(as.matrix(thinned$posterior$u$coeffs),
+               as.matrix(full$posterior$u$coeffs)[seq(4, 200, by = 4), ])
+
+  # Their iteration index counts in the two intervals multiplied.
+  expect_equal(as.numeric(stats::time(thinned$posterior$u$coeffs)),
+               seq(104, 300, by = 4))
+  expect_equal(coda::thin(thinned$posterior$u$coeffs), 4)
+
+  expect_equal(efficiency(thinned)$unit, efficiency(full)$unit)
+  expect_null(fit(FALSE)$posterior$u)
+})
+
+test_that("keep_u is validated", {
+  d <- sim_sf(n = 40, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d, iterations = 20,
+                                     burnin = 5))
+
+  # NA used to be taken for TRUE, since Rcpp reads NA_LOGICAL as true.
+  for (bad in list(NA, -1, 1.5, "yes", c(TRUE, FALSE))) {
+    expect_error(add_posterior_coefficients(m, keep_u = bad), "'keep_u'")
+  }
+})
+
+test_that("the four-component model thins all three augmented blocks", {
+  set.seed(66)
+  d <- sim_sf4(n = 15, n_time = 4, beta = c(1, 0.5))
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel4_exp(y ~ x1, data = d, id = "id", iterations = 200,
+                        burnin = 100)), keep_u = 5)
+
+  for (b in c("mu", "eta", "u")) {
+    expect_equal(nrow(as.matrix(est$posterior[[b]]$coeffs)), 40L)
+  }
+  expect_equal(nrow(as.matrix(est$posterior$beta$coeffs)), 200L)
+  expect_equal(nrow(efficiency(est, "transient")), 60L)
+  expect_equal(nrow(efficiency(est, "persistent")), 15L)
+})

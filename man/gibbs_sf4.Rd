@@ -32,7 +32,7 @@ gibbs_sf4(
   draws,
   burnin,
   thin,
-  keep_u,
+  u_thin,
   verbose
 )
 }
@@ -95,7 +95,8 @@ parameter.}
 
 \item{thin}{thinning interval.}
 
-\item{keep_u}{whether to store the augmented terms.}
+\item{u_thin}{0 not to store the augmented terms, otherwise the interval at
+which the retained draws are stored.}
 
 \item{verbose}{how often to report progress; 0 for no reporting.}
 }

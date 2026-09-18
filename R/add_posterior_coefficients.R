@@ -36,9 +36,12 @@
 #'   argument \code{object}. If \code{NULL}, the package's own sampler is used.
 #'   It is called as \code{posterior_function(object)} and must return the
 #'   object with its \code{posterior} element added.
-#' @param keep_u whether to store the inefficiency draws. Required by
-#'   \code{\link{efficiency}}, but note that the stored object grows with the
-#'   number of units times the number of retained draws.
+#' @param keep_u whether to store the inefficiency draws, which
+#'   \code{\link{efficiency}} needs. The block is one column per unit and one
+#'   row per retained draw, so it can be the largest part of the returned
+#'   object. A positive whole number stores every that-many-th retained draw
+#'   instead, which divides the storage by it and still leaves genuine
+#'   posterior draws to summarise.
 #' @param verbose either \code{FALSE}, \code{TRUE} for progress at every ten
 #'   per cent of iterations, or an integer reporting interval.
 #' @param ... further arguments passed to or from other methods.
@@ -138,6 +141,10 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
   verbose_int <- if (isTRUE(verbose)) max(1L, floor(n_iter / 10)) else
     if (isFALSE(verbose)) 0L else as.integer(verbose)
 
+  u_thin <- augmented_thin(keep_u)
+  n_keep_u <- if (u_thin > 0) (object$iterations / object$thin) %/% u_thin else 0
+  warn_augmented_size(object$data$n_units, n_keep_u)
+
   out <- .with_model_seed(
     object$model$seed,
     gibbs_sf(y = object$data$y,
@@ -159,7 +166,7 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
              draws = as.integer(object$iterations),
              burnin = as.integer(object$burnin),
              thin = as.integer(object$thin),
-             keep_u = keep_u,
+             u_thin = u_thin,
              verbose = verbose_int))
 
   colnames(out$beta) <- colnames(object$data$X)
@@ -177,7 +184,7 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
 
   if (!is.null(out$u)) {
     colnames(out$u) <- object$data$unit_labels
-    posterior$u <- list(coeffs = .mcmc_draws(object, out$u))
+    posterior$u <- list(coeffs = mcmc_augmented(object, out$u, u_thin))
   }
 
   object$posterior <- posterior
