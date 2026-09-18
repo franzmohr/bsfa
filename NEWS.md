@@ -35,6 +35,11 @@ First release.
 
 * `summary()`, `plot()` and `efficiency()` report the results. `plot()` takes a
   `type` of `"hist"`, `"trace"`, `"boxplot"` or `"efficiency"`.
+* The summary table ends in `ESS`, the effective sample size of each block.
+  The draws are autocorrelated, and in the four-component model severely so,
+  where the unit effect and persistent inefficiency trade off against each
+  other from sweep to sweep; a credible band is worth reading only against the
+  number of independent draws behind it.
 * `efficiency()` summarises the posterior distribution of the scores rather
   than a point predictor of them, which is what sampling the inefficiency term
   as a latent variable buys. For the four-component model it takes a `type` of

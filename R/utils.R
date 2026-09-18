@@ -357,3 +357,33 @@ verbose_interval <- function(verbose, n_iter) {
   }
   as.integer(verbose)
 }
+
+#' Effective sample size of a matrix of draws
+#'
+#' A thin guard around \code{\link[coda]{effectiveSize}}. The draws a sampler
+#' returns are autocorrelated, so the number of them overstates how much the
+#' posterior summaries are worth: a chain whose effective size is a hundredth
+#' of its length carries a Monte Carlo error ten times what an independent
+#' sample of the same length would. That ratio is not visible in the summaries
+#' themselves, which is why it is reported beside them.
+#'
+#' A posterior supplied through \code{posterior_function} need not be long
+#' enough, or varied enough, for the estimate to exist, so a failure is
+#' reported as \code{NA} rather than allowed to stop the summary.
+#'
+#' @param draws a matrix of draws, one row per draw.
+#'
+#' @return A numeric vector with one entry per column of \code{draws}.
+#'
+#' @keywords internal
+sf_ess <- function(draws) {
+
+  nms <- colnames(draws)
+  if (NROW(draws) < 3L) {
+    return(stats::setNames(rep(NA_real_, NCOL(draws)), nms))
+  }
+
+  out <- tryCatch(as.numeric(coda::effectiveSize(coda::mcmc(draws))),
+                  error = function(e) rep(NA_real_, NCOL(draws)))
+  stats::setNames(out, nms)
+}

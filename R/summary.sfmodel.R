@@ -15,7 +15,13 @@
 #' @return \code{summary.sfmodel} returns a list of class
 #'   \code{"summary.sfmodel"}, which contains the following components:
 #'   \item{coefficients}{summary statistics of the posterior draws of the
-#'     frontier coefficients and the two error components.}
+#'     frontier coefficients and the two error components, ending in
+#'     \code{ESS}, the effective sample size of each block. It is the number of
+#'     independent draws the chain is worth, so the Monte Carlo error of a
+#'     posterior mean is about its standard deviation divided by the square
+#'     root of it. A value far below the number of draws is the sign that the
+#'     chain needs to be longer, and in the four-component model it usually
+#'     is.}
 #'   \item{efficiency}{summary statistics of the posterior mean efficiency
 #'     across units, or \code{NULL} if the inefficiency draws were not kept.}
 #'   \item{specifications}{a list containing information on the model
@@ -46,9 +52,14 @@ summary.sfmodel <- function(object, ci = 0.95, ...) {
                     "median",
                     paste0(format(100 * probs[3], trim = TRUE), "%"))
 
+  # The effective sample size sits beside the band it qualifies. The draws are
+  # autocorrelated, and in the four-component model severely so, where the unit
+  # effect and persistent inefficiency trade off against each other from sweep
+  # to sweep; without this the summary gives no sign of it.
   tab <- cbind(mean = colMeans(pars),
                sd = apply(pars, 2, stats::sd),
-               qs)
+               qs,
+               ESS = sf_ess(pars))
 
   # For a four-component model the efficiency method returns the overall score,
   # which is the one a two-component model would report; the split between the
@@ -100,7 +111,12 @@ print.summary.sfmodel <- function(x, digits = 4, ...) {
 
   cat("\nPosterior summary, ", format(100 * spec$ci), "% credible bands:\n",
       sep = "")
-  print(round(x$coefficients, digits))
+  # Printed as a data frame so that the effective sample size, which is a count
+  # of draws, is not formatted to the same decimals as a standard deviation.
+  stat <- setdiff(colnames(x$coefficients), "ESS")
+  tab <- as.data.frame(round(x$coefficients[, stat, drop = FALSE], digits))
+  tab$ESS <- round(x$coefficients[, "ESS"])
+  print(tab)
 
   if (!is.null(x$efficiency)) {
     cat("\nPosterior mean ", if (four) "overall " else "",

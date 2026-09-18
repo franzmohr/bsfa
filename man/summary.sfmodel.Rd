@@ -28,7 +28,13 @@ a call to \code{\link{summary.sfmodel}}.}
 \code{summary.sfmodel} returns a list of class
   \code{"summary.sfmodel"}, which contains the following components:
   \item{coefficients}{summary statistics of the posterior draws of the
-    frontier coefficients and the two error components.}
+    frontier coefficients and the two error components, ending in
+    \code{ESS}, the effective sample size of each block. It is the number of
+    independent draws the chain is worth, so the Monte Carlo error of a
+    posterior mean is about its standard deviation divided by the square
+    root of it. A value far below the number of draws is the sign that the
+    chain needs to be longer, and in the four-component model it usually
+    is.}
   \item{efficiency}{summary statistics of the posterior mean efficiency
     across units, or \code{NULL} if the inefficiency draws were not kept.}
   \item{specifications}{a list containing information on the model

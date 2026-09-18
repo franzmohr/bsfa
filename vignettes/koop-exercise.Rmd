@@ -144,7 +144,9 @@ long <- add_priors(long,
 long <- add_seed(add_initial_values(long), 14013)
 long <- add_posterior_coefficients(long)
 
-round(summary(long)$coefficients, 4)
+tab <- summary(long)$coefficients
+stat <- setdiff(colnames(tab), "ESS")
+cbind(round(tab[, stat], 4), ESS = round(tab[, "ESS"]))
 ```
 
 Comparing the two against the values used to simulate the data:

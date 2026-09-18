@@ -266,7 +266,7 @@ test_that("summary requires draws and a valid credible band", {
   expect_s3_class(summary(est), "summary.sfmodel")
   expect_error(summary(est, ci = 1.5), "between 0 and 1")
   expect_equal(colnames(summary(est, ci = 0.9)$coefficients),
-               c("mean", "sd", "5%", "median", "95%"))
+               c("mean", "sd", "5%", "median", "95%", "ESS"))
 })
 
 test_that("thinning keeps the last sweep of each block", {
