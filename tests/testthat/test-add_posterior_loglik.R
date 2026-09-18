@@ -98,3 +98,57 @@ test_that("printing reports that the log-likelihood is present", {
   expect_output(print(est), "posterior      simulated")
   expect_output(print(add_posterior_loglik(est)), "with loglik")
 })
+
+test_that("the exponential density survives a large rate", {
+  set.seed(122)
+  d <- sim_sf(n = 40, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- create_sfmodel_exp(y ~ x1, data = d, iterations = 10)
+
+  resid <- function(beta) as.numeric(m$data$y - m$data$X %*% beta)
+
+  exact <- function(e, s, lambda) {
+    log(stats::integrate(
+      function(u) lambda * exp(-lambda * u) * stats::dnorm(e + u, 0, s),
+      0, Inf, rel.tol = .Machine$double.eps^0.75,
+      subdivisions = 4000L)$value)
+  }
+
+  # Written as the sum it is usually printed as, this density adds
+  # lambda^2 sigma^2 / 2 to a log distribution function of the same size and
+  # opposite sign. At lambda = 1e4 that sum has lost nine digits.
+  for (lambda in c(1, 1e2, 1e4)) {
+    got <- bsfa:::sf_loglik_point(m, c(1, 0.5), 0.2, lambda)
+    want <- vapply(resid(c(1, 0.5)), exact, numeric(1),
+                   s = 0.2, lambda = lambda)
+    expect_equal(got, want, tolerance = 1e-10)
+  }
+
+  # Beyond what integration can reach, the density must still be finite and
+  # must approach the normal density, since a large rate means no inefficiency.
+  e <- resid(c(1, 0.5))
+  for (lambda in 10^(5:12)) {
+    got <- bsfa:::sf_loglik_point(m, c(1, 0.5), 0.2, lambda)
+    expect_true(all(is.finite(got)))
+  }
+  expect_equal(bsfa:::sf_loglik_point(m, c(1, 0.5), 0.2, 1e12),
+               stats::dnorm(e, 0, 0.2, log = TRUE), tolerance = 1e-6)
+})
+
+test_that("log_phi_ratio agrees with its definition where both work", {
+  x <- c(-19.9, -15, -5, -1, 0, 1, 5)
+  expect_equal(bsfa:::log_phi_ratio(x),
+               stats::pnorm(x, log.p = TRUE) + x^2 / 2)
+
+  # Across the crossover the two branches must agree. They do so to about
+  # 1e-8, which is the accuracy of pnorm(log.p = TRUE) itself that far out:
+  # log Phi(-20) is about -204, and a relative error of 1e-10 on that is
+  # already 2e-8. The series has no such term.
+  expect_equal(bsfa:::log_phi_ratio(-20.0000001),
+               bsfa:::log_phi_ratio(-19.9999999), tolerance = 1e-7)
+
+  # In the far tail the naive form has lost everything and this one has not:
+  # log Phi(x) + x^2/2 tends to -log(sqrt(2 pi)) - log(-x).
+  x <- -10^(3:6)
+  expect_equal(bsfa:::log_phi_ratio(x),
+               -0.5 * log(2 * pi) - log(-x), tolerance = 1e-5)
+})

@@ -16,15 +16,22 @@ S3method(add_priors,sfmodel4_hn)
 S3method(add_priors,sfmodel_exp)
 S3method(add_priors,sfmodel_hn)
 S3method(add_seed,sfmodel)
+S3method(coef,sfmodel)
 S3method(efficiency,sfmodel)
 S3method(efficiency,sfmodel4)
+S3method(fitted,sfmodel)
+S3method(logLik,sfmodel)
+S3method(nobs,sfmodel)
 S3method(plot,sfmodel)
+S3method(predict,sfmodel)
 S3method(print,selcrit)
 S3method(print,sfmodel)
 S3method(print,summary.sfmodel)
+S3method(residuals,sfmodel)
 S3method(selection_criteria,sfmodel)
 S3method(selection_criteria,sfmodel4)
 S3method(summary,sfmodel)
+S3method(vcov,sfmodel)
 export(add_initial_values)
 export(add_posterior_coefficients)
 export(add_posterior_loglik)
@@ -46,5 +53,14 @@ importFrom(graphics,
   par,
   points,
   segments
+)
+importFrom(stats,
+  coef,
+  fitted,
+  logLik,
+  nobs,
+  predict,
+  residuals,
+  vcov
 )
 useDynLib(bsfa, .registration = TRUE)

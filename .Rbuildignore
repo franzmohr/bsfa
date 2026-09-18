@@ -6,3 +6,6 @@
 ^doc$
 ^Meta$
 ^analysis$
+^\.zenodo\.json$
+^CITATION\.cff$
+^README\.html$

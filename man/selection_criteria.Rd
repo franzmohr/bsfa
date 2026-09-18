@@ -21,8 +21,8 @@ selection_criteria(object, ...)
 credible band. Defaults to 0.95.}
 }
 \value{
-A list of class \code{"selcrit"}, which also inherits the class of
-  the model, with the element \code{model} and one data frame per criterion.
+A list of class \code{"selcrit"}, with the element \code{model} and
+  one data frame per criterion.
   Each has the columns \code{mean}, \code{median}, \code{qlower} and
   \code{qupper}, where bands that do not apply are \code{NA}.
 }

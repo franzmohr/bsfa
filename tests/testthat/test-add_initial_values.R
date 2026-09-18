@@ -157,3 +157,19 @@ test_that("prior draws of the coefficients match the prior they came from", {
   expect_equal(colMeans(b), c(3, -1), tolerance = 0.05)
   expect_equal(cov(b), solve(v_i), tolerance = 0.05)
 })
+
+test_that("a prior no draw can come from is reported rather than retried", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+
+  # A shape this small puts essentially all of the inverse gamma's mass beyond
+  # the range of a double, so redrawing cannot rescue it and saying so is the
+  # only useful outcome.
+  hopeless <- add_priors(create_sfmodel_exp(y ~ x1, data = d),
+                         sigma = list(shape = 1e-8, rate = 1e-8))
+  expect_error(add_initial_values(hopeless, method = "prior"),
+               "too vague to start a chain from")
+  expect_error(add_initial_values(hopeless, method = "prior"), "sigma_v2")
+
+  # Least squares does not consult the prior and still works.
+  expect_silent(add_initial_values(hopeless))
+})

@@ -1,7 +1,7 @@
 Package: bsfa
 Type: Package
 Title: Bayesian Stochastic Frontier Analysis
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: person(given = c("Franz", "X."),
                   family = "Mohr",
                   email = "franz.x.mohr@outlook.com",
@@ -12,11 +12,12 @@ Description: Markov chain Monte Carlo methods for the Bayesian estimation of
     provided for composed-error frontier models in the tradition of
     van den Broeck, Koop, Osiewalski and Steel (1994), covering exponential
     and half-normal inefficiency, production and cost frontiers, and
-    cross-sectional as well as time-invariant panel specifications. A model is
-    built up step by step, by creating a model object and then adding priors,
-    initial values and a seed to it before the posterior is drawn. Posterior
-    distributions of unit-specific efficiency scores are obtained directly
-    from the augmented draws rather than from point predictors.
+    cross-sectional, time-invariant panel and four-component panel
+    specifications. A model is built up step by step, by creating a model
+    object and then adding priors, initial values and a seed to it before the
+    posterior is drawn. Posterior distributions of unit-specific efficiency
+    scores are obtained directly from the augmented draws rather than from
+    point predictors.
 License: GPL (>= 2)
 Encoding: UTF-8
 Depends: R (>= 3.5.0)

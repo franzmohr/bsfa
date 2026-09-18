@@ -245,6 +245,17 @@ van den Broeck, J., Koop, G., Osiewalski, J., & Steel, M. F. J. (1994).
 Stochastic frontier models: A Bayesian perspective. *Journal of Econometrics*,
 61(2), 273–303.
 
+## Citation
+
+```r
+citation("bsfa")
+```
+
+Released versions are archived on Zenodo, which mints a DOI for each release
+and a concept DOI that always resolves to the latest one. Please cite the
+software alongside van den Broeck, Koop, Osiewalski and Steel (1994), whose
+sampler it follows.
+
 ## License
 
 GPL (>= 2)

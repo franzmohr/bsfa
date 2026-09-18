@@ -1,0 +1,44 @@
+{
+  "title": "bsfa: Bayesian Stochastic Frontier Analysis",
+  "description": "<p>An R package providing Markov chain Monte Carlo methods for the Bayesian estimation of stochastic frontier models.</p><p>Gibbs samplers with data augmentation are provided for composed-error frontier models in the tradition of van den Broeck, Koop, Osiewalski and Steel (1994), covering exponential and half-normal inefficiency, production and cost frontiers, and cross-sectional, time-invariant panel and four-component panel specifications. A model is built up step by step, by creating a model object and then adding priors, initial values and a seed to it before the posterior is drawn.</p><p>Because the one-sided inefficiency term is sampled as a latent variable rather than integrated out, posterior distributions of unit-specific efficiency scores are obtained directly from the augmented draws rather than from point predictors such as the Jondrow et al. (1982) conditional mean.</p>",
+  "upload_type": "software",
+  "license": "GPL-2.0-or-later",
+  "version": "0.1.0",
+  "language": "eng",
+  "creators": [
+    {
+      "name": "Mohr, Franz X.",
+      "orcid": "0009-0003-8890-7781"
+    }
+  ],
+  "keywords": [
+    "stochastic frontier analysis",
+    "Bayesian econometrics",
+    "Markov chain Monte Carlo",
+    "Gibbs sampling",
+    "data augmentation",
+    "technical efficiency",
+    "productivity analysis",
+    "R"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/franzmohr/bsfa",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://franzmohr.github.io/bsfa/",
+      "relation": "isDocumentedBy",
+      "resource_type": "publication-softwaredocumentation",
+      "scheme": "url"
+    },
+    {
+      "identifier": "10.1016/0304-4076(94)90087-6",
+      "relation": "cites",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    }
+  ]
+}

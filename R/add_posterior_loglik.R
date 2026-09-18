@@ -118,8 +118,15 @@ sf_loglik_point <- function(object, beta, sigma_v, par_u) {
   s <- if (object$model$type == "production") -1 else 1
 
   if (object$model$ineff == "exponential") {
-    log(par_u) - s * par_u * e + 0.5 * par_u^2 * sigma_v^2 +
-      stats::pnorm(s * e / sigma_v - par_u * sigma_v, log.p = TRUE)
+    # Written out, this density adds lambda^2 sigma_v^2 / 2 to a log
+    # distribution function of about the same size and opposite sign, and the
+    # two cancel: at lambda = 10^4 the sum has already lost nine digits, and by
+    # 10^9 it returns powers of two. Cancelling them by hand leaves
+    #   log(lambda) - e^2 / (2 sigma_v^2) + M(s e / sigma_v - lambda sigma_v),
+    # with M the function of log_phi_ratio(), which is the same expression
+    # evaluated where nothing large is subtracted from anything large.
+    z <- s * e / sigma_v
+    log(par_u) - 0.5 * z^2 + log_phi_ratio(z - par_u * sigma_v)
   } else {
     sig <- sqrt(par_u^2 + sigma_v^2)
     lam <- par_u / sigma_v

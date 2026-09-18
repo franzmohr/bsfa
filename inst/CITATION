@@ -1,0 +1,20 @@
+citHeader("To cite bsfa in publications, please use:")
+
+# A concept DOI is minted by Zenodo on the first deposit and resolves to the
+# most recent version. Add it here, and to the doi field of CITATION.cff, once
+# the first release has been archived.
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "{bsfa}: Bayesian Stochastic Frontier Analysis",
+  author   = person(given = c("Franz", "X."), family = "Mohr"),
+  year     = "2026",
+  note     = "R package version 0.1.0",
+  url      = "https://github.com/franzmohr/bsfa"
+)
+
+citFooter(
+  "The sampler follows van den Broeck, Koop, Osiewalski and Steel (1994),",
+  "Stochastic frontier models: A Bayesian perspective, Journal of",
+  "Econometrics 61(2), 273-303, which is worth citing alongside the software."
+)

@@ -22,4 +22,8 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom graphics boxplot hist par points segments
 #' @importFrom grDevices grey
+#' The generics below are imported rather than merely called, because a
+#' namespace registering an S3 method for one of them has to be able to find it
+#' when it loads with only base attached.
+#' @importFrom stats coef fitted logLik nobs predict residuals vcov
 NULL

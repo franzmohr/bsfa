@@ -139,8 +139,7 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
   }
 
   n_iter <- object$burnin + object$iterations
-  verbose_int <- if (isTRUE(verbose)) max(1L, floor(n_iter / 10)) else
-    if (isFALSE(verbose)) 0L else as.integer(verbose)
+  verbose_int <- verbose_interval(verbose, n_iter)
 
   n_keep <- object$iterations / object$thin
   u_thin <- augmented_thin(keep_u, n_keep)

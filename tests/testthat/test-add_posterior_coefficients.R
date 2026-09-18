@@ -423,3 +423,16 @@ test_that("the size of the augmented draws is warned about in advance", {
   expect_silent(warn_augmented_size(100, 1000))
   expect_silent(warn_augmented_size(0, 0))
 })
+
+test_that("verbose is validated", {
+  d <- sim_sf(n = 40, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d, iterations = 20,
+                                     burnin = 2))
+
+  # "yes" used to become NA_integer_ and quietly disable reporting; 2.7 was
+  # truncated to 2 without a word.
+  for (bad in list(NA, -1, 1.5, "yes", c(TRUE, FALSE))) {
+    expect_error(add_posterior_coefficients(m, verbose = bad), "'verbose'")
+  }
+  expect_silent(add_posterior_coefficients(m, verbose = 0))
+})

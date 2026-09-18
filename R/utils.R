@@ -295,3 +295,65 @@ draw_finite <- function(draw, what) {
        "method = \"ols\", or give it a shape and rate that put some mass on ",
        "values a variance could take.")
 }
+
+#' Log of the standard normal distribution function, plus half its argument
+#' squared
+#'
+#' The quantity \eqn{\log \Phi(x) + x^2/2}. It is what the exponential
+#' composed-error density reduces to once the terms that cancel are cancelled
+#' by hand, and it has to be computed as one thing rather than as the sum it is
+#' written as: in the left tail \eqn{\log \Phi(x)} is close to \eqn{-x^2/2}, so
+#' forming the two separately and adding them loses about \eqn{x^2/2} times the
+#' machine epsilon. At \eqn{x = -10^4} that is already \eqn{10^{-8}}, and by
+#' \eqn{x = -10^6} nothing of the answer survives.
+#'
+#' Far enough into the tail the asymptotic expansion of the Mills ratio is used
+#' instead, in which the cancelling part never appears. Its next omitted term
+#' is \eqn{10395/x^{12}}, which at the crossover is of the order of
+#' \eqn{10^{-12}}.
+#'
+#' @param x a numeric vector.
+#'
+#' @return A numeric vector of the same length.
+#'
+#' @keywords internal
+log_phi_ratio <- function(x) {
+
+  out <- numeric(length(x))
+  tail <- !is.na(x) & x < -20
+
+  if (any(!tail)) {
+    out[!tail] <- stats::pnorm(x[!tail], log.p = TRUE) + x[!tail]^2 / 2
+  }
+  if (any(tail)) {
+    w <- 1 / x[tail]^2
+    out[tail] <- -0.5 * log(2 * pi) - log(-x[tail]) +
+      log1p(w * (-1 + w * (3 + w * (-15 + w * (105 + w * -945)))))
+  }
+  out
+}
+
+#' Resolve the verbose argument to a reporting interval
+#'
+#' @param verbose \code{TRUE}, \code{FALSE}, or a non-negative whole number.
+#' @param n_iter the number of iterations the sampler will run.
+#'
+#' @return The interval in iterations, \code{0L} for no reporting.
+#'
+#' @keywords internal
+verbose_interval <- function(verbose, n_iter) {
+
+  if (is.logical(verbose)) {
+    if (length(verbose) != 1L || is.na(verbose)) {
+      stop("'verbose' must be TRUE, FALSE or a non-negative whole number.")
+    }
+    return(if (verbose) max(1L, as.integer(floor(n_iter / 10))) else 0L)
+  }
+
+  if (length(verbose) != 1L || !is.numeric(verbose) || !is.finite(verbose) ||
+      verbose != trunc(verbose) || verbose < 0 ||
+      verbose > .Machine$integer.max) {
+    stop("'verbose' must be TRUE, FALSE or a non-negative whole number.")
+  }
+  as.integer(verbose)
+}

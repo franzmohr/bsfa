@@ -52,8 +52,8 @@
 #' condition under which the pointwise log-likelihood exists; see
 #' \code{\link{add_posterior_loglik}}.
 #'
-#' @return A list of class \code{"selcrit"}, which also inherits the class of
-#'   the model, with the element \code{model} and one data frame per criterion.
+#' @return A list of class \code{"selcrit"}, with the element \code{model} and
+#'   one data frame per criterion.
 #'   Each has the columns \code{mean}, \code{median}, \code{qlower} and
 #'   \code{qupper}, where bands that do not apply are \code{NA}.
 #'
@@ -148,7 +148,7 @@ selection_criteria.sfmodel <- function(object, ci = 0.95, ...) {
          BIC = point(deviance + log(tt) * kappa),
          HQ = point(deviance + 2 * log(log(tt)) * kappa),
          WAIC = point(waic, waic_band[1], waic_band[2])),
-    class = c("selcrit", class(object)))
+    class = "selcrit")
 }
 
 #' @export

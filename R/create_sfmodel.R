@@ -208,6 +208,10 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
                       "sigma_u"),
        formula = formula,
        terms = mt,
+       # Kept so that predict() codes a factor in newdata against the levels
+       # the model was fitted with rather than against whatever happens to
+       # appear in the new data.
+       xlevels = stats::.getXlevels(mt, mf),
        na.action = dropped,
        n = n,
        k = k,

@@ -1,0 +1,55 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite both the software itself and the
+  article that the sampler follows.
+type: software
+title: "bsfa: Bayesian Stochastic Frontier Analysis"
+abstract: >-
+  Markov chain Monte Carlo methods for the Bayesian estimation of stochastic
+  frontier models. Gibbs samplers with data augmentation are provided for
+  composed-error frontier models in the tradition of van den Broeck, Koop,
+  Osiewalski and Steel (1994), covering exponential and half-normal
+  inefficiency, production and cost frontiers, and cross-sectional,
+  time-invariant panel and four-component panel specifications. Because the
+  one-sided inefficiency term is sampled as a latent variable rather than
+  integrated out, posterior distributions of unit-specific efficiency scores
+  are obtained directly from the augmented draws rather than from point
+  predictors.
+version: 0.1.0
+date-released: "2026-09-18"
+license: GPL-2.0-or-later
+repository-code: "https://github.com/franzmohr/bsfa"
+url: "https://franzmohr.github.io/bsfa/"
+authors:
+  - family-names: Mohr
+    given-names: "Franz X."
+    email: franz.x.mohr@outlook.com
+    orcid: "https://orcid.org/0009-0003-8890-7781"
+keywords:
+  - stochastic frontier analysis
+  - Bayesian econometrics
+  - Markov chain Monte Carlo
+  - Gibbs sampling
+  - data augmentation
+  - technical efficiency
+  - productivity analysis
+  - R
+references:
+  - type: article
+    title: "Stochastic frontier models: A Bayesian perspective"
+    authors:
+      - family-names: "van den Broeck"
+        given-names: Julien
+      - family-names: Koop
+        given-names: Gary
+      - family-names: Osiewalski
+        given-names: Jacek
+      - family-names: Steel
+        given-names: "Mark F. J."
+    journal: "Journal of Econometrics"
+    year: 1994
+    volume: 61
+    issue: 2
+    start: 273
+    end: 303
+    doi: "10.1016/0304-4076(94)90087-6"

@@ -10,7 +10,10 @@ test_that("criteria are returned in the documented shape", {
   crit <- selection_criteria(fitted_model())
 
   expect_s3_class(crit, "selcrit")
-  expect_s3_class(crit, "sfmodel_exp")
+  # It used to inherit the model's class as well, which bought nothing and sent
+  # summary(), plot() and efficiency() to methods that then complained about
+  # missing posterior draws.
+  expect_equal(class(crit), "selcrit")
   expect_named(crit, c("model", "LL", "AIC", "BIC", "HQ", "WAIC"))
 
   for (nm in c("LL", "AIC", "BIC", "HQ", "WAIC")) {
@@ -86,7 +89,10 @@ test_that("the log-sum-exp is stable where the naive version overflows", {
 test_that("the criteria work for the half-normal model too", {
   crit <- selection_criteria(fitted_model(ineff = "halfnormal"))
 
-  expect_s3_class(crit, "sfmodel_hn")
+  expect_s3_class(crit, "selcrit")
+  # Which model it came from is recorded in the object rather than in its
+  # class, so that it does not answer to the model's own methods.
+  expect_equal(crit$model$ineff, "halfnormal")
   expect_true(is.finite(crit$AIC$mean))
   expect_true(is.finite(crit$WAIC$mean))
 })

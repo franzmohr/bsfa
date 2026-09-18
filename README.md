@@ -78,15 +78,15 @@ summary(model)
 #> 
 #> Posterior summary, 95% credible bands:
 #>               mean     sd   2.5% median  97.5%
-#> (Intercept) 1.0460 0.0210 1.0041 1.0467 1.0861
-#> x1          0.5087 0.0128 0.4826 0.5087 0.5340
-#> x2          0.2889 0.0136 0.2616 0.2888 0.3165
-#> sigma_v     0.1876 0.0148 0.1613 0.1867 0.2186
-#> lambda      3.3359 0.2644 2.8624 3.3156 3.8956
+#> (Intercept) 1.0443 0.0200 1.0050 1.0442 1.0823
+#> x1          0.5082 0.0125 0.4833 0.5083 0.5326
+#> x2          0.2883 0.0135 0.2615 0.2883 0.3141
+#> sigma_v     0.1890 0.0140 0.1634 0.1884 0.2188
+#> lambda      3.3527 0.2564 2.8989 3.3388 3.8862
 #> 
 #> Posterior mean efficiency, per observation:
 #>   mean    min median    max 
-#> 0.7681 0.1995 0.8229 0.9549
+#> 0.7691 0.2007 0.8256 0.9556
 ```
 
 The data were simulated with $\beta = (1, 0.5, 0.3)$, $\sigma_v = 0.2$
@@ -119,11 +119,11 @@ selection_criteria(model)
 #> Inefficiency: exponential
 #> 
 #>           mean    median    qlower    qupper
-#> LL   -145.4157 -145.0797 -149.4518 -143.2591
-#> AIC   295.7543        NA        NA        NA
-#> BIC   316.8274        NA        NA        NA
-#> HQ    304.0234        NA        NA        NA
-#> WAIC  296.3049        NA  220.6911  371.9188
+#> LL   -145.3482 -145.0101 -149.3054 -143.2755
+#> AIC   295.7794        NA        NA        NA
+#> BIC   316.8524        NA        NA        NA
+#> HQ    304.0484        NA        NA        NA
+#> WAIC  295.9733        NA  220.4779  371.4686
 ```
 
 ## Model variants are classes
@@ -183,10 +183,10 @@ head(efficiency(m4, type = "persistent"), 3)   # one score per unit
 #> 2    2 0.9356330 0.06169995 0.806458 0.9538089 0.9966346
 #> 3    3 0.7658228 0.17435764 0.448957 0.7971668 0.9883174
 head(efficiency(m4, type = "transient"), 3)    # one per observation
-#>   unit      mean         sd        5%       50%       95%
-#> 1    1 0.9292819 0.06252166 0.8025554 0.9471838 0.9956866
-#> 2    1 0.9192284 0.06996841 0.7789144 0.9386785 0.9949919
-#> 3    1 0.8638980 0.10265547 0.6657852 0.8824033 0.9908603
+#>   unit obs      mean         sd        5%       50%       95%
+#> 1    1   1 0.9292819 0.06252166 0.8025554 0.9471838 0.9956866
+#> 2    1   2 0.9192284 0.06996841 0.7789144 0.9386785 0.9949919
+#> 3    1   3 0.8638980 0.10265547 0.6657852 0.8824033 0.9908603
 ```
 
 The unit effect enters none of the three scores, which is the point: in
@@ -286,6 +286,17 @@ Robert, C. P. (1995). Simulation of truncated normal variables.
 van den Broeck, J., Koop, G., Osiewalski, J., & Steel, M. F. J. (1994).
 Stochastic frontier models: A Bayesian perspective. *Journal of
 Econometrics*, 61(2), 273–303.
+
+## Citation
+
+``` r
+citation("bsfa")
+```
+
+Released versions are archived on Zenodo, which mints a DOI for each
+release and a concept DOI that always resolves to the latest one. Please
+cite the software alongside van den Broeck, Koop, Osiewalski and Steel
+(1994), whose sampler it follows.
 
 ## License
 
