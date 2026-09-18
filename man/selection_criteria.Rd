@@ -2,10 +2,13 @@
 % Please edit documentation in R/selection_criteria.R
 \name{selection_criteria}
 \alias{selection_criteria}
+\alias{selection_criteria.sfmodel4}
 \alias{selection_criteria.sfmodel}
 \title{Model selection criteria}
 \usage{
 selection_criteria(object, ...)
+
+\method{selection_criteria}{sfmodel4}(object, ...)
 
 \method{selection_criteria}{sfmodel}(object, ci = 0.95, ...)
 }

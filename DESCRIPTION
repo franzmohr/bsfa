@@ -2,10 +2,11 @@ Package: bsfa
 Type: Package
 Title: Bayesian Stochastic Frontier Analysis
 Version: 0.0.0.9000
-Authors@R: person(given = "Franz X.",
+Authors@R: person(given = c("Franz", "X."),
                   family = "Mohr",
-                  email = "franz.x.mohr@gmail.com",
-                  role = c("aut", "cre"))
+                  email = "franz.x.mohr@outlook.com",
+                  role = c("aut", "cre"),
+                  comment = c(ORCID = "0009-0003-8890-7781"))
 Description: Markov chain Monte Carlo methods for the Bayesian estimation of
     stochastic frontier models. Gibbs samplers with data augmentation are
     provided for composed-error frontier models in the tradition of

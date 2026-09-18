@@ -47,11 +47,6 @@ plot.sfmodel <- function(x, type = c("hist", "trace", "boxplot", "efficiency"),
 
   type <- match.arg(type)
 
-  if (is.null(x$posterior$beta$coeffs)) {
-    stop("Object does not contain posterior draws. ",
-         "See ?add_posterior_coefficients.")
-  }
-
   if (type == "efficiency") {
     return(invisible(plot_sf_efficiency(x, ci = ci, units = units, ...)))
   }
@@ -98,13 +93,8 @@ plot.sfmodel <- function(x, type = c("hist", "trace", "boxplot", "efficiency"),
 sf_par_draws <- function(object) {
 
   four <- identical(object$model$components, 4L)
-
-  blocks <- if (four) {
-    c("sigma_v", "sigma_mu", object$model$par_eta_name,
-      object$model$par_u_name)
-  } else {
-    c("sigma_v", object$model$par_u_name)
-  }
+  blocks <- sf_scalar_blocks(object)
+  check_posterior_blocks(object, c("beta", blocks))
 
   out <- as.matrix(object$posterior$beta$coeffs)
   for (b in blocks) {

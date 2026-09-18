@@ -128,5 +128,5 @@ prior_four <- function(object, coef, sigma, sigma_mu, eta, u, r_star) {
                           shape_u = u$shape,
                           rate_u = u$rate,
                           r_star = r_star))
-  object
+  drop_stale_posterior(object)
 }

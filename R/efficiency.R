@@ -43,6 +43,10 @@ efficiency <- function(object, ...) {
 #' @export
 efficiency.sfmodel <- function(object, probs = c(0.05, 0.5, 0.95), ...) {
 
+  if (is.null(object$posterior)) {
+    stop("Object does not contain posterior draws. ",
+         "See ?add_posterior_coefficients.")
+  }
   if (is.null(object$posterior$u$coeffs)) {
     stop("No inefficiency draws stored. Re-run add_posterior_coefficients() ",
          "with keep_u = TRUE.")

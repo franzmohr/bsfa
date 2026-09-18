@@ -68,6 +68,62 @@ test_that("specification errors are caught early", {
                "as many coefficients as observations")
 })
 
+test_that("the identifier survives dropped rows and non-integer rownames", {
+  # Aligning the identifier from rownames() used to coerce them to integers,
+  # which silently produced NA units and collapsed the panel into one whenever
+  # the rownames were not the default integers and a row had been dropped.
+  d <- sim_sf(n = 20, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4, n_time = 3)
+  d$x1[3] <- NA
+  rownames(d) <- paste0("b", seq_len(nrow(d)))
+
+  by_name <- create_sfmodel_exp(y ~ x1, data = d, id = "id")
+  by_value <- create_sfmodel_exp(y ~ x1, data = d, id = d$id)
+
+  for (m in list(by_name, by_value)) {
+    expect_equal(m$n, 59L)
+    expect_equal(m$data$n_units, 20L)
+    expect_false(anyNA(m$data$g))
+    expect_length(m$data$unit_labels, 20L)
+  }
+  expect_equal(by_name$data$g, by_value$data$g)
+})
+
+test_that("character identifiers are kept as labels", {
+  d <- sim_sf(n = 10, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4, n_time = 3)
+  d$id <- paste0("bank_", d$id)
+
+  m <- create_sfmodel_exp(y ~ x1, data = d, id = "id")
+  expect_equal(m$data$n_units, 10L)
+  expect_true(all(grepl("^bank_", m$data$unit_labels)))
+})
+
+test_that("an observation whose unit is unknown is dropped", {
+  d <- sim_sf(n = 20, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4, n_time = 3)
+  d$id[1:3] <- NA
+
+  m <- create_sfmodel_exp(y ~ x1, data = d, id = "id")
+  expect_equal(m$n, 57L)
+  expect_equal(m$data$n_units, 19L)
+  expect_false(anyNA(m$data$g))
+})
+
+test_that("the identifier does not enter the design matrix", {
+  d <- sim_sf(n = 10, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4, n_time = 2)
+  m <- create_sfmodel_exp(y ~ x1, data = d, id = "id")
+
+  expect_equal(colnames(m$data$X), c("(Intercept)", "x1"))
+  expect_equal(ncol(m$data$X), 2L)
+})
+
+test_that("a mismatched identifier is rejected rather than recycled", {
+  d <- sim_sf(n = 10, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4, n_time = 2)
+
+  expect_error(create_sfmodel_exp(y ~ x1, data = d, id = 1:5),
+               "one element per row")
+  expect_error(create_sfmodel_exp(y ~ x1, data = d[0, ], id = integer(0)),
+               "No complete observations remain")
+})
+
 test_that("printing reports which blocks have been set", {
   d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
   m <- create_sfmodel_exp(y ~ x1, data = d)

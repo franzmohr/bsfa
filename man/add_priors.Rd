@@ -64,6 +64,12 @@ The inefficiency term is hard to elicit directly, so its prior is anchored on
 to be exceeded as not, a priori. How that anchor maps into a prior differs
 between the two models, which is why there is one method per class.
 
+Because \code{r_star} is an efficiency, it fixes the scale of \eqn{u} in the
+units of the response. This is only meaningful if the response is on a
+logarithmic scale, where \eqn{u} is a proportional shortfall. A model fitted
+to output in levels will return efficiency scores that depend on the units
+the output happens to be measured in.
+
 For the exponential model the mapping is exact. Placing a gamma prior of
 shape 1 and rate \eqn{c = -\log(r^*)} on the rate parameter \eqn{\lambda}
 implies the marginal prior density

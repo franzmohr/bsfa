@@ -116,6 +116,24 @@ test_that("criteria need a log-likelihood and a valid band", {
                "between 0 and 1")
 })
 
+test_that("models that can never have criteria say so", {
+  # Pointing the user at add_posterior_loglik() is unhelpful when that function
+  # will refuse them too, so each case explains why rather than redirecting.
+  set.seed(60)
+  d4 <- sim_sf4(n = 30, n_time = 4, beta = c(1, 0.5))
+  m4 <- add_posterior_coefficients(add_priors(
+    create_sfmodel4_exp(y ~ x1, data = d4, id = "id",
+                        iterations = 100, burnin = 50)))
+  expect_error(selection_criteria(m4), "not available for the four-component")
+  expect_error(selection_criteria(m4), "does not factorise")
+
+  d2 <- sim_sf(n = 40, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4, n_time = 3)
+  mp <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d2, id = "id",
+                       iterations = 100, burnin = 50)))
+  expect_error(selection_criteria(mp), "panel model cannot have one")
+})
+
 test_that("printing lays the criteria out as a table", {
   crit <- selection_criteria(fitted_model())
   expect_output(print(crit), "WAIC")

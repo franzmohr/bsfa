@@ -70,6 +70,11 @@ for a cost frontier. Its four components are
   \item{\eqn{u_{it} \ge 0}}{transient inefficiency, varying within a unit.}
 }
 
+As in the two-component models, the response is assumed to be on a
+logarithmic scale, which is what makes \eqn{\exp(-\eta_i)} and
+\eqn{\exp(-u_{it})} efficiencies rather than quantities in the units of the
+output. See \code{\link{create_sfmodel_exp}}.
+
 This is the specification of Kumbhakar, Lien and Hjalmarsson (2014), Colombi
 et al. (2014) and Tsionas and Kumbhakar (2014). The reason to prefer it over
 the time-invariant panel model of \code{\link{create_sfmodel_exp}} is that

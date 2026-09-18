@@ -245,7 +245,7 @@ test_that("the log-likelihood and the criteria are refused", {
                         iterations = 100, burnin = 50)))
 
   expect_error(add_posterior_loglik(est), "not available for the four")
-  expect_error(selection_criteria(est), "does not contain draws")
+  expect_error(selection_criteria(est), "not available for the four-component")
 })
 
 test_that("the stored seed fixes the draws", {

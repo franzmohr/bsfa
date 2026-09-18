@@ -30,16 +30,17 @@ Econometrics}, 61(2), 273--303.
 Useful links:
 \itemize{
   \item \url{https://github.com/franzmohr/bsfa}
+  \item \url{https://franzmohr.github.io/bsfa/}
   \item Report bugs at \url{https://github.com/franzmohr/bsfa/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Franz X. Mohr \email{franz.x.mohr@gmail.com}
+\strong{Maintainer}: Franz X. Mohr \email{franz.x.mohr@outlook.com} (\href{https://orcid.org/0009-0003-8890-7781}{ORCID})
 
 Authors:
 \itemize{
-  \item Franz X. Mohr \email{franz.x.mohr@gmail.com}
+  \item Franz X. Mohr \email{franz.x.mohr@outlook.com} (\href{https://orcid.org/0009-0003-8890-7781}{ORCID})
 }
 
 }

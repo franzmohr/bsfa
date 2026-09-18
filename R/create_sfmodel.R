@@ -12,6 +12,15 @@
 #' the inputs \eqn{x_i}, and \eqn{\exp(-u_i)} the efficiency with which unit
 #' \eqn{i} reaches it.
 #'
+#' The response is assumed to be on a logarithmic scale, and the regressors
+#' usually are as well. That is what makes \eqn{\exp(-u_i)} an efficiency:
+#' \eqn{u_i} is then a proportional shortfall, so a unit with \eqn{u_i = 0.1}
+#' produces about ten per cent less than its inputs allow. Fitting output in
+#' levels does not merely change the units of \eqn{u}, it changes the answer,
+#' because the prior on the inefficiency term is expressed in the units of the
+#' response: the same data measured in euros and in millions of euros give
+#' different efficiency scores. See \code{\link{add_priors}}.
+#'
 #' \code{create_sfmodel_exp} assumes \eqn{u \sim Exp(\lambda)} and
 #' \code{create_sfmodel_hn} assumes \eqn{u \sim N^+(0, \sigma_u^2)}. The choice
 #' matters mainly for the prior, since the exponential model admits an exact
@@ -113,7 +122,43 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
     stop("'iterations' must be a multiple of 'thin'.")
   }
 
-  mf <- stats::model.frame(formula, data = data, na.action = stats::na.omit)
+  # The identifier is resolved to a vector here and then handed to
+  # model.frame(), so that na.omit() drops it in step with the response and the
+  # regressors. Aligning it afterwards from rownames() does not work: the
+  # rownames of a data frame need not be integers, and coercing them silently
+  # yields NA units, which collapses the whole panel into one.
+  id_var <- NULL
+  if (!is.null(id)) {
+    if (length(id) == 1L && is.character(id)) {
+      if (!id %in% names(data)) {
+        stop("Variable '", id, "' not found in 'data'.")
+      }
+      id_var <- data[[id]]
+    } else {
+      id_var <- id
+    }
+    if (is.data.frame(data) && length(id_var) != nrow(data)) {
+      stop("'id' must name a variable in 'data' or have one element per row ",
+           "of it; got ", length(id_var), " for ", nrow(data), " rows.")
+    }
+  }
+
+  # Rows are dropped explicitly rather than by na.action, so that the
+  # identifier is filtered by the same logical vector as the model frame. An
+  # observation whose unit is unknown is dropped as well, since it cannot be
+  # assigned an inefficiency term.
+  mf <- stats::model.frame(formula, data = data, na.action = stats::na.pass)
+  keep <- stats::complete.cases(mf)
+  if (!is.null(id_var)) {
+    keep <- keep & !is.na(id_var)
+  }
+  if (!any(keep)) {
+    stop("No complete observations remain after dropping missing values.")
+  }
+  mf <- mf[keep, , drop = FALSE]
+  if (!is.null(id_var)) {
+    id_var <- id_var[keep]
+  }
   mt <- attr(mf, "terms")
   y <- as.numeric(stats::model.response(mf))
   X <- stats::model.matrix(mt, mf)
@@ -125,22 +170,12 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
   }
 
   # Map observations to the units that own the inefficiency terms.
-  if (is.null(id)) {
+  if (is.null(id_var)) {
     g <- seq_len(n)
     unit_labels <- rownames(mf)
     panel <- FALSE
   } else {
-    if (length(id) == 1L && is.character(id)) {
-      if (!id %in% names(data)) {
-        stop("Variable '", id, "' not found in 'data'.")
-      }
-      id <- data[[id]]
-    }
-    if (length(id) != nrow(mf)) {
-      # Align with the rows that survived na.omit.
-      id <- id[as.integer(rownames(mf))]
-    }
-    fid <- factor(id)
+    fid <- factor(id_var)
     g <- as.integer(fid)
     unit_labels <- levels(fid)
     panel <- TRUE

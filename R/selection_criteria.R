@@ -82,11 +82,25 @@ selection_criteria <- function(object, ...) {
 
 #' @rdname selection_criteria
 #' @export
+selection_criteria.sfmodel4 <- function(object, ...) {
+  stop("Selection criteria are not available for the four-component model, ",
+       "because the pointwise log-likelihood they are built from is not. ",
+       "Integrating out the unit effect and the persistent inefficiency term ",
+       "couples the observations of a unit, so the likelihood does not ",
+       "factorise over them. See ?add_posterior_loglik.")
+}
+
+#' @rdname selection_criteria
+#' @export
 selection_criteria.sfmodel <- function(object, ci = 0.95, ...) {
 
   if (is.null(object$posterior$loglik)) {
     stop("Object does not contain draws of the log-likelihood. ",
-         "See ?add_posterior_loglik.")
+         if (object$model$panel)
+           paste("A panel model cannot have one: the units share an",
+                 "inefficiency term, so the likelihood does not factorise",
+                 "over a unit's observations.") else
+           "See ?add_posterior_loglik.")
   }
   if (length(ci) != 1L || ci <= 0 || ci >= 1) {
     stop("'ci' must be a single number strictly between 0 and 1.")

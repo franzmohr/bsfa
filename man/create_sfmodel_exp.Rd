@@ -61,6 +61,15 @@ frontier. The frontier \eqn{x_i'\beta} is the maximum output attainable with
 the inputs \eqn{x_i}, and \eqn{\exp(-u_i)} the efficiency with which unit
 \eqn{i} reaches it.
 
+The response is assumed to be on a logarithmic scale, and the regressors
+usually are as well. That is what makes \eqn{\exp(-u_i)} an efficiency:
+\eqn{u_i} is then a proportional shortfall, so a unit with \eqn{u_i = 0.1}
+produces about ten per cent less than its inputs allow. Fitting output in
+levels does not merely change the units of \eqn{u}, it changes the answer,
+because the prior on the inefficiency term is expressed in the units of the
+response: the same data measured in euros and in millions of euros give
+different efficiency scores. See \code{\link{add_priors}}.
+
 \code{create_sfmodel_exp} assumes \eqn{u \sim Exp(\lambda)} and
 \code{create_sfmodel_hn} assumes \eqn{u \sim N^+(0, \sigma_u^2)}. The choice
 matters mainly for the prior, since the exponential model admits an exact

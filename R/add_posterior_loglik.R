@@ -74,10 +74,8 @@ add_posterior_loglik.sfmodel_hn <- function(object, ...) {
 #' @keywords internal
 loglik_over_draws <- function(object) {
 
-  if (is.null(object$posterior$beta$coeffs)) {
-    stop("Object does not contain posterior draws in posterior$beta. ",
-         "See ?add_posterior_coefficients.")
-  }
+  check_posterior_blocks(object, c("beta", sf_scalar_blocks(object)))
+
   if (object$model$panel) {
     stop("The pointwise log-likelihood is not available for panel models, ",
          "because the marginal likelihood of a unit does not factorise over ",

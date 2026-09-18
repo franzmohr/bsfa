@@ -190,6 +190,62 @@ test_that("an alternative sampler can be supplied", {
   expect_s3_class(est, "sfmodel_exp")
 })
 
+test_that("changing the specification discards draws that no longer match", {
+  set.seed(21)
+  d <- sim_sf(n = 60, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 100, burnin = 50)))
+  expect_false(is.null(est$posterior))
+
+  expect_message(re_prior <- add_priors(est, lambda = list(r_star = 0.5)),
+                 "Dropping posterior draws")
+  expect_null(re_prior$posterior)
+  expect_equal(re_prior$priors$rate_u, -log(0.5))
+
+  expect_message(re_init <- add_initial_values(est), "Dropping posterior")
+  expect_null(re_init$posterior)
+
+  # Setting the specification on a model that has no draws says nothing.
+  fresh <- create_sfmodel_exp(y ~ x1, data = d, iterations = 100, burnin = 50)
+  expect_silent(add_initial_values(add_priors(fresh)))
+})
+
+test_that("a posterior from elsewhere is checked before it is used", {
+  # posterior_function is a documented extension point, so a posterior that
+  # does not carry the blocks the package writes has to be reported as such
+  # rather than surfacing later as a non-conformable matrix.
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d,
+                                     iterations = 100, burnin = 50))
+
+  only_beta <- add_posterior_coefficients(m, posterior_function = function(x) {
+    x$posterior <- list(beta = list(coeffs = matrix(0, 100, 2)))
+    x
+  })
+  expect_error(summary(only_beta), "no usable draws in posterior\\$sigma_v")
+  expect_error(add_posterior_loglik(only_beta), "no usable draws")
+
+  pdf(NULL)
+  on.exit(dev.off(), add = TRUE)
+  expect_error(plot(only_beta), "no usable draws")
+
+  wrong_width <- add_posterior_coefficients(m, posterior_function = function(x) {
+    x$posterior <- list(beta = list(coeffs = matrix(0, 100, 5)),
+                        sigma_v = list(coeffs = matrix(1, 100, 1)),
+                        lambda = list(coeffs = matrix(1, 100, 1)))
+    x
+  })
+  expect_error(summary(wrong_width), "5 column\\(s\\) but the model has 2")
+
+  ragged <- add_posterior_coefficients(m, posterior_function = function(x) {
+    x$posterior <- list(beta = list(coeffs = matrix(0, 100, 2)),
+                        sigma_v = list(coeffs = matrix(1, 50, 1)),
+                        lambda = list(coeffs = matrix(1, 100, 1)))
+    x
+  })
+  expect_error(summary(ragged), "different numbers of draws")
+})
+
 test_that("priors must be added before simulating", {
   d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
   m <- create_sfmodel_exp(y ~ x1, data = d, iterations = 100, burnin = 50)

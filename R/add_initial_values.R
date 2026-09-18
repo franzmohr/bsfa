@@ -136,5 +136,5 @@ attach_initial <- function(object, init) {
     object$model$seed <- .draw_model_seed()
   }
 
-  object
+  drop_stale_posterior(object)
 }

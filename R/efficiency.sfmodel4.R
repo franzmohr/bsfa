@@ -53,6 +53,10 @@ efficiency.sfmodel4 <- function(object,
 
   type <- match.arg(type)
 
+  if (is.null(object$posterior)) {
+    stop("Object does not contain posterior draws. ",
+         "See ?add_posterior_coefficients.")
+  }
   if (is.null(object$posterior$eta$coeffs)) {
     stop("No inefficiency draws stored. Re-run add_posterior_coefficients() ",
          "with keep_u = TRUE.")
