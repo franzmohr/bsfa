@@ -61,6 +61,10 @@ First release.
   elasticity is imposed rather than estimated.
 * A rank deficient design matrix is refused, naming the column that is a
   linear combination of the others, rather than left for the prior to fill in.
+* The response has to be a quantity. A factor would otherwise be fitted as the
+  integers coding its levels and a character vector as a column of `NA`.
+* An `id` is checked against the model frame rather than against `data`, so a
+  mismatched one is refused whether `data` is a data frame or a list.
 * Rows with a missing value, or with an unknown unit, are dropped with a
   message and recorded in the `na.action` element of the model object.
 * The response is assumed to be on a logarithmic scale. The prior on the

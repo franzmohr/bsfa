@@ -152,10 +152,6 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
     } else {
       id_var <- id
     }
-    if (is.data.frame(data) && length(id_var) != nrow(data)) {
-      stop("'id' must name a variable in 'data' or have one element per row ",
-           "of it; got ", length(id_var), " for ", nrow(data), " rows.")
-    }
   }
 
   # Rows are dropped explicitly rather than by na.action, so that the
@@ -163,6 +159,16 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
   # observation whose unit is unknown is dropped as well, since it cannot be
   # assigned an inefficiency term.
   mf <- stats::model.frame(formula, data = data, na.action = stats::na.pass)
+
+  # The identifier has to line up with the model frame rather than merely with
+  # 'data', which need not be a data frame with rows to count. Checked here,
+  # just before the two are combined, because a shorter identifier would be
+  # recycled by that line rather than rejected by it.
+  if (!is.null(id_var) && length(id_var) != nrow(mf)) {
+    stop("'id' must name a variable in 'data' or have one element per row ",
+         "of the model frame; got ", length(id_var), " for ", nrow(mf), ".")
+  }
+
   keep <- stats::complete.cases(mf)
   if (!is.null(id_var)) {
     keep <- keep & !is.na(id_var)
@@ -188,7 +194,30 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
     id_var <- id_var[keep]
   }
   mt <- attr(mf, "terms")
-  y <- as.numeric(stats::model.response(mf))
+
+  # as.numeric() will take anything, and what it makes of a factor or of a
+  # character vector is not a quantity anyone meant to fit: the codes behind
+  # the levels in the first case, a column of NA in the second, neither with a
+  # word said until the sampler fails on it much later, if at all.
+  y_raw <- stats::model.response(mf)
+  if (is.null(y_raw)) {
+    stop("The formula has no response. A frontier is fitted to an output, so ",
+         "the left hand side cannot be empty.")
+  }
+  if (NCOL(y_raw) > 1L) {
+    stop("The response has ", NCOL(y_raw), " columns. A frontier is fitted ",
+         "to one output at a time.")
+  }
+  if (is.factor(y_raw) || is.character(y_raw)) {
+    stop("The response is a ",
+         if (is.factor(y_raw)) "factor" else "character vector",
+         ", which cannot be the output of a frontier: it would be fitted as ",
+         if (is.factor(y_raw)) "the integers that code its levels"
+         else "a column of NA",
+         ". The response has to be numeric, and on a logarithmic scale.")
+  }
+
+  y <- as.numeric(y_raw)
   X <- stats::model.matrix(mt, mf)
 
   # An offset is a term whose coefficient is fixed at one, so it is not a

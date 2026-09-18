@@ -180,3 +180,47 @@ test_that("a unit left with one observation is named", {
   expect_match(err, "IT003")
   expect_match(err, "3 rows were dropped for missing values first")
 })
+
+test_that("a response that is not a quantity is refused", {
+  set.seed(150)
+  d <- sim_sf(n = 80, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4)
+  d$fy <- factor(sample(c("lo", "mid", "hi"), 80, TRUE))
+  d$cy <- sample(c("alpha", "beta"), 80, TRUE)
+
+  # A factor used to be fitted as the integers coding its levels, and a
+  # character vector as a column of NA that failed only once the sampler
+  # reached it.
+  expect_error(create_sfmodel_exp(fy ~ x1, data = d), "is a factor")
+  expect_error(create_sfmodel_exp(fy ~ x1, data = d), "logarithmic scale")
+  expect_error(create_sfmodel_exp(cy ~ x1, data = d), "character vector")
+  expect_error(create_sfmodel_exp(~ x1, data = d), "no response")
+  expect_error(create_sfmodel_exp(cbind(y, x1) ~ x2, data = d), "2 columns")
+
+  # A logical response coerces to zero and one, as it does in lm().
+  d$by <- d$y > median(d$y)
+  expect_silent(m <- create_sfmodel_exp(by ~ x1, data = d))
+  expect_equal(m$data$y, as.numeric(d$by))
+})
+
+test_that("a mismatched identifier is refused whatever data is", {
+  set.seed(151)
+  y <- rnorm(60) + 1; x1 <- rnorm(60)
+  good <- rep(1:6, each = 10)
+  bad <- rep(1:5, each = 4)
+
+  # The check used to apply only when data was a data frame, so a list let a
+  # short identifier through to be recycled, silently reassigning observations
+  # to units.
+  for (dat in list(data.frame(y = y, x1 = x1),
+                   list(y = y, x1 = x1))) {
+    expect_error(create_sfmodel_exp(y ~ x1, data = dat, id = bad),
+                 "one element per row")
+    expect_equal(create_sfmodel_exp(y ~ x1, data = dat,
+                                    id = good)$data$n_units, 6L)
+  }
+
+  # Named from within the data, a short column is caught the same way.
+  expect_error(create_sfmodel_exp(y ~ x1, data = list(y = y, x1 = x1,
+                                                      id = bad), id = "id"),
+               "one element per row")
+})
