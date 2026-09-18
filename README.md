@@ -99,6 +99,35 @@ separate result, and are stored as `coda` objects, one block per
 parameter. Printing the model reports which blocks have been set, which
 is worth a glance before committing to a long run.
 
+Before reading any of it, ask whether the sample supports a one-sided
+term at all. A production frontier skews the residuals to the left; if
+they are not skewed, there is no inefficiency in the data to estimate.
+
+``` r
+skewness_test(model)
+#> Skewness of the least squares residuals
+#> 
+#> Frontier:     production (implies negative skewness)
+#> Observations: 500
+#> 
+#>   skewness       -0.9514
+#>   M3T statistic  -4.8507
+#>   p-value        0
+#>   standard error from 299 resamples of the observations
+#> 
+#> The residuals are skewed as the frontier implies, so the sample carries
+#> information about the one-sided term and the efficiency scores are
+#> estimated from it.
+```
+
+This matters more for a Bayesian fit than for a maximum likelihood one.
+Maximum likelihood collapses onto least squares and says so. A posterior
+cannot: the prior holds the inefficiency term away from zero, so the
+sampler returns efficiency scores of ordinary appearance that are a
+reading of the prior rather than of the data. On a sample simulated with
+no inefficiency whatsoever this package reports a mean efficiency near
+0.89 without complaint.
+
 ``` r
 plot(model, type = "efficiency")
 ```

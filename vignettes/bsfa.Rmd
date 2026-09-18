@@ -111,16 +111,37 @@ only the asymmetry of the residuals. That is a feature of the model rather than
 of the sampler, and it is worth keeping in mind whenever the level of the
 frontier is itself of interest.
 
-The draws are kept as `coda` objects, one block per parameter, so anything that
-reads `mcmc` objects works on them directly:
+The `ESS` column is the effective sample size of each block: the number of
+independent draws the chain is worth, which is what the width of a credible
+band should be read against. The draws are kept as `coda` objects, one block
+per parameter, so anything that reads `mcmc` objects works on them directly if
+more is wanted:
 
 ```{r}
-coda::effectiveSize(model$posterior$lambda$coeffs)
+coda::autocorr.diag(model$posterior$lambda$coeffs, lags = c(1, 5, 10))
 ```
 
 ```{r, fig.height = 5}
 plot(model, type = "trace")
 ```
+
+## Is there inefficiency to find?
+
+Before reading the scores, it is worth asking whether the sample says anything
+about the one-sided term. A production frontier skews the composed error to the
+left, and if the least squares residuals carry no such skew then there is no
+evidence of inefficiency in the data.
+
+```{r}
+skewness_test(model)
+```
+
+Maximum likelihood answers this loudly, by collapsing onto least squares. A
+posterior cannot: the prior holds the inefficiency term away from zero, so the
+sampler returns plausible looking scores whether or not the data support them.
+A verdict of `weak` or `wrong` does not mean the model should be abandoned, but
+it does mean the scores below are largely the prior, and should be reported as
+such.
 
 ## Efficiency scores
 

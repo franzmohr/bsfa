@@ -56,7 +56,9 @@ First release.
   sample supports a one-sided term at all. It matters more here than for a
   maximum likelihood fit: that one collapses onto least squares and says so,
   whereas a posterior cannot, and returns plausible looking efficiency scores
-  read off the prior instead.
+  read off the prior instead. Its standard error comes from a bootstrap over
+  the units rather than from the closed form, which assumes the residuals are
+  independent and so rejects too often on a panel.
 
 ## Simulation
 

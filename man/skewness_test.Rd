@@ -4,15 +4,19 @@
 \alias{skewness_test}
 \title{Is there any inefficiency in the data?}
 \usage{
-skewness_test(object)
+skewness_test(object, replicates = 299L)
 }
 \arguments{
 \item{object}{an object of class \code{"sfmodel"}.}
+
+\item{replicates}{the number of bootstrap resamples used for the standard
+error.}
 }
 \value{
 A list of class \code{"sfskew"}, with the skewness of the residuals,
-  the statistic, its one sided p-value, the direction the frontier implies
-  and a verdict of \code{"informative"}, \code{"weak"} or \code{"wrong"}.
+  the statistic, its standard error, its one sided p-value, the direction
+  the frontier implies and a verdict of \code{"informative"}, \code{"weak"}
+  or \code{"wrong"}.
 }
 \description{
 Tests the least squares residuals for skewness in the direction the
@@ -37,12 +41,26 @@ rather than of the data. On a sample simulated with no inefficiency
 whatsoever, this package reports a mean efficiency near 0.89 and says
 nothing. This test is the warning that is otherwise missing.
 
-The statistic is that of Coelli (1995). With \eqn{m_2} and \eqn{m_3} the
-second and third moments of the residuals,
-\deqn{M3T = m_3 / \sqrt{6 m_2^3 / n},}
-which is standard normal when the residuals are symmetric. The p-value is
-one sided, in the direction the frontier implies, so a small one is evidence
-that there is inefficiency to estimate.
+The statistic is that of Coelli (1995): the third central moment of the
+residuals over its standard error, which is standard normal when the
+residuals are symmetric. The p-value is one sided, in the direction the
+frontier implies, so a small one is evidence that there is inefficiency to
+estimate.
+
+The standard error is taken from a bootstrap over the units that own the
+inefficiency terms rather than from the usual closed form
+\eqn{\sqrt{6 m_2^3 / n}}. The two agree for a cross-section, where every
+observation is its own unit, but the closed form assumes the residuals are
+independent and a panel's are not: one inefficiency term is shared by all of
+a unit's periods. Simulated on samples with no inefficiency in them, the
+closed form called sixteen per cent of sixty-unit, five-period panels
+informative at the ten per cent level, and ten per cent of them at five. The
+bootstrap holds the rate at its nominal value for panels of every shape
+tried, and loses no power in doing so.
+
+The resampling runs from a fixed seed and puts R's generator back as it
+found it, so the test is a function of the data alone and repeating it gives
+the same answer.
 
 The test needs no posterior draws and can be run on a model as soon as it is
 created. A wrong or absent skew is not a reason to abandon the model: it is

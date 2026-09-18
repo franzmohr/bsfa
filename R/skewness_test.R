@@ -21,12 +21,36 @@
 #' whatsoever, this package reports a mean efficiency near 0.89 and says
 #' nothing. This test is the warning that is otherwise missing.
 #'
-#' The statistic is that of Coelli (1995). With \eqn{m_2} and \eqn{m_3} the
-#' second and third moments of the residuals,
-#' \deqn{M3T = m_3 / \sqrt{6 m_2^3 / n},}
-#' which is standard normal when the residuals are symmetric. The p-value is
-#' one sided, in the direction the frontier implies, so a small one is evidence
-#' that there is inefficiency to estimate.
+#' The statistic is that of Coelli (1995): the third central moment of the
+#' residuals over its standard error, which is standard normal when the
+#' residuals are symmetric. The p-value is one sided, in the direction the
+#' frontier implies, so a small one is evidence that there is inefficiency to
+#' estimate.
+#'
+#' The standard error is taken from a bootstrap over the units that own the
+#' inefficiency terms rather than from the usual closed form
+#' \eqn{\sqrt{6 m_2^3 / n}}. The two agree for a cross-section, where every
+#' observation is its own unit, but the closed form assumes the residuals are
+#' independent and a panel's are not: one inefficiency term is shared by all of
+#' a unit's periods, and pretending otherwise makes the test reject too often.
+#' On samples simulated with no inefficiency in them at all, and a nominal rate
+#' of ten per cent:
+#' \tabular{lrr}{
+#'   \tab closed form \tab bootstrap \cr
+#'   cross-section, 300 observations \tab 8.2\% \tab 8.2\% \cr
+#'   panel, 150 units of 2 \tab 9.4\% \tab 9.1\% \cr
+#'   panel, 60 units of 5 \tab 14.4\% \tab 11.9\% \cr
+#'   panel, 30 units of 10 \tab 16.1\% \tab 12.5\%
+#' }
+#' The bootstrap roughly halves the excess without costing power, but it does
+#' not remove it. What is left is the small sample behaviour of any cluster
+#' bootstrap: thirty units is not many to resample from. On a panel with few
+#' units and many periods, read a p-value near the threshold as suggestive
+#' rather than decisive.
+#'
+#' The resampling runs from a fixed seed and puts R's generator back as it
+#' found it, so the test is a function of the data alone and repeating it gives
+#' the same answer.
 #'
 #' The test needs no posterior draws and can be run on a model as soon as it is
 #' created. A wrong or absent skew is not a reason to abandon the model: it is
@@ -34,11 +58,22 @@
 #' response really is on a logarithmic scale, and to say as much when reporting
 #' them.
 #'
+#' Being a test, it has the power of one, and answers whether the data can
+#' support the scores rather than whether the scores are right. A sample with
+#' no inefficiency reads as informative about a tenth of the time at the
+#' threshold used here, which is what a ten per cent level means. A sample
+#' whose inefficiency is small beside its noise is not distinguished from one
+#' that has none. And the statistic is asymptotic, so below about fifty
+#' observations it is conservative to the point of rarely firing at all.
+#'
 #' @param object an object of class \code{"sfmodel"}.
+#' @param replicates the number of bootstrap resamples used for the standard
+#'   error.
 #'
 #' @return A list of class \code{"sfskew"}, with the skewness of the residuals,
-#'   the statistic, its one sided p-value, the direction the frontier implies
-#'   and a verdict of \code{"informative"}, \code{"weak"} or \code{"wrong"}.
+#'   the statistic, its standard error, its one sided p-value, the direction
+#'   the frontier implies and a verdict of \code{"informative"}, \code{"weak"}
+#'   or \code{"wrong"}.
 #'
 #' @references
 #' Coelli, T. (1995). Estimators and hypothesis tests for a stochastic frontier
@@ -68,16 +103,21 @@
 #' skewness_test(create_sfmodel_exp(y ~ x1, data = d0))
 #'
 #' @export
-skewness_test <- function(object) {
+skewness_test <- function(object, replicates = 299L) {
 
   if (!inherits(object, "sfmodel")) {
     stop("'object' must be a stochastic frontier model.")
   }
+  check_count(replicates, "replicates")
+  if (replicates < 50) {
+    stop("'replicates' must be at least 50 for the standard error to mean ",
+         "anything.")
+  }
 
   r <- as.numeric(stats::.lm.fit(object$data$X, object$data$y)$residuals)
   n <- length(r)
-  m2 <- mean(r^2)
-  m3 <- mean(r^3)
+  m2 <- mean((r - mean(r))^2)
+  m3 <- mean((r - mean(r))^3)
 
   if (m2 <= 0) {
     stop("The least squares residuals have no variation, so there is no ",
@@ -85,7 +125,26 @@ skewness_test <- function(object) {
   }
 
   skew <- m3 / m2^1.5
-  m3t <- m3 / sqrt(6 * m2^3 / n)
+
+  # Resampling the units that own the inefficiency terms rather than the
+  # observations. For a cross-section those are the same thing, since every
+  # observation is its own unit, and the standard error comes out where the
+  # closed form puts it; for a panel they are not, and it does not.
+  blocks <- unname(split(seq_len(n), object$data$g))
+  se <- .with_model_seed(41L, {
+    reps <- replicate(as.integer(replicates), {
+      z <- r[unlist(blocks[sample.int(length(blocks), length(blocks),
+                                      replace = TRUE)], use.names = FALSE)]
+      mean((z - mean(z))^3)
+    })
+    stats::sd(reps)
+  })
+  if (!is.finite(se) || se <= 0) {
+    stop("The bootstrap standard error of the third moment came out as ",
+         format(se), ", so no test can be formed from it.")
+  }
+
+  m3t <- m3 / se
 
   # The frontier fixes which tail the evidence has to be in: a production
   # frontier subtracts the one-sided term and so skews the residuals left.
@@ -95,8 +154,9 @@ skewness_test <- function(object) {
   verdict <- if (sign(m3) != s && m3 != 0) "wrong" else
     if (p > 0.1) "weak" else "informative"
 
-  structure(list(skewness = skew, statistic = m3t, p.value = p,
-                 n = n, expected = if (s < 0) "negative" else "positive",
+  structure(list(skewness = skew, statistic = m3t, se = se, p.value = p,
+                 n = n, units = length(blocks), replicates = replicates,
+                 expected = if (s < 0) "negative" else "positive",
                  type = object$model$type, verdict = verdict),
             class = "sfskew")
 }
@@ -107,10 +167,14 @@ print.sfskew <- function(x, digits = 4, ...) {
   cat("Skewness of the least squares residuals\n\n")
   cat("Frontier:     ", x$type, " (implies ", x$expected, " skewness)\n",
       sep = "")
-  cat("Observations: ", x$n, "\n\n", sep = "")
+  cat("Observations: ", x$n,
+      if (x$units < x$n) paste0(" in ", x$units, " units") else "", "\n\n",
+      sep = "")
   cat("  skewness       ", format(round(x$skewness, digits)), "\n", sep = "")
   cat("  M3T statistic  ", format(round(x$statistic, digits)), "\n", sep = "")
-  cat("  p-value        ", format(round(x$p.value, digits)), "\n\n", sep = "")
+  cat("  p-value        ", format(round(x$p.value, digits)), "\n", sep = "")
+  cat("  standard error from ", x$replicates, " resamples of the ",
+      if (x$units < x$n) "units" else "observations", "\n\n", sep = "")
 
   cat(strwrap(switch(
     x$verdict,

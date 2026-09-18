@@ -11,13 +11,59 @@ test_that("the statistic is the one Coelli defines", {
   t <- skewness_test(m)
 
   r <- as.numeric(stats::.lm.fit(m$data$X, m$data$y)$residuals)
-  m2 <- mean(r^2); m3 <- mean(r^3); n <- length(r)
+  m2 <- mean((r - mean(r))^2); m3 <- mean((r - mean(r))^3)
   expect_equal(t$skewness, m3 / m2^1.5)
-  expect_equal(t$statistic, m3 / sqrt(6 * m2^3 / n))
+  expect_equal(t$statistic, m3 / t$se)
+  expect_gt(t$se, 0)
   # One sided, towards the tail a production frontier implies.
   expect_equal(t$p.value, stats::pnorm(t$statistic))
   expect_equal(t$n, 400L)
+  expect_equal(t$units, 400L)        # a cross-section: every row its own unit
   expect_s3_class(t, "sfskew")
+
+  # For a cross-section the bootstrap has to land near the closed form, which
+  # is what it replaces and which is right when the residuals are independent.
+  expect_equal(t$se, sqrt(6 * m2^3 / length(r)), tolerance = 0.3)
+})
+
+test_that("the standard error clusters on the units of a panel", {
+  set.seed(163)
+  nu <- 40; tt <- 8; n <- nu * tt
+  g <- rep(seq_len(nu), each = tt)
+  x1 <- rnorm(n); mu <- rnorm(nu, sd = 0.5)
+  d <- data.frame(y = 1 + 0.5 * x1 + mu[g] + rnorm(n, sd = 0.2),
+                  x1 = x1, id = g)
+  m <- create_sfmodel_exp(y ~ x1, data = d, id = "id")
+  t <- skewness_test(m)
+
+  expect_equal(t$n, n)
+  expect_equal(t$units, nu)
+  expect_output(print(t), "units")
+
+  # A shared unit effect makes a unit's residuals move together, so the third
+  # moment is less precisely determined than n independent draws would make
+  # it. The closed form assumes otherwise and is too small.
+  r <- as.numeric(stats::.lm.fit(m$data$X, m$data$y)$residuals)
+  m2 <- mean((r - mean(r))^2)
+  expect_gt(t$se, sqrt(6 * m2^3 / n))
+})
+
+test_that("it is a function of the data alone", {
+  m <- create_sfmodel_exp(y ~ x1, data = mk(3))
+
+  set.seed(1);  a <- skewness_test(m)
+  set.seed(99); b <- skewness_test(m)
+  expect_equal(a$statistic, b$statistic)
+  expect_equal(a$se, b$se)
+
+  # And it leaves R's generator where it found it.
+  set.seed(7); before <- runif(3)
+  set.seed(7); invisible(skewness_test(m)); after <- runif(3)
+  expect_equal(before, after)
+
+  expect_error(skewness_test(m, replicates = 10), "at least 50")
+  expect_error(skewness_test(m, replicates = NA), "'replicates'")
+  expect_equal(skewness_test(m, replicates = 99)$replicates, 99)
 })
 
 test_that("it tells the three cases apart", {
