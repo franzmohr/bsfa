@@ -1,33 +1,43 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # bsfa
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/franzmohr/bsfa/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/franzmohr/bsfa/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/franzmohr/bsfa/graph/badge.svg)](https://app.codecov.io/gh/franzmohr/bsfa)
-[![License: GPL (>= 2)](https://img.shields.io/badge/license-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 
-[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/franzmohr)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/franzmohr)
+[![R-CMD-check](https://github.com/franzmohr/bsfa/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/franzmohr/bsfa/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/franzmohr/bsfa/graph/badge.svg)](https://app.codecov.io/gh/franzmohr/bsfa)
+[![License: GPL (\>=
+2)](https://img.shields.io/badge/license-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+
+[![GitHub
+Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/franzmohr)
+[![Buy Me a
+Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/franzmohr)
 <!-- badges: end -->
 
 Bayesian estimation of stochastic frontier models in R.
 
-The package implements Gibbs samplers with data augmentation for composed-error
-frontier models in the tradition of van den Broeck, Koop, Osiewalski and Steel
-(1994). Because the one-sided inefficiency term is sampled as a latent variable
-rather than integrated out, efficiency scores come out of the sampler as draws.
-`efficiency()` therefore reports genuine posterior distributions, where maximum
-likelihood has to fall back on the Jondrow et al. (1982) conditional mean — a
-point predictor of an unobserved quantity, with no comparable measure of
+The package implements Gibbs samplers with data augmentation for
+composed-error frontier models in the tradition of van den Broeck, Koop,
+Osiewalski and Steel (1994). Because the one-sided inefficiency term is
+sampled as a latent variable rather than integrated out, efficiency
+scores come out of the sampler as draws. `efficiency()` therefore
+reports genuine posterior distributions, where maximum likelihood has to
+fall back on the Jondrow et al. (1982) conditional mean — a point
+predictor of an unobserved quantity, with no comparable measure of
 uncertainty attached.
 
 At the time of writing there is no maintained general-purpose Bayesian
-stochastic frontier package on CRAN. `sfaR`, `sfa`, `frontier`, `semsfa` and
-`ssfa` are all maximum likelihood.
+stochastic frontier package on CRAN. `sfaR`, `sfa`, `frontier`, `semsfa`
+and `ssfa` are all maximum likelihood.
 
 ## Installation
 
-```r
+``` r
 # install.packages("remotes")
 remotes::install_github("franzmohr/bsfa")
 ```
@@ -35,11 +45,11 @@ remotes::install_github("franzmohr/bsfa")
 ## Usage
 
 A model is built up step by step, in the manner of
-[bvartools](https://github.com/franzmohr/bvartools): a constructor fixes the
-data and the specification, and the `add_*` functions attach the remaining
-blocks and then the posterior draws.
+[bvartools](https://github.com/franzmohr/bvartools): a constructor fixes
+the data and the specification, and the `add_*` functions attach the
+remaining blocks and then the posterior draws.
 
-```r
+``` r
 library(bsfa)
 
 set.seed(1234)
@@ -54,45 +64,100 @@ model <- add_posterior_coefficients(model)
 model <- add_posterior_loglik(model)
 
 summary(model)
-plot(model, type = "efficiency")
-selection_criteria(model)
-head(efficiency(model))
+#> Bayesian stochastic frontier model
+#> 
+#> Call:
+#> create_sfmodel_exp(formula = y ~ x1 + x2, data = d, iterations = 5000, 
+#>     burnin = 2000)
+#> 
+#> Frontier:           production
+#> Inefficiency:       exponential
+#> Observations:       500
+#> Units:              500
+#> Draws:              5000 after 2000 burn-in, thinning 1
+#> 
+#> Posterior summary, 95% credible bands:
+#>               mean     sd   2.5% median  97.5%
+#> (Intercept) 1.0460 0.0210 1.0041 1.0467 1.0861
+#> x1          0.5087 0.0128 0.4826 0.5087 0.5340
+#> x2          0.2889 0.0136 0.2616 0.2888 0.3165
+#> sigma_v     0.1876 0.0148 0.1613 0.1867 0.2186
+#> lambda      3.3359 0.2644 2.8624 3.3156 3.8956
+#> 
+#> Posterior mean efficiency, per observation:
+#>   mean    min median    max 
+#> 0.7681 0.1995 0.8229 0.9549
 ```
 
-The draws are attached to the same object rather than returned as a separate
-result, and are stored as `coda` objects, one block per parameter. Printing the
-model reports which blocks have been set, which is worth a glance before
-committing to a long run.
+The data were simulated with $\beta = (1, 0.5, 0.3)$, $\sigma_v = 0.2$
+and $\lambda = 4$. The slopes come back sharply; the intercept is the
+loose one, because it has to be separated from the mean of the one-sided
+term using only the asymmetry of the residuals.
 
-The distribution of the inefficiency term is carried by the model's class rather
-than by an argument, so each variant gets its own methods:
+The draws are attached to the same object rather than returned as a
+separate result, and are stored as `coda` objects, one block per
+parameter. Printing the model reports which blocks have been set, which
+is worth a glance before committing to a long run.
 
-| Constructor | Class | Inefficiency |
-|---|---|---|
-| `create_sfmodel_exp()` | `sfmodel_exp` | exponential, rate `lambda` |
-| `create_sfmodel_hn()` | `sfmodel_hn` | half-normal, scale `sigma_u` |
-| `create_sfmodel4_exp()` | `sfmodel4_exp` | four-component, exponential |
-| `create_sfmodel4_hn()` | `sfmodel4_hn` | four-component, half-normal |
+``` r
+plot(model, type = "efficiency")
+```
 
-That split is not cosmetic. The prior on the inefficiency term is elicited from
-a prior median efficiency `r_star`, and the two models map that anchor
-differently:
+<img src="man/figures/README-efficiency-plot-1.png" alt="" width="100%" />
 
-```r
+The left panel is the summary usually reported. The right one is the
+reason to look further: with one observation per unit there is very
+little information about any individual score, and the bands cover much
+of the range the histogram spreads over. That uncertainty is what the
+maximum likelihood route cannot report.
+
+``` r
+selection_criteria(model)
+#> Selection criteria for a Bayesian stochastic frontier model
+#> 
+#> Frontier:     production
+#> Inefficiency: exponential
+#> 
+#>           mean    median    qlower    qupper
+#> LL   -145.4157 -145.0797 -149.4518 -143.2591
+#> AIC   295.7543        NA        NA        NA
+#> BIC   316.8274        NA        NA        NA
+#> HQ    304.0234        NA        NA        NA
+#> WAIC  296.3049        NA  220.6911  371.9188
+```
+
+## Model variants are classes
+
+The distribution of the inefficiency term is carried by the model’s
+class rather than by an argument, so each variant gets its own methods:
+
+| Constructor             | Class          | Inefficiency                 |
+|-------------------------|----------------|------------------------------|
+| `create_sfmodel_exp()`  | `sfmodel_exp`  | exponential, rate `lambda`   |
+| `create_sfmodel_hn()`   | `sfmodel_hn`   | half-normal, scale `sigma_u` |
+| `create_sfmodel4_exp()` | `sfmodel4_exp` | four-component, exponential  |
+| `create_sfmodel4_hn()`  | `sfmodel4_hn`  | four-component, half-normal  |
+
+That split is not cosmetic. The prior on the inefficiency term is
+elicited from a prior median efficiency `r_star`, and the two
+distributions map that anchor differently, so the argument is named
+after the parameter it governs:
+
+``` r
 model <- add_priors(model, lambda = list(r_star = 0.85))   # sfmodel_exp
 model <- add_priors(model, sigma_u = list(r_star = 0.85))  # sfmodel_hn
 ```
 
-For the exponential model the mapping is exact. With a gamma prior of shape 1
-and rate `c = -log(r_star)` on the rate parameter, the implied marginal prior
-density of `u` is `c / (u + c)^2`, whose median is `c`, so the prior median of
-`exp(-u)` is exactly `r_star`. For the half-normal model the same target is
-matched only in expectation.
+For the exponential model the mapping is exact. With a gamma prior of
+shape 1 and rate `c = -log(r_star)` on the rate parameter, the implied
+marginal prior density of `u` is `c / (u + c)^2`, whose median is `c`,
+so the prior median of `exp(-u)` is exactly `r_star`. For the
+half-normal model the same target is matched only in expectation.
 
 ## What is implemented
 
-| | |
-|---|---|
+|  |  |
+|----|----|
 | Inefficiency | exponential, half-normal |
 | Frontier | production, cost |
 | Data | cross-section, time-invariant panel (Pitt and Lee, 1981), four-component panel (Kumbhakar, Lien and Hjalmarsson, 2014) |
@@ -101,74 +166,87 @@ matched only in expectation.
 
 ## The four-component model
 
-`create_sfmodel4_exp()` and `create_sfmodel4_hn()` split the disturbance into a
-unit effect, persistent inefficiency, noise and transient inefficiency:
+`create_sfmodel4_exp()` and `create_sfmodel4_hn()` split the disturbance
+into a unit effect, persistent inefficiency, noise and transient
+inefficiency. It needs panel data, so `id` is required.
 
-```r
-model <- create_sfmodel4_exp(y ~ x1 + x2, data = d, id = "id",
-                             iterations = 5000, burnin = 2000)
-model <- add_posterior_coefficients(add_priors(model))
+``` r
+dp <- sim_sf4(n = 120, n_time = 8, beta = c(1, 0.5, 0.3))
 
-efficiency(model, type = "persistent")   # one score per unit
-efficiency(model, type = "transient")    # one per observation
-efficiency(model, type = "overall")      # the product of the two
+m4 <- create_sfmodel4_exp(y ~ x1 + x2, data = dp, id = "id",
+                          iterations = 5000, burnin = 2000)
+m4 <- add_posterior_coefficients(add_priors(m4))
+
+head(efficiency(m4, type = "persistent"), 3)   # one score per unit
+#>   unit      mean         sd       5%       50%       95%
+#> 1    1 0.7945873 0.15701652 0.505467 0.8254475 0.9892329
+#> 2    2 0.9356330 0.06169995 0.806458 0.9538089 0.9966346
+#> 3    3 0.7658228 0.17435764 0.448957 0.7971668 0.9883174
+head(efficiency(m4, type = "transient"), 3)    # one per observation
+#>   unit      mean         sd        5%       50%       95%
+#> 1    1 0.9292819 0.06252166 0.8025554 0.9471838 0.9956866
+#> 2    1 0.9192284 0.06996841 0.7789144 0.9386785 0.9949919
+#> 3    1 0.8638980 0.10265547 0.6657852 0.8824033 0.9908603
 ```
 
-The unit effect enters none of the three scores, which is the point: in the
-time-invariant panel model every persistent difference between units — funding
-structure, soil quality, vintage of equipment — has nowhere to go but into
-inefficiency.
+The unit effect enters none of the three scores, which is the point: in
+the time-invariant panel model every persistent difference between units
+— funding structure, soil quality, vintage of equipment — has nowhere to
+go but into inefficiency.
 
-The combination `mu_i - eta_i` is determined sharply by the data, but how it
-divides between the two depends on which of them has the wider spread: where the
-unit effect dominates it is recovered well and the persistent term is not, and
-where it is small the reverse holds. That is a property of the model rather than
-of the sampler, so a prior sensitivity check on `sigma_mu` and the persistent
-inefficiency parameter is worth running before reading much into the split. The
-frontier and the transient scores are unaffected. See the `four-component`
-vignette.
+The combination `mu_i - eta_i` is determined sharply by the data, but
+how it divides between the two depends on which of them has the wider
+spread: where the unit effect dominates it is recovered well and the
+persistent term is not, and where it is small the reverse holds. That is
+a property of the model rather than of the sampler, so a prior
+sensitivity check on `sigma_mu` and the persistent inefficiency
+parameter is worth running before reading much into the split. The
+frontier and the transient scores are unaffected. See the
+`four-component` vignette.
 
 ## Roadmap
 
 The planned extensions, roughly in order:
 
-1. **Inefficiency determinants** — a Battese and Coelli (1995) style regression
-   in the mean or scale of the inefficiency distribution, estimated jointly with
-   the frontier rather than in an inconsistent second step.
-2. **Heteroskedasticity** in both error components, which matters whenever unit
-   size is widely dispersed.
-3. **Latent class / regime switching**, with class membership driven by
-   covariates. Gibbs handles the discrete membership indicator naturally, where
-   Hamiltonian Monte Carlo would not.
-4. **The closed skew normal likelihood** of Colombi et al. (2014), which would
-   make information criteria available for the four-component model. It needs
-   normal distribution functions of dimension `T_i + 1`.
-5. **LOOIC**, once the Pareto smoothed importance sampling it needs has had its
-   own testing pass.
+1.  **Inefficiency determinants** — a Battese and Coelli (1995) style
+    regression in the mean or scale of the inefficiency distribution,
+    estimated jointly with the frontier rather than in an inconsistent
+    second step.
+2.  **Heteroskedasticity** in both error components, which matters
+    whenever unit size is widely dispersed.
+3.  **Latent class / regime switching**, with class membership driven by
+    covariates. Gibbs handles the discrete membership indicator
+    naturally, where Hamiltonian Monte Carlo would not.
+4.  **The closed skew normal likelihood** of Colombi et al. (2014),
+    which would make information criteria available for the
+    four-component model. It needs normal distribution functions of
+    dimension `T_i + 1`.
+5.  **LOOIC**, once the Pareto smoothed importance sampling it needs has
+    had its own testing pass.
 
-Each of these is a block of the specification rather than an argument to an
-estimator, which is why the package is organised around a model object.
+Each of these is a block of the specification rather than an argument to
+an estimator, which is why the package is organised around a model
+object.
 
-`selection_criteria()` does not provide LOOIC. The Pareto smoothed importance
-sampling it needs is a piece of machinery in its own right and deserves its own
-testing pass, so it is left out rather than added hastily. Note also that the
-pointwise log-likelihood, and therefore every criterion, is unavailable for
-panel models: the units share one inefficiency term, so integrating it out
-couples the observations that belong to the same unit.
+Note that the pointwise log-likelihood, and therefore every criterion,
+is unavailable for panel models: the units share one inefficiency term,
+so integrating it out couples the observations that belong to the same
+unit.
 
 ## Validation
 
-The exponential, time-invariant panel specification reproduces the sampler
-distributed by Justin Tobias for exercise 14.13 of Koop, Poirier and Tobias
-(2007), *Bayesian Econometric Methods*. The `koop-exercise` vignette translates
-both that program and its data-generating script into `bsfa` and compares the
-results, which is worth having because the data-generating process is known.
+The exponential, time-invariant panel specification reproduces the
+sampler distributed by Justin Tobias for exercise 14.13 of Koop, Poirier
+and Tobias (2007), *Bayesian Econometric Methods*. The `koop-exercise`
+vignette translates both that program and its data-generating script
+into `bsfa` and compares the results, which is worth having because the
+data-generating process is known.
 
-The correspondence is exact. The mean of the truncated normal full conditional
-for `z_i` carries the `-1/(T h mu_z)` shift contributed by the exponential
-prior, which in the half-normal case is replaced by an additional `1/sigma_u^2`
-term in the precision; that one line is the whole difference between the two
-specifications inside the sampler.
+The correspondence is exact. The mean of the truncated normal full
+conditional for `z_i` carries the `-1/(T h mu_z)` shift contributed by
+the exponential prior, which in the half-normal case is replaced by an
+additional `1/sigma_u^2` term in the precision; that one line is the
+whole difference between the two specifications inside the sampler.
 
 The closed-form log-likelihoods are checked against direct numerical
 integration of the composed-error density in the test suite, for both
@@ -176,35 +254,39 @@ distributions and for both orientations of the frontier.
 
 ## References
 
-Aigner, D., Lovell, C. A. K., & Schmidt, P. (1977). Formulation and estimation
-of stochastic frontier production function models. *Journal of Econometrics*,
-6(1), 21–37.
+Aigner, D., Lovell, C. A. K., & Schmidt, P. (1977). Formulation and
+estimation of stochastic frontier production function models. *Journal
+of Econometrics*, 6(1), 21–37.
 
-Battese, G. E., & Coelli, T. J. (1995). A model for technical inefficiency
-effects in a stochastic frontier production function for panel data.
-*Empirical Economics*, 20(2), 325–332.
+Battese, G. E., & Coelli, T. J. (1995). A model for technical
+inefficiency effects in a stochastic frontier production function for
+panel data. *Empirical Economics*, 20(2), 325–332.
 
-Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On the
-estimation of technical inefficiency in the stochastic frontier production
-function model. *Journal of Econometrics*, 19(2–3), 233–238.
+Colombi, R., Kumbhakar, S. C., Martini, G., & Vittadini, G. (2014).
+Closed skew normal distribution and efficiency analysis. *Journal of
+Productivity Analysis*, 42(2), 123–136.
+
+Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On
+the estimation of technical inefficiency in the stochastic frontier
+production function model. *Journal of Econometrics*, 19(2–3), 233–238.
 
 Koop, G. (2003). *Bayesian Econometrics*. Chichester: Wiley.
 
-Kumbhakar, S. C., Lien, G., & Hjalmarsson, L. (2014). Technical efficiency in
-competing panel data models: A study of Norwegian grain farming. *Journal of
-Productivity Analysis*, 41(2), 321–337.
+Kumbhakar, S. C., Lien, G., & Hjalmarsson, L. (2014). Technical
+efficiency in competing panel data models: A study of Norwegian grain
+farming. *Journal of Productivity Analysis*, 41(2), 321–337.
 
-Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical
-inefficiency in the Indonesian weaving industry. *Journal of Development
-Economics*, 9(1), 43–64.
+Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of
+technical inefficiency in the Indonesian weaving industry. *Journal of
+Development Economics*, 9(1), 43–64.
 
-Robert, C. P. (1995). Simulation of truncated normal variables. *Statistics and
-Computing*, 5(2), 121–125.
+Robert, C. P. (1995). Simulation of truncated normal variables.
+*Statistics and Computing*, 5(2), 121–125.
 
 van den Broeck, J., Koop, G., Osiewalski, J., & Steel, M. F. J. (1994).
-Stochastic frontier models: A Bayesian perspective. *Journal of Econometrics*,
-61(2), 273–303.
+Stochastic frontier models: A Bayesian perspective. *Journal of
+Econometrics*, 61(2), 273–303.
 
 ## License
 
-GPL (>= 2)
+GPL (\>= 2)
