@@ -1,18 +1,21 @@
 #' Add a seed to a stochastic frontier model
 #'
-#' Records the seed that \code{\link{draw_posterior}} sets before sampling, so
-#' that a model object fully determines its own output.
+#' Replaces the seed that \code{\link{add_posterior_coefficients}} sets before
+#' sampling, so that a model object fully determines its own output.
 #'
-#' Setting the seed here rather than calling \code{set.seed} beforehand keeps
-#' the seed with the specification, which matters once several models are
-#' estimated in one script: the results then depend on each model's own seed
-#' rather than on the order in which they happen to be run.
+#' \code{\link{add_initial_values}} already draws a seed and stores it as
+#' \code{object$model$seed}; this function replaces it. Keeping the seed with
+#' the specification rather than calling \code{set.seed} beforehand matters
+#' once several models are estimated in one script: the results then depend on
+#' each model's own seed rather than on the order in which they happen to be
+#' run.
 #'
 #' @param object an object of class \code{"sfmodel"}.
 #' @param seed a single number passed to \code{\link[base]{set.seed}}.
 #' @param ... unused, for compatibility with the generic.
 #'
-#' @return The model object with the element \code{seed} attached.
+#' @return The model object with the element \code{seed} of \code{model}
+#'   replaced.
 #'
 #' @examples
 #' set.seed(1234)
@@ -36,6 +39,6 @@ add_seed.sfmodel <- function(object, seed, ...) {
     stop("'seed' must be a single number.")
   }
 
-  object$seed <- seed
+  object$model$seed <- seed
   object
 }

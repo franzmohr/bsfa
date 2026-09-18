@@ -17,17 +17,20 @@ add_seed(object, ...)
 \item{seed}{a single number passed to \code{\link[base]{set.seed}}.}
 }
 \value{
-The model object with the element \code{seed} attached.
+The model object with the element \code{seed} of \code{model}
+  replaced.
 }
 \description{
-Records the seed that \code{\link{draw_posterior}} sets before sampling, so
-that a model object fully determines its own output.
+Replaces the seed that \code{\link{add_posterior_coefficients}} sets before
+sampling, so that a model object fully determines its own output.
 }
 \details{
-Setting the seed here rather than calling \code{set.seed} beforehand keeps
-the seed with the specification, which matters once several models are
-estimated in one script: the results then depend on each model's own seed
-rather than on the order in which they happen to be run.
+\code{\link{add_initial_values}} already draws a seed and stores it as
+\code{object$model$seed}; this function replaces it. Keeping the seed with
+the specification rather than calling \code{set.seed} beforehand matters
+once several models are estimated in one script: the results then depend on
+each model's own seed rather than on the order in which they happen to be
+run.
 }
 \examples{
 set.seed(1234)

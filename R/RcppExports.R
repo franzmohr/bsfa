@@ -3,8 +3,8 @@
 
 #' Gibbs sampler for the stochastic frontier model
 #'
-#' Workhorse behind \code{\link{bsfa}}. Not intended to be called directly,
-#' since it performs no input checking.
+#' Workhorse behind \code{\link{add_posterior_coefficients}}. Not intended to
+#' be called directly, since it performs no input checking.
 #'
 #' @param y vector of observations on the dependent variable.
 #' @param X matrix of regressors.
@@ -30,13 +30,12 @@
 #' @param burnin number of discarded iterations.
 #' @param thin thinning interval.
 #' @param keep_u whether to store the augmented inefficiency draws.
-#' @param keep_ll whether to store pointwise log-likelihood contributions.
 #' @param verbose how often to report progress; 0 for no reporting.
 #'
 #' @return A named list of draw matrices.
 #'
 #' @keywords internal
-gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, keep_u, keep_ll, verbose) {
-    .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, keep_u, keep_ll, verbose)
+gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose) {
+    .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, keep_u, verbose)
 }
 

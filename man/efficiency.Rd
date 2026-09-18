@@ -2,16 +2,16 @@
 % Please edit documentation in R/efficiency.R
 \name{efficiency}
 \alias{efficiency}
-\alias{efficiency.bsfa}
+\alias{efficiency.sfmodel}
 \title{Posterior efficiency scores}
 \usage{
 efficiency(object, ...)
 
-\method{efficiency}{bsfa}(object, probs = c(0.05, 0.5, 0.95), ...)
+\method{efficiency}{sfmodel}(object, probs = c(0.05, 0.5, 0.95), ...)
 }
 \arguments{
-\item{object}{an object of class \code{"bsfa"}, estimated with
-\code{keep_u = TRUE}.}
+\item{object}{an object of class \code{"sfmodel_exp"} or
+\code{"sfmodel_hn"}, estimated with \code{keep_u = TRUE}.}
 
 \item{...}{unused, for compatibility with the generic.}
 
@@ -38,10 +38,11 @@ unobserved quantity and carries no comparable measure of uncertainty.
 set.seed(1234)
 d <- sim_sf(n = 100, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
 
-est <- create_sfmodel_exp(y ~ x1, data = d,
-                          iterations = 500, burnin = 200)
-est <- draw_posterior(add_priors(est))
-head(efficiency(est))
+model <- create_sfmodel_exp(y ~ x1, data = d,
+                            iterations = 500, burnin = 200)
+model <- add_posterior_coefficients(add_priors(model))
+
+head(efficiency(model))
 
 }
 \references{

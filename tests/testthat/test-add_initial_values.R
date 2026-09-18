@@ -49,7 +49,7 @@ test_that("a seed is stored and validated", {
   d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
   m <- create_sfmodel_exp(y ~ x1, data = d)
 
-  expect_equal(add_seed(m, 99)$seed, 99)
+  expect_equal(add_seed(m, 99)$model$seed, 99)
   expect_error(add_seed(m, "a"), "single number")
   expect_error(add_seed(m, c(1, 2)), "single number")
 })

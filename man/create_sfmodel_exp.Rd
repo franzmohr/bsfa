@@ -48,10 +48,10 @@ An object of class \code{"sfmodel_exp"} or \code{"sfmodel_hn"}, both
   inheriting from \code{"sfmodel"}.
 }
 \description{
-Sets up the model object that the \code{add_*} functions and
-\code{\link{draw_posterior}} operate on. The two functions differ only in the
-distribution assumed for the one-sided inefficiency term, which determines
-the class of the object and hence the methods that apply to it.
+Sets up the model object that the \code{add_*} functions operate on. The two
+functions differ only in the distribution assumed for the one-sided
+inefficiency term, which determines the class of the object and hence the
+methods that apply to it.
 }
 \details{
 The model is
@@ -89,5 +89,5 @@ Development Economics}, 9(1), 43--64.
 }
 \seealso{
 \code{\link{add_priors}}, \code{\link{add_initial_values}},
-  \code{\link{add_seed}}, \code{\link{draw_posterior}}
+  \code{\link{add_seed}}, \code{\link{add_posterior_coefficients}}
 }

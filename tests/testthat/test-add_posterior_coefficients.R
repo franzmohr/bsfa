@@ -1,0 +1,214 @@
+test_that("draws are attached to the model object as mcmc blocks", {
+  set.seed(1)
+  d <- sim_sf(n = 80, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4)
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1 + x2, data = d,
+                       iterations = 200, burnin = 100, thin = 2)))
+
+  # The object keeps its class; estimation adds to it rather than replacing it.
+  expect_s3_class(est, "sfmodel_exp")
+  expect_s3_class(est, "sfmodel")
+
+  expect_s3_class(est$posterior$beta$coeffs, "mcmc")
+  expect_equal(dim(est$posterior$beta$coeffs), c(100L, 3L))
+  expect_equal(colnames(est$posterior$beta$coeffs),
+               c("(Intercept)", "x1", "x2"))
+  expect_equal(coda::mcpar(est$posterior$beta$coeffs), c(102, 300, 2))
+
+  expect_equal(dim(est$posterior$sigma_v$coeffs), c(100L, 1L))
+  expect_equal(dim(est$posterior$lambda$coeffs), c(100L, 1L))
+  expect_null(est$posterior$sigma_u)
+  expect_equal(dim(est$posterior$u$coeffs), c(100L, 80L))
+  expect_true(all(est$posterior$u$coeffs >= 0))
+})
+
+test_that("the half-normal model names its own parameter block", {
+  set.seed(2)
+  d <- sim_sf(n = 80, beta = c(1, 0.5), sigma_v = 0.2, par_u = 0.3,
+              ineff = "halfnormal")
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_hn(y ~ x1, data = d, iterations = 200, burnin = 100)))
+
+  expect_s3_class(est, "sfmodel_hn")
+  expect_equal(dim(est$posterior$sigma_u$coeffs), c(200L, 1L))
+  expect_null(est$posterior$lambda)
+  # The signal-to-noise ratio is reported for the half-normal model only.
+  expect_true("lambda" %in% rownames(summary(est)$coefficients))
+})
+
+test_that("keep_u = FALSE omits the inefficiency block", {
+  set.seed(4)
+  d <- sim_sf(n = 80, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 100, burnin = 50)),
+    keep_u = FALSE)
+
+  expect_null(est$posterior$u)
+  expect_error(efficiency(est), "keep_u")
+})
+
+test_that("the exponential model recovers its parameters", {
+  set.seed(123)
+  beta <- c(1, 0.5, 0.3)
+  d <- sim_sf(n = 1500, beta = beta, sigma_v = 0.2, par_u = 4)
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1 + x2, data = d,
+                       iterations = 2000, burnin = 1000)))
+
+  pm <- colMeans(est$posterior$beta$coeffs)
+  expect_equal(unname(pm[2:3]), beta[2:3], tolerance = 0.05)
+  # The intercept is only weakly separated from the mean of the one-sided term,
+  # so it is checked against a looser bound than the slopes.
+  expect_equal(unname(pm[1]), beta[1], tolerance = 0.15)
+  expect_equal(mean(est$posterior$sigma_v$coeffs), 0.2, tolerance = 0.1)
+  expect_equal(mean(est$posterior$lambda$coeffs), 4, tolerance = 1.5)
+})
+
+test_that("the half-normal model recovers its parameters", {
+  set.seed(321)
+  d <- sim_sf(n = 1500, beta = c(1, 0.5), sigma_v = 0.2, par_u = 0.3,
+              ineff = "halfnormal")
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_hn(y ~ x1, data = d, iterations = 2000, burnin = 1000)))
+
+  expect_equal(unname(colMeans(est$posterior$beta$coeffs)[2]), 0.5,
+               tolerance = 0.05)
+  expect_equal(mean(est$posterior$sigma_u$coeffs), 0.3, tolerance = 0.15)
+})
+
+test_that("the cost frontier flips the sign of the one-sided term", {
+  set.seed(7)
+  d <- sim_sf(n = 800, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4,
+              type = "cost")
+
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, type = "cost",
+                       iterations = 1000, burnin = 500)))
+  expect_equal(unname(colMeans(est$posterior$beta$coeffs)[2]), 0.5,
+               tolerance = 0.05)
+
+  # Estimating the same data as a production frontier must inflate the
+  # residual variance, because the one-sided term is then pushed the wrong way.
+  wrong <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, type = "production",
+                       iterations = 1000, burnin = 500)))
+  expect_gt(mean(wrong$posterior$sigma_v$coeffs),
+            mean(est$posterior$sigma_v$coeffs))
+})
+
+test_that("efficiency scores track the simulated truth", {
+  set.seed(99)
+  d <- sim_sf(n = 400, beta = c(1, 0.5), sigma_v = 0.1, par_u = 4)
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 1000, burnin = 500)))
+
+  eff <- efficiency(est)
+  expect_equal(nrow(eff), 400L)
+  expect_true(all(eff$mean > 0 & eff$mean <= 1))
+  expect_true(all(eff[["5%"]] <= eff[["95%"]]))
+  expect_gt(cor(eff$mean, attr(d, "efficiency")), 0.8)
+})
+
+test_that("the panel model gives one inefficiency term per unit", {
+  set.seed(11)
+  d <- sim_sf(n = 100, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4,
+              n_time = 5)
+  est <- add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1 + x2, data = d, id = "id",
+                       iterations = 500, burnin = 250)))
+
+  expect_equal(est$n, 500L)
+  expect_equal(est$data$n_units, 100L)
+  expect_equal(ncol(est$posterior$u$coeffs), 100L)
+  expect_gt(cor(colMeans(exp(-est$posterior$u$coeffs)),
+                attr(d, "efficiency")), 0.8)
+})
+
+test_that("the stored seed fixes the draws", {
+  set.seed(3)
+  d <- sim_sf(n = 100, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_seed(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 200, burnin = 100)), 777)
+
+  a <- add_posterior_coefficients(m)
+  b <- add_posterior_coefficients(m)
+  expect_equal(a$posterior$beta$coeffs, b$posterior$beta$coeffs)
+
+  # add_seed keeps the seed the model already had out of it, and
+  # add_initial_values does not overwrite one that is already there.
+  expect_equal(add_initial_values(m)$model$seed, 777)
+})
+
+test_that("set.seed after add_initial_values does not change the draws", {
+  d <- sim_sf(n = 100, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_initial_values(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 200, burnin = 100)))
+
+  set.seed(1)
+  a <- add_posterior_coefficients(m)
+  set.seed(2)
+  b <- add_posterior_coefficients(m)
+  expect_equal(a$posterior$beta$coeffs, b$posterior$beta$coeffs)
+})
+
+test_that("the generator is left as it was found", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_seed(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 100, burnin = 50)), 1)
+
+  set.seed(4321)
+  before <- .Random.seed
+  invisible(add_posterior_coefficients(m))
+  expect_equal(.Random.seed, before)
+})
+
+test_that("starting from the prior reaches the same posterior", {
+  set.seed(17)
+  d <- sim_sf(n = 600, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d,
+                                     iterations = 2000, burnin = 1000))
+
+  a <- add_posterior_coefficients(add_initial_values(m, method = "ols"))
+  b <- add_posterior_coefficients(add_initial_values(m, method = "prior"))
+
+  expect_equal(colMeans(a$posterior$beta$coeffs),
+               colMeans(b$posterior$beta$coeffs), tolerance = 0.05)
+})
+
+test_that("an alternative sampler can be supplied", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d,
+                                     iterations = 100, burnin = 50))
+
+  fake <- function(object) {
+    object$posterior <- list(beta = list(coeffs = "supplied elsewhere"))
+    object
+  }
+  est <- add_posterior_coefficients(m, posterior_function = fake)
+
+  expect_equal(est$posterior$beta$coeffs, "supplied elsewhere")
+  expect_s3_class(est, "sfmodel_exp")
+})
+
+test_that("priors must be added before simulating", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- create_sfmodel_exp(y ~ x1, data = d, iterations = 100, burnin = 50)
+
+  expect_error(add_posterior_coefficients(m), "Add priors before simulating")
+  # Initial values, unlike priors, are filled in with their default.
+  expect_false(is.null(add_posterior_coefficients(add_priors(m))$initial))
+})
+
+test_that("summary requires draws and a valid credible band", {
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d,
+                                     iterations = 100, burnin = 50))
+
+  expect_error(summary(m), "does not contain posterior draws")
+
+  est <- add_posterior_coefficients(m)
+  expect_s3_class(summary(est), "summary.sfmodel")
+  expect_error(summary(est, ci = 1.5), "between 0 and 1")
+  expect_equal(colnames(summary(est, ci = 0.9)$coefficients),
+               c("mean", "sd", "5%", "median", "95%"))
+})

@@ -25,7 +25,6 @@ gibbs_sf(
   burnin,
   thin,
   keep_u,
-  keep_ll,
   verbose
 )
 }
@@ -74,15 +73,13 @@ for \code{ineff = 0} and the rate for \code{ineff = 1}.}
 
 \item{keep_u}{whether to store the augmented inefficiency draws.}
 
-\item{keep_ll}{whether to store pointwise log-likelihood contributions.}
-
 \item{verbose}{how often to report progress; 0 for no reporting.}
 }
 \value{
 A named list of draw matrices.
 }
 \description{
-Workhorse behind \code{\link{bsfa}}. Not intended to be called directly,
-since it performs no input checking.
+Workhorse behind \code{\link{add_posterior_coefficients}}. Not intended to
+be called directly, since it performs no input checking.
 }
 \keyword{internal}

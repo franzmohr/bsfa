@@ -20,4 +20,6 @@
 
 #' @useDynLib bsfa, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom graphics boxplot hist par points segments
+#' @importFrom grDevices grey
 NULL

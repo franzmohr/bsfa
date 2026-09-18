@@ -26,8 +26,8 @@ remotes::install_github("franzmohr/bsfa")
 
 A model is built up step by step, in the manner of
 [bvartools](https://github.com/franzmohr/bvartools): a constructor fixes the
-data and the specification, the `add_*` functions attach the remaining blocks,
-and `draw_posterior()` runs the sampler.
+data and the specification, and the `add_*` functions attach the remaining
+blocks and then the posterior draws.
 
 ```r
 library(bsfa)
@@ -40,14 +40,19 @@ model <- create_sfmodel_exp(y ~ x1 + x2, data = d,
 model <- add_priors(model)
 model <- add_initial_values(model)
 model <- add_seed(model, 1234)
+model <- add_posterior_coefficients(model)
+model <- add_posterior_loglik(model)
 
-est <- draw_posterior(model)
-summary(est)
-head(efficiency(est))
+summary(model)
+plot(model, type = "efficiency")
+selection_criteria(model)
+head(efficiency(model))
 ```
 
-Printing the model object before estimating it reports which blocks have been
-set, which is worth a glance before committing to a long run.
+The draws are attached to the same object rather than returned as a separate
+result, and are stored as `coda` objects, one block per parameter. Printing the
+model reports which blocks have been set, which is worth a glance before
+committing to a long run.
 
 The distribution of the inefficiency term is carried by the model's class rather
 than by an argument, so each variant gets its own methods:
@@ -79,7 +84,8 @@ matched only in expectation.
 | Inefficiency | exponential, half-normal |
 | Frontier | production, cost |
 | Data | cross-section, time-invariant panel (Pitt and Lee, 1981) |
-| Output | posterior draws of coefficients, variances and unit-level efficiency; pointwise log-likelihood for information criteria |
+| Output | posterior draws of coefficients, variances and unit-level efficiency |
+| Inference | `summary()`, `plot()`, `efficiency()`, `selection_criteria()` (LL, AIC, BIC, HQ, WAIC) |
 
 ## Roadmap
 
@@ -105,16 +111,30 @@ reasons unrelated to efficiency. The planned extensions, roughly in order:
 Each of these is a block of the specification rather than an argument to an
 estimator, which is why the package is organised around a model object.
 
+`selection_criteria()` does not provide LOOIC. The Pareto smoothed importance
+sampling it needs is a piece of machinery in its own right and deserves its own
+testing pass, so it is left out rather than added hastily. Note also that the
+pointwise log-likelihood, and therefore every criterion, is unavailable for
+panel models: the units share one inefficiency term, so integrating it out
+couples the observations that belong to the same unit.
+
 ## Validation
 
 The exponential, time-invariant panel specification reproduces the sampler
 distributed by Justin Tobias for exercise 14.13 of Koop, Poirier and Tobias
-(2007), *Bayesian Econometric Methods*. Its full conditionals were checked
-against the implementation here: the mean of the truncated normal for `z_i`
-carries the `-1/(T h mu_z)` shift contributed by the exponential prior, which in
-the half-normal case is replaced by an additional `1/sigma_u^2` term in the
-precision. That program is a useful external reference because it ships with a
-data-generating script, giving a known truth to sample against.
+(2007), *Bayesian Econometric Methods*. The `koop-exercise` vignette translates
+both that program and its data-generating script into `bsfa` and compares the
+results, which is worth having because the data-generating process is known.
+
+The correspondence is exact. The mean of the truncated normal full conditional
+for `z_i` carries the `-1/(T h mu_z)` shift contributed by the exponential
+prior, which in the half-normal case is replaced by an additional `1/sigma_u^2`
+term in the precision; that one line is the whole difference between the two
+specifications inside the sampler.
+
+The closed-form log-likelihoods are checked against direct numerical
+integration of the composed-error density in the test suite, for both
+distributions and for both orientations of the frontier.
 
 ## References
 

@@ -19,7 +19,7 @@ Description: Markov chain Monte Carlo methods for the Bayesian estimation of
 License: GPL (>= 2)
 Encoding: UTF-8
 Depends: R (>= 3.5.0)
-Imports: Rcpp (>= 1.0.0), stats
+Imports: coda, grDevices, graphics, Rcpp (>= 1.0.0), stats
 LinkingTo: Rcpp, RcppArmadillo
 Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr

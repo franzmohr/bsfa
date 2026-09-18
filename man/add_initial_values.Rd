@@ -21,7 +21,8 @@ add_initial_values(object, ...)
 \item{method}{either \code{"ols"} or \code{"prior"}. See details.}
 }
 \value{
-The model object with the element \code{initial} attached.
+The model object with the element \code{initial} attached, and the
+  element \code{seed} of \code{model} if it did not have one.
 }
 \description{
 Attaches the starting values of the Gibbs sampler to a model object. Priors
@@ -38,6 +39,13 @@ With \code{method = "prior"} every parameter is drawn from its prior instead.
 This is the more honest choice when checking convergence, because running
 several chains from prior draws disperses the starting points rather than
 concentrating them all on the same least squares fit.
+
+The function also stores the seed of the posterior simulation as element
+\code{seed} of \code{object$model}, unless the model has one already. It is
+drawn from R's random number generator, so \code{set.seed()} before this
+call makes it reproducible, and \code{\link{add_seed}} replaces it
+afterwards. A \code{set.seed()} call placed after this one therefore does
+not change the draws.
 }
 \examples{
 set.seed(1234)

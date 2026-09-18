@@ -1,9 +1,9 @@
 #' Specify a Bayesian stochastic frontier model
 #'
-#' Sets up the model object that the \code{add_*} functions and
-#' \code{\link{draw_posterior}} operate on. The two functions differ only in the
-#' distribution assumed for the one-sided inefficiency term, which determines
-#' the class of the object and hence the methods that apply to it.
+#' Sets up the model object that the \code{add_*} functions operate on. The two
+#' functions differ only in the distribution assumed for the one-sided
+#' inefficiency term, which determines the class of the object and hence the
+#' methods that apply to it.
 #'
 #' The model is
 #' \deqn{y_i = x_i' \beta - u_{g(i)} + v_i, \quad v_i \sim N(0, \sigma_v^2),}
@@ -39,7 +39,7 @@
 #'   inheriting from \code{"sfmodel"}.
 #'
 #' @seealso \code{\link{add_priors}}, \code{\link{add_initial_values}},
-#'   \code{\link{add_seed}}, \code{\link{draw_posterior}}
+#'   \code{\link{add_seed}}, \code{\link{add_posterior_coefficients}}
 #'
 #' @references
 #' Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical
@@ -160,7 +160,7 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
        thin = thin,
        priors = NULL,
        initial = NULL,
-       seed = NULL,
+       posterior = NULL,
        call = cl)
 }
 
@@ -182,7 +182,12 @@ print.sfmodel <- function(x, ...) {
   tick <- function(done) if (done) "set" else "not set"
   cat("  priors         ", tick(!is.null(x$priors)), "\n", sep = "")
   cat("  initial values ", tick(!is.null(x$initial)), "\n", sep = "")
-  cat("  seed           ", tick(!is.null(x$seed)), "\n", sep = "")
+  cat("  seed           ", tick(!is.null(x$model$seed)), "\n", sep = "")
+  cat("  posterior      ",
+      if (is.null(x$posterior)) "not simulated" else
+        paste0("simulated",
+               if (is.null(x$posterior$loglik)) "" else ", with loglik"),
+      "\n", sep = "")
 
   if (!is.null(x$priors)) {
     cat("\nPrior median efficiency: ", format(x$priors$r_star), "\n", sep = "")

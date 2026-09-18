@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6,
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
                       fig.height = 4)
 ```
 
@@ -37,7 +37,7 @@ $\lambda$, and half-normal with scale $\sigma_u$.
 
 A model is assembled step by step rather than in a single call. The constructor
 fixes the data, the frontier and the MCMC settings; the `add_*` functions attach
-the remaining blocks; `draw_posterior()` runs the sampler.
+the remaining blocks and then the posterior draws.
 
 ```{r}
 d <- sim_sf(n = 500, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4)
@@ -58,10 +58,15 @@ model <- add_seed(model, 5555)
 model
 ```
 
+`add_initial_values()` also draws a seed if the model does not have one, so a
+model is reproducible whether or not `add_seed()` is used. The sampler sets that
+seed and puts the generator back afterwards, which means a `set.seed()` call
+placed between these steps and the simulation does not change the result.
+
 The distribution of the inefficiency term is carried by the class of the object,
 `sfmodel_exp` here and `sfmodel_hn` for the half-normal alternative, so
-`add_priors()` and `draw_posterior()` dispatch on it. The next section shows why
-that matters more than it might appear.
+`add_priors()` and `add_posterior_coefficients()` dispatch on it. The next
+section shows why that matters more than it might appear.
 
 ## Choosing a prior
 
@@ -92,11 +97,11 @@ need different elicitations of the same quantity, which is exactly what the
 separate `add_priors()` methods provide — and why the argument is named after
 the parameter it governs, `lambda` for one model and `sigma_u` for the other.
 
-## A cross-sectional example
+## Drawing from the posterior
 
 ```{r}
-est <- draw_posterior(model)
-summary(est)
+model <- add_posterior_coefficients(model)
+summary(model)
 ```
 
 The simulated data used $\beta = (1, 0.5, 0.3)$, $\sigma_v = 0.2$ and
@@ -106,28 +111,64 @@ only the asymmetry of the residuals. That is a feature of the model rather than
 of the sampler, and it is worth keeping in mind whenever the level of the
 frontier is itself of interest.
 
-Efficiency scores, with their posterior uncertainty:
+The draws are kept as `coda` objects, one block per parameter, so anything that
+reads `mcmc` objects works on them directly:
 
 ```{r}
-eff <- efficiency(est)
+coda::effectiveSize(model$posterior$lambda$coeffs)
+```
+
+```{r, fig.height = 5}
+plot(model, type = "trace")
+```
+
+## Efficiency scores
+
+```{r}
+eff <- efficiency(model)
 head(eff)
 ```
 
 ```{r}
-plot(attr(d, "efficiency"), eff$mean,
-     xlab = "Simulated efficiency", ylab = "Posterior mean",
-     pch = 16, col = grey(0.3, 0.5))
-abline(0, 1)
+plot(model, type = "efficiency")
 ```
 
-The scatter around the 45-degree line is genuine, not a defect: with one
-observation per unit there is very little information about any individual
-$u_i$, and the posterior shrinks each score towards the prior. The width of the
-intervals in `eff` reports exactly how much.
+The left panel is the summary usually reported. The right one is the reason to
+look further: with one observation per unit there is very little information
+about any individual $u_i$, and the bands are wide enough to cover much of the
+range the histogram spreads over. That uncertainty is real, and it is what the
+maximum likelihood route cannot report, since the Jondrow et al. (1982)
+conditional mean is a point predictor of an unobserved quantity.
 
 ```{r}
 summary(eff[["95%"]] - eff[["5%"]])
 ```
+
+## Comparing specifications
+
+`add_posterior_loglik()` evaluates the pointwise log-likelihood with the
+inefficiency term integrated out, and `selection_criteria()` turns those draws
+into information criteria.
+
+```{r}
+fit <- function(model) {
+  model <- add_posterior_coefficients(add_priors(model))
+  add_posterior_loglik(model)
+}
+
+m_exp <- fit(create_sfmodel_exp(y ~ x1 + x2, data = d,
+                                iterations = 4000, burnin = 1000))
+m_hn <- fit(create_sfmodel_hn(y ~ x1 + x2, data = d,
+                              iterations = 4000, burnin = 1000))
+
+selection_criteria(m_exp)
+selection_criteria(m_hn)
+```
+
+The data were generated with exponential inefficiency, and the criteria prefer
+that specification. They are not always so decisive: the two distributions are
+hard to tell apart when inefficiency is small relative to noise, which is the
+usual situation.
 
 ## Panel data
 
@@ -141,7 +182,7 @@ dp <- sim_sf(n = 100, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4,
 
 estp <- create_sfmodel_exp(y ~ x1 + x2, data = dp, id = "id",
                            iterations = 4000, burnin = 1000)
-estp <- draw_posterior(add_priors(estp))
+estp <- add_posterior_coefficients(add_priors(estp))
 
 effp <- efficiency(estp)
 summary(effp[["95%"]] - effp[["5%"]])
@@ -153,6 +194,12 @@ the model, every persistent difference between units — technology, market,
 business model — is booked as inefficiency. Separating those two requires a
 model with both a unit effect and a persistent inefficiency component, which is
 on the roadmap rather than in the package today.
+
+Note also that `add_posterior_loglik()` refuses a panel model. The units share
+one inefficiency term, so integrating it out couples the observations that
+belong to the same unit and the likelihood no longer factorises over them. The
+information criteria are therefore unavailable here, and a panel specification
+cannot be compared with a cross-sectional one this way.
 
 ## Checking convergence
 
@@ -167,7 +214,7 @@ base <- add_priors(create_sfmodel_exp(y ~ x1 + x2, data = d,
 
 chains <- lapply(1:3, function(i) {
   m <- add_seed(add_initial_values(base, method = "prior"), i)
-  colMeans(draw_posterior(m, keep_u = FALSE)$draws$beta)
+  colMeans(add_posterior_coefficients(m, keep_u = FALSE)$posterior$beta$coeffs)
 })
 do.call(rbind, chains)
 ```

@@ -14,12 +14,20 @@
 #' several chains from prior draws disperses the starting points rather than
 #' concentrating them all on the same least squares fit.
 #'
+#' The function also stores the seed of the posterior simulation as element
+#' \code{seed} of \code{object$model}, unless the model has one already. It is
+#' drawn from R's random number generator, so \code{set.seed()} before this
+#' call makes it reproducible, and \code{\link{add_seed}} replaces it
+#' afterwards. A \code{set.seed()} call placed after this one therefore does
+#' not change the draws.
+#'
 #' @param object an object of class \code{"sfmodel_exp"} or
 #'   \code{"sfmodel_hn"}, with priors already added.
 #' @param method either \code{"ols"} or \code{"prior"}. See details.
 #' @param ... unused, for compatibility with the generic.
 #'
-#' @return The model object with the element \code{initial} attached.
+#' @return The model object with the element \code{initial} attached, and the
+#'   element \code{seed} of \code{model} if it did not have one.
 #'
 #' @seealso \code{\link{add_priors}}
 #'
@@ -50,8 +58,7 @@ add_initial_values.sfmodel_exp <- function(object, method = "ols", ...) {
                        prior = stats::rgamma(1, shape = object$priors$shape_u,
                                              rate = object$priors$rate_u))
 
-  object$initial <- init
-  object
+  attach_initial(object, init)
 }
 
 #' @rdname add_initial_values
@@ -68,8 +75,7 @@ add_initial_values.sfmodel_hn <- function(object, method = "ols", ...) {
     prior = 1 / sqrt(stats::rgamma(1, shape = object$priors$shape_u,
                                    rate = object$priors$rate_u)))
 
-  object$initial <- init
-  object
+  attach_initial(object, init)
 }
 
 #' Starting values shared by both inefficiency distributions
@@ -108,4 +114,27 @@ initial_common <- function(object, method) {
        sigma_v2 = sigma_v2,
        u = rep(0, object$data$n_units),
        method = method)
+}
+
+#' Attach the shared starting values and a seed
+#'
+#' @param object a model object with priors attached.
+#' @param init the starting values built by \code{initial_common}.
+#'
+#' @return The model object with \code{initial} and, if it had none,
+#'   \code{model$seed} attached.
+#'
+#' @keywords internal
+attach_initial <- function(object, init) {
+
+  object$initial <- init
+
+  # The seed of the posterior simulation, unless the model has one already. It
+  # is drawn from R's generator, so set.seed() before this call makes it
+  # reproducible, and add_seed() replaces it afterwards.
+  if (is.null(object$model$seed)) {
+    object$model$seed <- .draw_model_seed()
+  }
+
+  object
 }

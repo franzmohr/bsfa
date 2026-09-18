@@ -144,9 +144,12 @@ prior_coef_sigma <- function(object, coef, sigma) {
     stop("'coef$v_i' must be a scalar or a ", k, " x ", k, " matrix.")
   }
 
-  if (sigma$shape <= 0 || sigma$rate <= 0) {
+  # Zeros are allowed: they give the improper limiting prior p(h) proportional
+  # to 1/h, which is the non-informative choice used in much of the literature
+  # and still leaves a proper posterior here.
+  if (sigma$shape < 0 || sigma$rate < 0) {
     stop("The shape and rate of the prior on the error precision must be ",
-         "positive.")
+         "non-negative.")
   }
 
   list(b0 = b0, B0i = B0i, shape_v = sigma$shape, rate_v = sigma$rate)

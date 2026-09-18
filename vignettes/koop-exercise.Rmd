@@ -1,0 +1,237 @@
+---
+title: "Reproducing the panel frontier exercise of Koop, Poirier and Tobias"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Reproducing the panel frontier exercise of Koop, Poirier and Tobias}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6,
+                      fig.height = 4)
+```
+
+```{r setup}
+library(bsfa)
+```
+
+Exercise 14.13 of Koop, Poirier and Tobias (2007), which follows Chapter 7 of
+Koop (2003), estimates a panel stochastic frontier model by Gibbs sampling with
+data augmentation. The MATLAB programs distributed with the book, `ch14q13dgp.m`
+and `ch14q13.m`, generate an artificial panel and then sample from the
+posterior. Because the data-generating process is known, the exercise is a
+useful external check on this package: the sampler here should reproduce it.
+
+This vignette translates both programs into `bsfa` and compares the results.
+
+## The data-generating process
+
+`ch14q13dgp.m` builds a balanced panel of $N = 100$ individuals observed over
+$T = 5$ periods, with an intercept and two regressors drawn from a uniform
+distribution:
+
+$$y_{it} = x_{it}'\theta - z_i + \varepsilon_{it}, \qquad
+  \varepsilon_{it} \sim N(0, \sigma^2),$$
+
+with $\theta = (1, 0.75, 0.25)'$ and $\sigma = 0.2$, so the error precision is
+$h = 25$. The inefficiency term is drawn once per individual and held fixed over
+that individual's five periods — the time-invariant specification of Pitt and
+Lee (1981).
+
+In the MATLAB the draw is `gamm_rnd(1, 1, .5*vz, .5*vz*muterm)` with `vz = 2`
+and `muterm = 1/muz`, which is a gamma with shape `vz/2 = 1` and rate `1/muz`:
+an exponential with mean $\mu_z = -\log(0.85)$. The individuals are therefore
+about 85 per cent efficient on average by construction.
+
+```{r}
+set.seed(14013)
+
+n <- 100
+t <- 5
+theta <- c(1, 0.75, 0.25)
+sigma <- 0.2
+mu_z <- -log(0.85)
+
+x <- cbind(x1 = runif(n * t), x2 = runif(n * t))
+z <- rexp(n, rate = 1 / mu_z)
+id <- rep(seq_len(n), each = t)
+
+y <- as.numeric(cbind(1, x) %*% theta) - z[id] + rnorm(n * t, sd = sigma)
+
+stoch_front <- data.frame(y = y, x, id = id)
+head(stoch_front, 3)
+```
+
+## The prior
+
+`ch14q13.m` sets an independent normal–gamma prior plus a hierarchical prior on
+the inefficiencies. Each of its three blocks maps onto one argument of
+`add_priors()`.
+
+The coefficients get a normal prior centred at $(0, 0.5, 0.5)'$, with a variance
+of 100 on the intercept and $0.25^2$ on the slopes. `add_priors()` takes the
+prior *precision*, so the variances are inverted:
+
+```{r}
+v_beta <- diag(c(100, 0.25^2, 0.25^2))
+coef_prior <- list(mu = c(0, 0.5, 0.5), v_i = solve(v_beta))
+```
+
+Note that this prior is deliberately at odds with the truth: it puts both slopes
+at 0.5 with a standard deviation of 0.25, while the data were generated with
+0.75 and 0.25.
+
+The error precision gets `v0 = 0` degrees of freedom, which is the improper
+limiting prior $p(h) \propto 1/h$. In the shape and rate parameterisation used
+here that is a pair of zeros:
+
+```{r}
+sigma_prior <- list(shape = 0, rate = 0)
+```
+
+The inefficiency prior uses `v_z = 2` and `mu_z = -log(.5)`, that is, a prior
+median efficiency of one half. This is the elicitation of van den Broeck, Koop,
+Osiewalski and Steel (1994), and `add_priors()` takes the anchor directly:
+
+```{r}
+lambda_prior <- list(r_star = 0.5, shape = 1)
+```
+
+So the prior expects far more inefficiency than the data contain, which makes
+the exercise a reasonable test of whether the likelihood dominates.
+
+## Estimation
+
+`ch14q13.m` discards 25 draws and keeps 250. Those numbers are much too small
+for real work, and the book says so, but they are what the reference program
+uses:
+
+```{r}
+model <- create_sfmodel_exp(y ~ x1 + x2, data = stoch_front, id = "id",
+                            iterations = 250, burnin = 25)
+model <- add_priors(model,
+                    coef = coef_prior,
+                    sigma = sigma_prior,
+                    lambda = lambda_prior)
+model <- add_initial_values(model)
+model <- add_seed(model, 14013)
+model <- add_posterior_coefficients(model)
+
+summary(model)
+```
+
+Supplying `id` is what makes this the Pitt and Lee specification: one
+inefficiency term per individual, held fixed over that individual's periods,
+exactly as `zdraw` is in the MATLAB loop.
+
+The posterior means sit close to $\theta = (1, 0.75, 0.25)$ despite the prior
+pulling both slopes towards 0.5. The error standard deviation is recovered near
+0.2, which is the precision of 25 the program prints.
+
+## A longer run
+
+Two hundred and fifty draws is not enough to pin down the tails. With a longer
+chain the picture firms up:
+
+```{r}
+long <- create_sfmodel_exp(y ~ x1 + x2, data = stoch_front, id = "id",
+                           iterations = 20000, burnin = 2000)
+long <- add_priors(long,
+                   coef = coef_prior,
+                   sigma = sigma_prior,
+                   lambda = lambda_prior)
+long <- add_seed(add_initial_values(long), 14013)
+long <- add_posterior_coefficients(long)
+
+round(summary(long)$coefficients, 4)
+```
+
+Comparing the two against the values used to simulate the data:
+
+```{r}
+truth <- c(theta, sigma, 1 / mu_z)
+cbind(truth = truth,
+      short = summary(model)$coefficients[, "mean"],
+      long = summary(long)$coefficients[, "mean"])
+```
+
+The last row is the rate $\lambda$ of the exponential, whose true value is
+$1/\mu_z$. It is the least well determined of the parameters: with $N = 100$
+individuals there are only a hundred observations on the inefficiency
+distribution, however long the panel.
+
+## Figure 7.5
+
+The program closes with a histogram of the posterior means of the efficiencies,
+which is Figure 7.5 in Koop (2003).
+
+```{r, fig.width = 7}
+plot(long, type = "efficiency")
+```
+
+The left panel is that figure. The right one is what the book's program does not
+show, and is the more interesting of the two.
+
+Because `bsfa` keeps the augmented draws rather than only their means, the same
+object also answers how well any individual score is determined:
+
+```{r}
+eff <- efficiency(long)
+head(eff)
+```
+
+Each interval is wide even with five observations per individual. That is not a
+shortcoming of the sampler but the shape of the problem: a single $z_i$ has to
+be told apart from five normal errors, so the data leave a good deal of
+uncertainty about it. Maximum likelihood faces the same difficulty, and reports
+the Jondrow et al. (1982) conditional mean without an interval to say so.
+
+```{r}
+plot(exp(-z), eff$mean,
+     xlab = "Simulated efficiency", ylab = "Posterior mean",
+     pch = 16, col = grey(0.3, 0.6))
+abline(0, 1)
+```
+
+## How the sampler corresponds to the program
+
+The full conditional for $z_i$ in `ch14q13.m` is a normal truncated at zero,
+with
+
+```
+zvar  = 1 / (t * h)
+zterm = 1 / (t * h * muz)
+zmean = mean(x_i) * beta - mean(y_i) - zterm
+```
+
+The same conditional is used here. Writing $e_{it} = y_{it} - x_{it}'\beta$, the
+precision is $T_i / \sigma_v^2$ and the mean is
+$\left(-\sum_t e_{it} / \sigma_v^2 - \lambda\right)$ divided by that precision,
+which is the expression above once $\lambda = 1/\mu_z$ and $h = 1/\sigma_v^2$
+are substituted. The `zterm` is the contribution of the exponential prior.
+
+The half-normal model of `create_sfmodel_hn()` differs in exactly that place:
+there is no shift in the mean, and instead the precision gains a term
+$1/\sigma_u^2$. That one line is the whole difference between the two
+specifications inside the sampler, and the reason the package splits them by
+class is the prior rather than the loop.
+
+## References
+
+Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On the
+estimation of technical inefficiency in the stochastic frontier production
+function model. *Journal of Econometrics*, 19(2–3), 233–238.
+
+Koop, G. (2003). *Bayesian Econometrics*. Chichester: Wiley.
+
+Koop, G., Poirier, D. J., & Tobias, J. L. (2007). *Bayesian Econometric
+Methods*. Cambridge: Cambridge University Press.
+
+Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical
+inefficiency in the Indonesian weaving industry. *Journal of Development
+Economics*, 9(1), 43–64.
+
+van den Broeck, J., Koop, G., Osiewalski, J., & Steel, M. F. J. (1994).
+Stochastic frontier models: A Bayesian perspective. *Journal of Econometrics*,
+61(2), 273–303.

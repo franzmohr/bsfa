@@ -45,8 +45,8 @@ static double rtnorm_pos(const double mu, const double sd) {
 
 //' Gibbs sampler for the stochastic frontier model
 //'
-//' Workhorse behind \code{\link{bsfa}}. Not intended to be called directly,
-//' since it performs no input checking.
+//' Workhorse behind \code{\link{add_posterior_coefficients}}. Not intended to
+//' be called directly, since it performs no input checking.
 //'
 //' @param y vector of observations on the dependent variable.
 //' @param X matrix of regressors.
@@ -72,7 +72,6 @@ static double rtnorm_pos(const double mu, const double sd) {
 //' @param burnin number of discarded iterations.
 //' @param thin thinning interval.
 //' @param keep_u whether to store the augmented inefficiency draws.
-//' @param keep_ll whether to store pointwise log-likelihood contributions.
 //' @param verbose how often to report progress; 0 for no reporting.
 //'
 //' @return A named list of draw matrices.
@@ -94,7 +93,7 @@ Rcpp::List gibbs_sf(const arma::vec& y,
                     const int ineff,
                     const double s,
                     const int draws, const int burnin, const int thin,
-                    const bool keep_u, const bool keep_ll,
+                    const bool keep_u,
                     const int verbose) {
 
   const arma::uword n = y.n_elem;
@@ -122,7 +121,6 @@ Rcpp::List gibbs_sf(const arma::vec& y,
   arma::vec sigma_v_store(n_keep, arma::fill::zeros);
   arma::vec par_u_store(n_keep, arma::fill::zeros);
   arma::mat u_store(keep_u ? n_units : 0, keep_u ? n_keep : 0, arma::fill::zeros);
-  arma::mat ll_store(keep_ll ? n : 0, keep_ll ? n_keep : 0, arma::fill::zeros);
 
   const int n_iter = burnin + draws;
   int store = 0;
@@ -184,26 +182,6 @@ Rcpp::List gibbs_sf(const arma::vec& y,
       if (keep_u) {
         u_store.col(store) = u;
       }
-      if (keep_ll) {
-        const double sigma_v = std::sqrt(sigma_v2);
-        const arma::vec e_ll = y - X * beta;
-        const double sig = std::sqrt(sigma_u2 + sigma_v2);
-        const double lam = std::sqrt(sigma_u2) / sigma_v;
-        for (arma::uword i = 0; i < n; i++) {
-          double lli;
-          if (ineff == 0) {
-            lli = std::log(2.0) - std::log(sig) +
-              ::Rf_dnorm4(e_ll(i) / sig, 0.0, 1.0, 1) +
-              ::Rf_pnorm5(s * lam * e_ll(i) / sig, 0.0, 1.0, 1, 1);
-          } else {
-            lli = std::log(lambda) - s * lambda * e_ll(i) +
-              0.5 * lambda * lambda * sigma_v2 +
-              ::Rf_pnorm5(s * e_ll(i) / sigma_v - lambda * sigma_v,
-                          0.0, 1.0, 1, 1);
-          }
-          ll_store(i, store) = lli;
-        }
-      }
       store++;
     }
 
@@ -219,6 +197,5 @@ Rcpp::List gibbs_sf(const arma::vec& y,
     Rcpp::Named("beta") = beta_store.t(),
     Rcpp::Named("sigma_v") = sigma_v_store,
     Rcpp::Named("par_u") = par_u_store,
-    Rcpp::Named("u") = keep_u ? Rcpp::wrap(u_store.t()) : R_NilValue,
-    Rcpp::Named("log_lik") = keep_ll ? Rcpp::wrap(ll_store.t()) : R_NilValue);
+    Rcpp::Named("u") = keep_u ? Rcpp::wrap(u_store.t()) : R_NilValue);
 }

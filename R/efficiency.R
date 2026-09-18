@@ -11,8 +11,8 @@
 #' Jondrow et al. (1982) conditional mean, which is a point predictor of an
 #' unobserved quantity and carries no comparable measure of uncertainty.
 #'
-#' @param object an object of class \code{"bsfa"}, estimated with
-#'   \code{keep_u = TRUE}.
+#' @param object an object of class \code{"sfmodel_exp"} or
+#'   \code{"sfmodel_hn"}, estimated with \code{keep_u = TRUE}.
 #' @param probs quantiles of the posterior to report.
 #' @param ... unused, for compatibility with the generic.
 #'
@@ -28,10 +28,11 @@
 #' set.seed(1234)
 #' d <- sim_sf(n = 100, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
 #'
-#' est <- create_sfmodel_exp(y ~ x1, data = d,
-#'                           iterations = 500, burnin = 200)
-#' est <- draw_posterior(add_priors(est))
-#' head(efficiency(est))
+#' model <- create_sfmodel_exp(y ~ x1, data = d,
+#'                             iterations = 500, burnin = 200)
+#' model <- add_posterior_coefficients(add_priors(model))
+#'
+#' head(efficiency(model))
 #'
 #' @export
 efficiency <- function(object, ...) {
@@ -40,17 +41,18 @@ efficiency <- function(object, ...) {
 
 #' @rdname efficiency
 #' @export
-efficiency.bsfa <- function(object, probs = c(0.05, 0.5, 0.95), ...) {
+efficiency.sfmodel <- function(object, probs = c(0.05, 0.5, 0.95), ...) {
 
-  if (is.null(object$u)) {
-    stop("No inefficiency draws stored. Re-estimate with keep_u = TRUE.")
+  if (is.null(object$posterior$u$coeffs)) {
+    stop("No inefficiency draws stored. Re-run add_posterior_coefficients() ",
+         "with keep_u = TRUE.")
   }
 
-  r <- exp(-object$u)
+  r <- exp(-as.matrix(object$posterior$u$coeffs))
   qs <- t(apply(r, 2, stats::quantile, probs = probs))
   colnames(qs) <- paste0(format(100 * probs, trim = TRUE), "%")
 
-  data.frame(unit = object$units,
+  data.frame(unit = object$data$unit_labels,
              mean = colMeans(r),
              sd = apply(r, 2, stats::sd),
              qs,

@@ -70,6 +70,20 @@ test_that("misspelled prior elements are reported rather than ignored", {
   expect_error(add_priors(m, coef = 0.1), "must be a named list")
 })
 
+test_that("the improper limiting prior on the error precision is allowed", {
+  # Koop's own programs use a flat prior on the error precision, which in the
+  # shape and rate parameterisation means zeros. The posterior stays proper.
+  d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d,
+                                     iterations = 100, burnin = 50),
+                  sigma = list(shape = 0, rate = 0))
+
+  expect_equal(m$priors$shape_v, 0)
+  est <- add_posterior_coefficients(m)
+  expect_true(all(is.finite(est$posterior$sigma_v$coeffs)))
+  expect_true(all(est$posterior$sigma_v$coeffs > 0))
+})
+
 test_that("prior arguments are validated", {
   d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
   m_exp <- create_sfmodel_exp(y ~ x1, data = d)
@@ -78,7 +92,8 @@ test_that("prior arguments are validated", {
   expect_error(add_priors(m_exp, lambda = list(r_star = 0)), "between 0 and 1")
   expect_error(add_priors(m_exp, lambda = list(r_star = 1)), "between 0 and 1")
   expect_error(add_priors(m_hn, sigma_u = list(shape = 1)), "must exceed 1")
-  expect_error(add_priors(m_exp, sigma = list(shape = -1)), "must be positive")
+  expect_error(add_priors(m_exp, sigma = list(shape = -1)),
+               "must be non-negative")
   expect_error(add_priors(m_exp, coef = list(mu = c(1, 2, 3))),
                "must be of length 1 or 2")
   expect_error(add_priors(m_exp, coef = list(v_i = matrix(1, 3, 3))),

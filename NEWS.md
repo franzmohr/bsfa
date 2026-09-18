@@ -8,9 +8,13 @@ First development version.
 * `add_priors()` attaches the prior specification, eliciting the prior on the
   inefficiency term from a prior median efficiency. The mapping is exact for
   the exponential model and matched in expectation for the half-normal one.
-* `add_initial_values()` and `add_seed()` attach the remaining blocks.
-* `draw_posterior()` runs the Gibbs sampler and returns an object of class
-  `bsfa_exp` or `bsfa_hn`.
-* `efficiency()` returns posterior summaries of the unit-level efficiency
-  scores.
+* `add_initial_values()` and `add_seed()` attach the remaining blocks. The
+  former also draws a seed for the simulation if the model does not have one.
+* `add_posterior_coefficients()` runs the Gibbs sampler and adds the draws to
+  the model as `coda` objects, one block per parameter.
+* `add_posterior_loglik()` adds the pointwise log-likelihood, with the
+  inefficiency term integrated out.
+* `selection_criteria()` returns LL, AIC, BIC, HQ and WAIC from those draws.
+* `summary()`, `plot()` and `efficiency()` report the results. `plot()` takes
+  a `type` of `"hist"`, `"trace"`, `"boxplot"` or `"efficiency"`.
 * `sim_sf()` generates artificial data from the model.
