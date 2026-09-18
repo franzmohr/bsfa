@@ -26,6 +26,12 @@
 #' matters mainly for the prior, since the exponential model admits an exact
 #' elicitation from a prior median efficiency; see \code{\link{add_priors}}.
 #'
+#' A term wrapped in \code{\link[stats]{offset}} enters the frontier with its
+#' coefficient fixed at one, as it does in \code{\link[stats]{lm}}. This is how
+#' a known quantity is imposed rather than estimated: a capacity that the
+#' frontier cannot exceed, or a scale factor whose elasticity is known to be
+#' one. The efficiency scores are measured from the frontier including it.
+#'
 #' If \code{id} is supplied, one inefficiency term is drawn per unit and held
 #' fixed over that unit's observations, which is the time-invariant panel model
 #' of Pitt and Lee (1981). This attributes all persistent heterogeneity between
@@ -47,7 +53,10 @@
 #' @return An object of class \code{"sfmodel_exp"} or \code{"sfmodel_hn"}, both
 #'   inheriting from \code{"sfmodel"}. Rows with a missing value in the model
 #'   frame, or with an unknown unit, are dropped with a message and recorded in
-#'   the element \code{na.action}.
+#'   the element \code{na.action}. An \code{\link[stats]{offset}} in the
+#'   formula is subtracted from the response and kept as \code{data$offset},
+#'   so \code{data$y} is the response the sampler sees rather than the one
+#'   supplied.
 #'
 #' @seealso \code{\link{add_priors}}, \code{\link{add_initial_values}},
 #'   \code{\link{add_seed}}, \code{\link{add_posterior_coefficients}}
@@ -181,11 +190,39 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
   mt <- attr(mf, "terms")
   y <- as.numeric(stats::model.response(mf))
   X <- stats::model.matrix(mt, mf)
+
+  # An offset is a term whose coefficient is fixed at one, so it is not a
+  # column of the design matrix and model.matrix() leaves it out. Subtracting
+  # it from the response here is what makes it enter the model at all.
+  # Everything downstream -- the sampler, the log-likelihood, the residuals --
+  # then works on the adjusted response, and fitted() adds it back.
+  offs <- stats::model.offset(mf)
+  if (!is.null(offs)) {
+    offs <- as.numeric(offs)
+    y <- y - offs
+  }
+
   n <- length(y)
   k <- ncol(X)
 
   if (n <= k) {
     stop("Model has at least as many coefficients as observations.")
+  }
+
+  # A rank deficient design leaves a direction the data say nothing about.
+  # lm() drops the aliased columns and reports NA for them; here the prior
+  # would fill the gap instead, giving coefficients with enormous standard
+  # deviations whose sum happens to be right, and a chain that barely moves.
+  qx <- qr(X)
+  if (qx$rank < k) {
+    aliased <- colnames(X)[qx$pivot[(qx$rank + 1L):k]]
+    one <- length(aliased) == 1L
+    stop("The design matrix has ", k, " columns but rank ", qx$rank, ". ",
+         if (one) "Column " else "Columns ",
+         paste(aliased, collapse = ", "), if (one) " is " else " are ",
+         "a linear combination of the others, so the data cannot tell the ",
+         "coefficients apart. Drop ", if (one) "it" else "them",
+         " from the formula.")
   }
 
   # Map observations to the units that own the inefficiency terms.
@@ -200,8 +237,8 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
     panel <- TRUE
   }
 
-  list(data = list(y = y, X = X, g = g, n_units = length(unique(g)),
-                   unit_labels = unit_labels),
+  list(data = list(y = y, X = X, offset = offs, g = g,
+                   n_units = length(unique(g)), unit_labels = unit_labels),
        model = list(ineff = ineff, type = type, panel = panel,
                     components = 2L,
                     par_u_name = if (ineff == "exponential") "lambda" else
@@ -237,6 +274,9 @@ print.sfmodel <- function(x, ...) {
   cat("Observations:       ", x$n,
       if (is.null(x$na.action)) "" else
         paste0(" (", length(x$na.action), " dropped)"), "\n", sep = "")
+  if (!is.null(x$data$offset)) {
+    cat("Offset:             subtracted from the response\n")
+  }
   cat("Coefficients:       ", x$k, "\n", sep = "")
   cat("Inefficiency terms: ", x$data$n_units,
       if (x$model$panel) " (one per unit, time invariant)" else

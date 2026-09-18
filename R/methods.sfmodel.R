@@ -6,11 +6,13 @@
 #' rather than saying so.
 #'
 #' A frontier model has two natural notions of a fitted value, and they are
-#' kept apart here. \code{fitted()} returns the frontier \eqn{x_i'\beta}, the
-#' maximum output the inputs allow, which is what the coefficients describe.
-#' \code{residuals()} returns \eqn{y_i - x_i'\beta}, the composed error, which
-#' still contains the one-sided term and is therefore not centred on zero. Use
-#' \code{\link{efficiency}} for the inefficiency part of it.
+#' kept apart here. \code{fitted()} returns the frontier, the maximum output
+#' the inputs allow, which is what the coefficients describe, including any
+#' offset. \code{residuals()} returns the composed error, which still contains
+#' the one-sided term and is therefore not centred on zero. Use
+#' \code{\link{efficiency}} for the inefficiency part of it. The two are
+#' related as usual: the residual is the response as supplied minus the fitted
+#' frontier, whether or not there is an offset.
 #'
 #' Every one of these summarises the posterior by its mean. That is a
 #' convenience, not the object: the draws themselves are in
@@ -69,10 +71,24 @@ nobs.sfmodel <- function(object, ...) {
   object$n
 }
 
+#' The estimated part of the frontier, without any offset
+#'
+#' @param object a model object carrying posterior draws.
+#'
+#' @return A numeric vector with one entry per observation.
+#'
+#' @keywords internal
+sf_frontier <- function(object) {
+  as.numeric(object$data$X %*% coef.sfmodel(object))
+}
+
 #' @rdname sfmodel-methods
 #' @export
 fitted.sfmodel <- function(object, ...) {
-  out <- as.numeric(object$data$X %*% coef.sfmodel(object))
+  out <- sf_frontier(object)
+  if (!is.null(object$data$offset)) {
+    out <- out + object$data$offset
+  }
   names(out) <- rownames(object$data$X)
   out
 }
@@ -80,7 +96,12 @@ fitted.sfmodel <- function(object, ...) {
 #' @rdname sfmodel-methods
 #' @export
 residuals.sfmodel <- function(object, ...) {
-  object$data$y - fitted.sfmodel(object)
+  # Against the frontier without the offset, and the response the sampler saw,
+  # which is the one the offset has already been taken out of. Subtracting
+  # fitted() from the original response comes to the same thing.
+  out <- object$data$y - sf_frontier(object)
+  names(out) <- rownames(object$data$X)
+  out
 }
 
 #' @rdname sfmodel-methods
@@ -103,6 +124,10 @@ predict.sfmodel <- function(object, newdata = NULL, ...) {
   }
 
   out <- as.numeric(X %*% coef.sfmodel(object))
+  offs <- stats::model.offset(mf)
+  if (!is.null(offs)) {
+    out <- out + as.numeric(offs)
+  }
   names(out) <- rownames(X)
   out
 }

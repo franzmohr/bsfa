@@ -56,6 +56,11 @@ First release.
 
 ## Notes
 
+* A term wrapped in `offset()` enters the frontier with its coefficient fixed
+  at one, as it does in `lm()`, which is how a known capacity or a known
+  elasticity is imposed rather than estimated.
+* A rank deficient design matrix is refused, naming the column that is a
+  linear combination of the others, rather than left for the prior to fill in.
 * Rows with a missing value, or with an unknown unit, are dropped with a
   message and recorded in the `na.action` element of the model object.
 * The response is assumed to be on a logarithmic scale. The prior on the

@@ -49,11 +49,13 @@ rather than saying so.
 }
 \details{
 A frontier model has two natural notions of a fitted value, and they are
-kept apart here. \code{fitted()} returns the frontier \eqn{x_i'\beta}, the
-maximum output the inputs allow, which is what the coefficients describe.
-\code{residuals()} returns \eqn{y_i - x_i'\beta}, the composed error, which
-still contains the one-sided term and is therefore not centred on zero. Use
-\code{\link{efficiency}} for the inefficiency part of it.
+kept apart here. \code{fitted()} returns the frontier, the maximum output
+the inputs allow, which is what the coefficients describe, including any
+offset. \code{residuals()} returns the composed error, which still contains
+the one-sided term and is therefore not centred on zero. Use
+\code{\link{efficiency}} for the inefficiency part of it. The two are
+related as usual: the residual is the response as supplied minus the fitted
+frontier, whether or not there is an offset.
 
 Every one of these summarises the posterior by its mean. That is a
 convenience, not the object: the draws themselves are in

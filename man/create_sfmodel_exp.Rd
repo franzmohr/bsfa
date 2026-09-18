@@ -47,7 +47,10 @@ thinning.}
 An object of class \code{"sfmodel_exp"} or \code{"sfmodel_hn"}, both
   inheriting from \code{"sfmodel"}. Rows with a missing value in the model
   frame, or with an unknown unit, are dropped with a message and recorded in
-  the element \code{na.action}.
+  the element \code{na.action}. An \code{\link[stats]{offset}} in the
+  formula is subtracted from the response and kept as \code{data$offset},
+  so \code{data$y} is the response the sampler sees rather than the one
+  supplied.
 }
 \description{
 Sets up the model object that the \code{add_*} functions operate on. The two
@@ -76,6 +79,12 @@ different efficiency scores. See \code{\link{add_priors}}.
 \code{create_sfmodel_hn} assumes \eqn{u \sim N^+(0, \sigma_u^2)}. The choice
 matters mainly for the prior, since the exponential model admits an exact
 elicitation from a prior median efficiency; see \code{\link{add_priors}}.
+
+A term wrapped in \code{\link[stats]{offset}} enters the frontier with its
+coefficient fixed at one, as it does in \code{\link[stats]{lm}}. This is how
+a known quantity is imposed rather than estimated: a capacity that the
+frontier cannot exceed, or a scale factor whose elasticity is known to be
+one. The efficiency scores are measured from the frontier including it.
 
 If \code{id} is supplied, one inefficiency term is drawn per unit and held
 fixed over that unit's observations, which is the time-invariant panel model
