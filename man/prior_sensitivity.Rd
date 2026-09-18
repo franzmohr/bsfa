@@ -26,7 +26,9 @@ need the draws, but an interval may be given to thin them.}
 A list of class \code{"sfsens"}, with \code{efficiency}, a data
   frame of the score summaries by anchor; \code{coefficients}, the posterior
   means of the frontier coefficients by anchor; \code{spread}, the range of
-  the mean score; \code{coef_spread}; and the \code{seed} used throughout.
+  the mean score; \code{relative}, that range over the spread of the scores
+  between units, which is the figure to read; \code{coef_spread}; and the
+  \code{seed} used throughout.
 }
 \description{
 Refits a model across a grid of prior median efficiencies and reports how
@@ -50,6 +52,18 @@ distribution to get wrong. On a sample simulated with no inefficiency at
 all, the mean score moved by 0.036 as the anchor ran from 0.5 to 0.9,
 against 0.005 for a sample that had plenty; the skewness test called that
 same empty sample informative.
+
+Read \code{relative} rather than \code{spread}. The movement of the mean
+matters in proportion to how far the scores are spread between units in the
+first place, and the absolute figure cannot tell a mean that moves a lot
+among tightly packed scores from one that moves a little among widely
+spread ones. Over fifteen simulated samples the absolute figure overlapped
+between the informative and the empty case; the relative one did not.
+
+No threshold separates the two cleanly in every sample, and none should be
+expected to: where the one-sided term is about the size of the noise, the
+data genuinely do not pin the level down, and a middling figure is the
+honest answer rather than a failure of the diagnostic.
 
 Every fit uses one seed, the model's own where it has one, so that the table
 shows the prior moving the answer rather than the sampler doing it. The rest

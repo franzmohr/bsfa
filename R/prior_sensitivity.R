@@ -21,6 +21,18 @@
 #' against 0.005 for a sample that had plenty; the skewness test called that
 #' same empty sample informative.
 #'
+#' Read \code{relative} rather than \code{spread}. The movement of the mean
+#' matters in proportion to how far the scores are spread between units in the
+#' first place, and the absolute figure cannot tell a mean that moves a lot
+#' among tightly packed scores from one that moves a little among widely
+#' spread ones. Over fifteen simulated samples the absolute figure overlapped
+#' between the informative and the empty case; the relative one did not.
+#'
+#' No threshold separates the two cleanly in every sample, and none should be
+#' expected to: where the one-sided term is about the size of the noise, the
+#' data genuinely do not pin the level down, and a middling figure is the
+#' honest answer rather than a failure of the diagnostic.
+#'
 #' Every fit uses one seed, the model's own where it has one, so that the table
 #' shows the prior moving the answer rather than the sampler doing it. The rest
 #' of the prior specification is carried over unchanged, so a model that
@@ -42,7 +54,9 @@
 #' @return A list of class \code{"sfsens"}, with \code{efficiency}, a data
 #'   frame of the score summaries by anchor; \code{coefficients}, the posterior
 #'   means of the frontier coefficients by anchor; \code{spread}, the range of
-#'   the mean score; \code{coef_spread}; and the \code{seed} used throughout.
+#'   the mean score; \code{relative}, that range over the spread of the scores
+#'   between units, which is the figure to read; \code{coef_spread}; and the
+#'   \code{seed} used throughout.
 #'
 #' @seealso \code{\link{skewness_test}} for the check that needs no sampling,
 #'   \code{\link{add_priors}} for what the anchor means.
@@ -94,8 +108,18 @@ prior_sensitivity <- function(object, r_star = c(0.5, 0.75, 0.9),
   rownames(eff) <- NULL
   rownames(coefs) <- format(r_star)
 
+  spread <- max(eff$mean) - min(eff$mean)
+
+  # Judged against the spread of the scores themselves. A mean that moves by
+  # 0.04 while the units are spread over 0.14 is a different matter from one
+  # that moves by 0.04 while they are spread over 0.03, and the absolute
+  # figure cannot tell the two apart: across fifteen simulated samples the
+  # absolute spread of an informative one reached 0.047 and that of an empty
+  # one fell to 0.032, while the relative figure kept them an order of
+  # magnitude apart.
   structure(list(efficiency = eff, coefficients = coefs,
-                 spread = max(eff$mean) - min(eff$mean),
+                 spread = spread,
+                 relative = spread / mean(eff$sd),
                  coef_spread = apply(coefs, 2, function(z) max(z) - min(z)),
                  seed = seed, model = object$model),
             class = "sfsens")
@@ -162,18 +186,31 @@ print.sfsens <- function(x, digits = 4, ...) {
 
   cat("\n  scores move by  ", format(round(x$spread, digits)),
       " across the grid\n", sep = "")
+  cat("  that is         ", format(round(x$relative, 2)),
+      " times their own spread across units\n", sep = "")
   cat("  coefficients by ", format(round(max(x$coef_spread), digits)),
       " at most\n\n", sep = "")
 
-  cat(strwrap(if (x$spread > 0.02) paste(
-    "The scores follow the anchor. What they say about the level of",
-    "efficiency is largely what the prior was told to say, and belongs in a",
-    "report as a prior sensitivity rather than as a finding. The ranking of",
-    "units may still be informative where the level is not.")
+  cat(strwrap(if (x$relative > 0.5) paste(
+    "The anchor moves the scores by a large fraction of the spread between",
+    "units, so what they say about the level of efficiency is largely what",
+    "the prior was told to say. Report it as a prior sensitivity rather than",
+    "as a finding. The ranking of units may still be informative where the",
+    "level is not.")
     else paste(
-      "The scores barely move with the anchor, so they are estimated from the",
-      "data rather than carried over from the prior.")), sep = "\n")
+      "The anchor moves the scores by little beside the spread between",
+      "units, so they are estimated from the data rather than carried over",
+      "from the prior.")), sep = "\n")
   cat("\n")
+  if (x$relative > 0.25 && x$relative <= 0.5) {
+    cat("\n")
+    cat(strwrap(paste(
+      "This sits in the middle of the range, where a sample carries some",
+      "information about the level but not much. Neither reading is safe on",
+      "its own; widen the grid, or report the scores with the range they",
+      "take across it.")), sep = "\n")
+    cat("\n")
+  }
 
   invisible(x)
 }

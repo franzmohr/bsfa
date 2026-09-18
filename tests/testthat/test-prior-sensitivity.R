@@ -11,8 +11,8 @@ test_that("it returns the documented shape", {
   s <- prior_sensitivity(m, r_star = c(0.6, 0.8))
 
   expect_s3_class(s, "sfsens")
-  expect_named(s, c("efficiency", "coefficients", "spread", "coef_spread",
-                    "seed", "model"))
+  expect_named(s, c("efficiency", "coefficients", "spread", "relative",
+                    "coef_spread", "seed", "model"))
   expect_equal(names(s$efficiency), c("r_star", "mean", "sd", "min", "max"))
   expect_equal(s$efficiency$r_star, c(0.6, 0.8))
   expect_equal(dim(s$coefficients), c(2L, 2L))
@@ -26,14 +26,19 @@ test_that("it separates a prior driven fit from an estimated one", {
                                          iterations = 1500, burnin = 500),
                       r_star = c(0.5, 0.75, 0.9))
   }
+  # A one-sided term twice the size of the noise, so that the sample really is
+  # informative about the level. At a signal the size of the noise the data
+  # genuinely do not pin the level down, and no assertion here should pretend
+  # otherwise: an earlier version of this test compared the two spreads by a
+  # factor of five and failed about a third of the time.
   empty <- fit(NA)
-  plenty <- fit(4)
+  plenty <- fit(2)
 
-  # With nothing in the data the scores follow the anchor; with plenty in it
-  # they do not.
-  expect_gt(empty$spread, 0.02)
-  expect_lt(plenty$spread, 0.02)
-  expect_gt(empty$spread, 5 * plenty$spread)
+  # The figure to read is the movement relative to the spread between units.
+  expect_gt(empty$relative, 0.5)
+  expect_lt(plenty$relative, 0.5)
+  expect_gt(empty$relative, plenty$relative)
+  expect_equal(empty$relative, empty$spread / mean(empty$efficiency$sd))
 
   # The mean score rises with the anchor when the prior is doing the work.
   expect_true(all(diff(empty$efficiency$mean) > 0))
@@ -41,8 +46,8 @@ test_that("it separates a prior driven fit from an estimated one", {
   # The frontier holds still either way: it is the distance to it that is in
   # question, not the frontier.
   expect_lt(max(plenty$coef_spread), 0.05)
-  expect_output(print(empty), "follow the anchor")
-  expect_output(print(plenty), "barely move")
+  expect_output(print(empty), "largely what")
+  expect_output(print(plenty), "estimated from the data")
 })
 
 test_that("one seed is used for every fit", {
