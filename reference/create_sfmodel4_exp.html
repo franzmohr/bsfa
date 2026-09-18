@@ -20,7 +20,7 @@ it."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -159,7 +159,11 @@ for a cost frontier. Its four components are</p><dl><dt>\(\mu_i \sim N(0, \sigma
 <dd><p>transient inefficiency, varying within a unit.</p></dd>
 
 
-</dl><p>This is the specification of Kumbhakar, Lien and Hjalmarsson (2014), Colombi
+</dl><p>As in the two-component models, the response is assumed to be on a
+logarithmic scale, which is what makes \(\exp(-\eta_i)\) and
+\(\exp(-u_{it})\) efficiencies rather than quantities in the units of the
+output. See <code><a href="create_sfmodel_exp.html">create_sfmodel_exp</a></code>.</p>
+<p>This is the specification of Kumbhakar, Lien and Hjalmarsson (2014), Colombi
 et al. (2014) and Tsionas and Kumbhakar (2014). The reason to prefer it over
 the time-invariant panel model of <code><a href="create_sfmodel_exp.html">create_sfmodel_exp</a></code> is that
 the latter has no \(\mu_i\), so every persistent difference between units

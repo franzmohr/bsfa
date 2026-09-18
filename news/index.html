@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -64,27 +64,52 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.0.0.9000" id="bsfa-0009000">bsfa 0.0.0.9000<a class="anchor" aria-label="anchor" href="#bsfa-0009000"></a></h2>
-<p>First development version.</p>
+<h2 class="page-header" data-toc-text="0.1.0" id="bsfa-010">bsfa 0.1.0<a class="anchor" aria-label="anchor" href="#bsfa-010"></a></h2>
+<p>First release.</p>
+<div class="section level3">
+<h3 id="models-0-1-0">Models<a class="anchor" aria-label="anchor" href="#models-0-1-0"></a></h3>
 <ul><li>
-<code><a href="../reference/create_sfmodel_exp.html">create_sfmodel_exp()</a></code> and <code><a href="../reference/create_sfmodel_exp.html">create_sfmodel_hn()</a></code> set up a stochastic frontier model with exponential or half-normal inefficiency. The distribution is carried by the object’s class, so each variant has its own methods.</li>
+<code><a href="../reference/create_sfmodel_exp.html">create_sfmodel_exp()</a></code> and <code><a href="../reference/create_sfmodel_exp.html">create_sfmodel_hn()</a></code> set up a stochastic frontier model with exponential or half-normal inefficiency, as a cross-section or, with <code>id</code>, as the time-invariant panel model of Pitt and Lee (1981). The distribution is carried by the object’s class, so each variant has its own methods.</li>
 <li>
+<code><a href="../reference/create_sfmodel4_exp.html">create_sfmodel4_exp()</a></code> and <code><a href="../reference/create_sfmodel4_exp.html">create_sfmodel4_hn()</a></code> set up the four-component model of Kumbhakar, Lien and Hjalmarsson (2014), which separates a unit effect, persistent inefficiency, noise and transient inefficiency.</li>
+<li>Production and cost frontiers throughout.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="building-a-model-0-1-0">Building a model<a class="anchor" aria-label="anchor" href="#building-a-model-0-1-0"></a></h3>
+<ul><li>
 <code><a href="../reference/add_priors.html">add_priors()</a></code> attaches the prior specification, eliciting the prior on the inefficiency term from a prior median efficiency. The mapping is exact for the exponential model and matched in expectation for the half-normal one.</li>
 <li>
-<code><a href="../reference/add_initial_values.html">add_initial_values()</a></code> and <code><a href="../reference/add_seed.html">add_seed()</a></code> attach the remaining blocks. The former also draws a seed for the simulation if the model does not have one.</li>
+<code><a href="../reference/add_initial_values.html">add_initial_values()</a></code> and <code><a href="../reference/add_seed.html">add_seed()</a></code> attach the remaining blocks. The former also draws a seed for the simulation if the model does not have one, so that a model object determines its own output.</li>
 <li>
-<code><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients()</a></code> runs the Gibbs sampler and adds the draws to the model as <code>coda</code> objects, one block per parameter.</li>
+<code><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients()</a></code> runs the Gibbs sampler and adds the draws to the model as <code>coda</code> objects, one block per parameter. <code>keep_u</code> takes an interval at which to store the augmented draws, which on a wide panel are otherwise by far the largest part of the object.</li>
 <li>
-<code><a href="../reference/add_posterior_loglik.html">add_posterior_loglik()</a></code> adds the pointwise log-likelihood, with the inefficiency term integrated out.</li>
-<li>
-<code><a href="../reference/selection_criteria.html">selection_criteria()</a></code> returns LL, AIC, BIC, HQ and WAIC from those draws.</li>
-<li>
-<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and <code><a href="../reference/efficiency.html">efficiency()</a></code> report the results. <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> takes a <code>type</code> of <code>"hist"</code>, <code>"trace"</code>, <code>"boxplot"</code> or <code>"efficiency"</code>.</li>
-<li>
-<code><a href="../reference/sim_sf.html">sim_sf()</a></code> generates artificial data from the model.</li>
-<li>
-<code><a href="../reference/create_sfmodel4_exp.html">create_sfmodel4_exp()</a></code> and <code><a href="../reference/create_sfmodel4_exp.html">create_sfmodel4_hn()</a></code> set up the four-component model of Kumbhakar, Lien and Hjalmarsson (2014), which separates a unit effect, persistent inefficiency, noise and transient inefficiency. Its <code><a href="../reference/efficiency.html">efficiency()</a></code> method takes a <code>type</code> of <code>"overall"</code>, <code>"persistent"</code> or <code>"transient"</code>, and <code><a href="../reference/sim_sf4.html">sim_sf4()</a></code> generates artificial data from it. The pointwise log-likelihood, and with it <code><a href="../reference/selection_criteria.html">selection_criteria()</a></code>, is not available for this model.</li>
+<code><a href="../reference/add_posterior_loglik.html">add_posterior_loglik()</a></code> adds the pointwise log-likelihood, with the inefficiency term integrated out. It is available for cross-sections only, since the marginal likelihood of a panel unit does not factorise over its observations.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="reading-the-results-0-1-0">Reading the results<a class="anchor" aria-label="anchor" href="#reading-the-results-0-1-0"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and <code><a href="../reference/efficiency.html">efficiency()</a></code> report the results. <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> takes a <code>type</code> of <code>"hist"</code>, <code>"trace"</code>, <code>"boxplot"</code> or <code>"efficiency"</code>.</li>
+<li>The summary table ends in <code>ESS</code>, the effective sample size of each block. The draws are autocorrelated, and in the four-component model severely so, where the unit effect and persistent inefficiency trade off against each other from sweep to sweep; a credible band is worth reading only against the number of independent draws behind it.</li>
+<li>
+<code><a href="../reference/efficiency.html">efficiency()</a></code> summarises the posterior distribution of the scores rather than a point predictor of them, which is what sampling the inefficiency term as a latent variable buys. For the four-component model it takes a <code>type</code> of <code>"overall"</code>, <code>"persistent"</code> or <code>"transient"</code>; the two observation-level types carry an <code>obs</code> column so that the scores can be joined back to the data.</li>
+<li>
+<code><a href="../reference/selection_criteria.html">selection_criteria()</a></code> returns LL, AIC, BIC, HQ and WAIC from the log-likelihood draws. Like the log-likelihood itself, it is unavailable for panel and four-component models.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="simulation-0-1-0">Simulation<a class="anchor" aria-label="anchor" href="#simulation-0-1-0"></a></h3>
+<ul><li>
+<code><a href="../reference/sim_sf.html">sim_sf()</a></code> and <code><a href="../reference/sim_sf4.html">sim_sf4()</a></code> generate artificial data from the two- and four-component models, for examples, tests and prior predictive checks.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="notes-0-1-0">Notes<a class="anchor" aria-label="anchor" href="#notes-0-1-0"></a></h3>
+<ul><li>A term wrapped in <code><a href="https://rdrr.io/r/stats/offset.html" class="external-link">offset()</a></code> enters the frontier with its coefficient fixed at one, as it does in <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code>, which is how a known capacity or a known elasticity is imposed rather than estimated.</li>
+<li>A rank deficient design matrix is refused, naming the column that is a linear combination of the others, rather than left for the prior to fill in.</li>
+<li>The response has to be a quantity. A factor would otherwise be fitted as the integers coding its levels and a character vector as a column of <code>NA</code>.</li>
+<li>An <code>id</code> is checked against the model frame rather than against <code>data</code>, so a mismatched one is refused whether <code>data</code> is a data frame or a list.</li>
+<li>Rows with a missing value, or with an unknown unit, are dropped with a message and recorded in the <code>na.action</code> element of the model object.</li>
+<li>The response is assumed to be on a logarithmic scale. The prior on the inefficiency term is expressed in the units of the response, so fitting output in levels does not merely change the units of the efficiency scores, it changes their values.</li>
+</ul></div>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

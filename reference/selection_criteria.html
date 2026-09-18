@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -71,6 +71,9 @@
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">selection_criteria</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># S3 method for class 'sfmodel4'</span></span>
+<span><span class="fu">selection_criteria</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># S3 method for class 'sfmodel'</span></span>
 <span><span class="fu">selection_criteria</span><span class="op">(</span><span class="va">object</span>, ci <span class="op">=</span> <span class="fl">0.95</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -94,8 +97,8 @@ credible band. Defaults to 0.95.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A list of class <code>"selcrit"</code>, which also inherits the class of
-  the model, with the element <code>model</code> and one data frame per criterion.
+    <p>A list of class <code>"selcrit"</code>, with the element <code>model</code> and
+  one data frame per criterion.
   Each has the columns <code>mean</code>, <code>median</code>, <code>qlower</code> and
   <code>qupper</code>, where bands that do not apply are <code>NA</code>.</p>
     </div>

@@ -20,7 +20,7 @@ methods that apply to it."><!-- mathjax --><script src="https://cdnjs.cloudflare
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -134,7 +134,12 @@ thinning.</p></dd>
     <div id="value">
     <h2>Value</h2>
     <p>An object of class <code>"sfmodel_exp"</code> or <code>"sfmodel_hn"</code>, both
-  inheriting from <code>"sfmodel"</code>.</p>
+  inheriting from <code>"sfmodel"</code>. Rows with a missing value in the model
+  frame, or with an unknown unit, are dropped with a message and recorded in
+  the element <code>na.action</code>. An <code><a href="https://rdrr.io/r/stats/offset.html" class="external-link">offset</a></code> in the
+  formula is subtracted from the response and kept as <code>data$offset</code>,
+  so <code>data$y</code> is the response the sampler sees rather than the one
+  supplied.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -144,10 +149,23 @@ for a production frontier, with the sign of \(u\) reversed for a cost
 frontier. The frontier \(x_i'\beta\) is the maximum output attainable with
 the inputs \(x_i\), and \(\exp(-u_i)\) the efficiency with which unit
 \(i\) reaches it.</p>
+<p>The response is assumed to be on a logarithmic scale, and the regressors
+usually are as well. That is what makes \(\exp(-u_i)\) an efficiency:
+\(u_i\) is then a proportional shortfall, so a unit with \(u_i = 0.1\)
+produces about ten per cent less than its inputs allow. Fitting output in
+levels does not merely change the units of \(u\), it changes the answer,
+because the prior on the inefficiency term is expressed in the units of the
+response: the same data measured in euros and in millions of euros give
+different efficiency scores. See <code><a href="add_priors.html">add_priors</a></code>.</p>
 <p><code>create_sfmodel_exp</code> assumes \(u \sim Exp(\lambda)\) and
 <code>create_sfmodel_hn</code> assumes \(u \sim N^+(0, \sigma_u^2)\). The choice
 matters mainly for the prior, since the exponential model admits an exact
 elicitation from a prior median efficiency; see <code><a href="add_priors.html">add_priors</a></code>.</p>
+<p>A term wrapped in <code><a href="https://rdrr.io/r/stats/offset.html" class="external-link">offset</a></code> enters the frontier with its
+coefficient fixed at one, as it does in <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></code>. This is how
+a known quantity is imposed rather than estimated: a capacity that the
+frontier cannot exceed, or a scale factor whose elasticity is known to be
+one. The efficiency scores are measured from the frontier including it.</p>
 <p>If <code>id</code> is supplied, one inefficiency term is drawn per unit and held
 fixed over that unit's observations, which is the time-invariant panel model
 of Pitt and Lee (1981). This attributes all persistent heterogeneity between

@@ -18,7 +18,7 @@ must be added first, since both methods draw on them."><!-- mathjax --><script s
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -113,6 +113,13 @@ inefficiency terms themselves at zero.</p>
 This is the more honest choice when checking convergence, because running
 several chains from prior draws disperses the starting points rather than
 concentrating them all on the same least squares fit.</p>
+<p>How wide that dispersion is depends on the prior, and under a vague one it
+is very wide indeed: with the default shape and rate of 0.01 on the error
+precision, the median starting value for \(\sigma_v^2\) is of the order of
+\(10^{28}\). Chains do come back from there within a few dozen sweeps, but
+a draw that overflows to <code>Inf</code> is not a starting point at all, so such
+a draw is repeated. An improper prior on the coefficients has no draw either
+and is reported rather than left to fail in the linear algebra.</p>
 <p>The function also stores the seed of the posterior simulation as element
 <code>seed</code> of <code>object$model</code>, unless the model has one already. It is
 drawn from R's random number generator, so <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> before this

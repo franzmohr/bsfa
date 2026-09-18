@@ -19,7 +19,7 @@ the draws to it."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -117,9 +117,13 @@ object with its <code>posterior</code> element added.</p></dd>
 
 
 <dt id="arg-keep-u">keep_u<a class="anchor" aria-label="anchor" href="#arg-keep-u"></a></dt>
-<dd><p>whether to store the inefficiency draws. Required by
-<code><a href="efficiency.html">efficiency</a></code>, but note that the stored object grows with the
-number of units times the number of retained draws.</p></dd>
+<dd><p>whether to store the inefficiency draws, which
+<code><a href="efficiency.html">efficiency</a></code> needs. The block is one column per unit and one
+row per retained draw, so it can be the largest part of the returned
+object. A positive whole number stores every that-many-th retained draw
+instead, which divides the storage by it and still leaves genuine
+posterior draws to summarise. It cannot exceed the number of retained
+draws, since nothing would then be stored at all.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -215,12 +219,12 @@ Econometrics</em>, 61(2), 273–303.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Draws:              500 after 200 burn-in, thinning 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior summary, 95% credible bands:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               mean     sd   2.5% median  97.5%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) 0.9820 0.0329 0.9185 0.9835 1.0460</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x1          0.5048 0.0190 0.4688 0.5045 0.5431</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x2          0.3045 0.0182 0.2666 0.3059 0.3361</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_v     0.1852 0.0243 0.1458 0.1830 0.2369</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> lambda      3.9853 0.5711 3.0847 3.9219 5.2840</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               mean     sd   2.5% median  97.5% ESS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) 0.9820 0.0329 0.9185 0.9835 1.0460  20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x1          0.5048 0.0190 0.4688 0.5045 0.5431 146</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x2          0.3045 0.0182 0.2666 0.3059 0.3361 178</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_v     0.1852 0.0243 0.1458 0.1830 0.2369  25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> lambda      3.9853 0.5711 3.0847 3.9219 5.2840  21</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior mean efficiency, per observation:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   mean    min median    max </span>

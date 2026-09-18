@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -110,7 +110,13 @@ a call to <code>summary.sfmodel</code>.</p></dd>
   <code>"summary.sfmodel"</code>, which contains the following components:</p>
 <dl><dt>coefficients</dt>
 <dd><p>summary statistics of the posterior draws of the
-    frontier coefficients and the two error components.</p></dd>
+    frontier coefficients and the two error components, ending in
+    <code>ESS</code>, the effective sample size of each block. It is the number of
+    independent draws the chain is worth, so the Monte Carlo error of a
+    posterior mean is about its standard deviation divided by the square
+    root of it. A value far below the number of draws is the sign that the
+    chain needs to be longer, and in the four-component model it usually
+    is.</p></dd>
 
   <dt>efficiency</dt>
 <dd><p>summary statistics of the posterior mean efficiency
@@ -149,12 +155,12 @@ a call to <code>summary.sfmodel</code>.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Draws:              500 after 200 burn-in, thinning 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior summary, 95% credible bands:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               mean     sd   2.5% median  97.5%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) 0.9820 0.0329 0.9185 0.9835 1.0460</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x1          0.5048 0.0190 0.4688 0.5045 0.5431</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x2          0.3045 0.0182 0.2666 0.3059 0.3361</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_v     0.1852 0.0243 0.1458 0.1830 0.2369</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> lambda      3.9853 0.5711 3.0847 3.9219 5.2840</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               mean     sd   2.5% median  97.5% ESS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) 0.9820 0.0329 0.9185 0.9835 1.0460  20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x1          0.5048 0.0190 0.4688 0.5045 0.5431 146</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x2          0.3045 0.0182 0.2666 0.3059 0.3361 178</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_v     0.1852 0.0243 0.1458 0.1830 0.2369  25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> lambda      3.9853 0.5711 3.0847 3.9219 5.2840  21</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior mean efficiency, per observation:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   mean    min median    max </span>

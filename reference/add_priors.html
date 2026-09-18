@@ -18,7 +18,7 @@ create_sfmodel_exp or create_sfmodel_hn."><!-- mathjax --><script src="https://c
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -143,6 +143,11 @@ prior with the given shape and rate.</p>
 <code>r_star</code>, the efficiency score the researcher considers equally likely
 to be exceeded as not, a priori. How that anchor maps into a prior differs
 between the two models, which is why there is one method per class.</p>
+<p>Because <code>r_star</code> is an efficiency, it fixes the scale of \(u\) in the
+units of the response. This is only meaningful if the response is on a
+logarithmic scale, where \(u\) is a proportional shortfall. A model fitted
+to output in levels will return efficiency scores that depend on the units
+the output happens to be measured in.</p>
 <p>For the exponential model the mapping is exact. Placing a gamma prior of
 shape 1 and rate \(c = -\log(r^*)\) on the rate parameter \(\lambda\)
 implies the marginal prior density

@@ -19,7 +19,7 @@ called directly, since it performs no input checking.'><!-- mathjax --><script s
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -101,7 +101,7 @@ called directly, since it performs no input checking.</p>
 <span>  <span class="va">draws</span>,</span>
 <span>  <span class="va">burnin</span>,</span>
 <span>  <span class="va">thin</span>,</span>
-<span>  <span class="va">keep_u</span>,</span>
+<span>  <span class="va">u_thin</span>,</span>
 <span>  <span class="va">verbose</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -222,8 +222,9 @@ parameter.</p></dd>
 <dd><p>thinning interval.</p></dd>
 
 
-<dt id="arg-keep-u">keep_u<a class="anchor" aria-label="anchor" href="#arg-keep-u"></a></dt>
-<dd><p>whether to store the augmented terms.</p></dd>
+<dt id="arg-u-thin">u_thin<a class="anchor" aria-label="anchor" href="#arg-u-thin"></a></dt>
+<dd><p>0 not to store the augmented terms, otherwise the interval at
+which the retained draws are stored.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

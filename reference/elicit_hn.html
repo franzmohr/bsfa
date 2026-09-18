@@ -18,7 +18,7 @@ median of a half-normal variate at -log(r_star)."><!-- mathjax --><script src="h
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -71,7 +71,7 @@ median of a half-normal variate at <code>-log(r_star)</code>.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">elicit_hn</span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">elicit_hn</span><span class="op">(</span><span class="va">spec</span>, <span class="va">what</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -80,6 +80,11 @@ median of a half-normal variate at <code>-log(r_star)</code>.</p>
 
 <dl><dt id="arg-spec">spec<a class="anchor" aria-label="anchor" href="#arg-spec"></a></dt>
 <dd><p>a list with elements <code>r_star</code> and <code>shape</code>.</p></dd>
+
+
+<dt id="arg-what">what<a class="anchor" aria-label="anchor" href="#arg-what"></a></dt>
+<dd><p>the name of the argument the specification came from, used in
+error messages.</p></dd>
 
 </dl></div>
     <div id="value">

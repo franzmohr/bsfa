@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
 <script src="pkgdown.js"></script><meta property="og:title" content="Bayesian Stochastic Frontier Analysis">
-<meta property="og:description" content="Markov chain Monte Carlo methods for the Bayesian estimation of stochastic frontier models. Gibbs samplers with data augmentation are provided for composed-error frontier models in the tradition of van den Broeck, Koop, Osiewalski and Steel (1994), covering exponential and half-normal inefficiency, production and cost frontiers, and cross-sectional as well as time-invariant panel specifications. A model is built up step by step, by creating a model object and then adding priors, initial values and a seed to it before the posterior is drawn. Posterior distributions of unit-specific efficiency scores are obtained directly from the augmented draws rather than from point predictors.">
+<meta property="og:description" content="Markov chain Monte Carlo methods for the Bayesian estimation of stochastic frontier models. Gibbs samplers with data augmentation are provided for composed-error frontier models in the tradition of van den Broeck, Koop, Osiewalski and Steel (1994), covering exponential and half-normal inefficiency, production and cost frontiers, and cross-sectional, time-invariant panel and four-component panel specifications. A model is built up step by step, by creating a model object and then adding priors, initial values and a seed to it before the posterior is drawn. Posterior distributions of unit-specific efficiency scores are obtained directly from the augmented draws rather than from point predictors.">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -118,16 +118,58 @@
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_loglik.html">add_posterior_loglik</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"efficiency"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; Bayesian stochastic frontier model</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Call:</span></span>
+<span><span class="co">#&gt; create_sfmodel_exp(formula = y ~ x1 + x2, data = d, iterations = 5000, </span></span>
+<span><span class="co">#&gt;     burnin = 2000)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Frontier:           production</span></span>
+<span><span class="co">#&gt; Inefficiency:       exponential</span></span>
+<span><span class="co">#&gt; Observations:       500</span></span>
+<span><span class="co">#&gt; Units:              500</span></span>
+<span><span class="co">#&gt; Draws:              5000 after 2000 burn-in, thinning 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
+<span><span class="co">#&gt;               mean     sd   2.5% median  97.5%  ESS</span></span>
+<span><span class="co">#&gt; (Intercept) 1.0460 0.0210 1.0041 1.0467 1.0861  290</span></span>
+<span><span class="co">#&gt; x1          0.5087 0.0128 0.4826 0.5087 0.5340 1304</span></span>
+<span><span class="co">#&gt; x2          0.2889 0.0136 0.2616 0.2888 0.3165 1438</span></span>
+<span><span class="co">#&gt; sigma_v     0.1876 0.0148 0.1613 0.1867 0.2186  296</span></span>
+<span><span class="co">#&gt; lambda      3.3359 0.2644 2.8624 3.3156 3.8956  328</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Posterior mean efficiency, per observation:</span></span>
+<span><span class="co">#&gt;   mean    min median    max </span></span>
+<span><span class="co">#&gt; 0.7681 0.1995 0.8229 0.9549</span></span></code></pre></div>
+<p>The data were simulated with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0.5</mn><mo>,</mo><mn>0.3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\beta = (1, 0.5, 0.3)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>v</mi></msub><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\sigma_v = 0.2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">\lambda = 4</annotation></semantics></math>. The slopes come back sharply; the intercept is the loose one, because it has to be separated from the mean of the one-sided term using only the asymmetry of the residuals.</p>
 <p>The draws are attached to the same object rather than returned as a separate result, and are stored as <code>coda</code> objects, one block per parameter. Printing the model reports which blocks have been set, which is worth a glance before committing to a long run.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"efficiency"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-efficiency-plot-1.png" alt="" width="100%"></p>
+<p>The left panel is the summary usually reported. The right one is the reason to look further: with one observation per unit there is very little information about any individual score, and the bands cover much of the range the histogram spreads over. That uncertainty is what the maximum likelihood route cannot report.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/selection_criteria.html">selection_criteria</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Selection criteria for a Bayesian stochastic frontier model</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Frontier:     production</span></span>
+<span><span class="co">#&gt; Inefficiency: exponential</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;           mean    median    qlower    qupper</span></span>
+<span><span class="co">#&gt; LL   -145.4157 -145.0797 -149.4518 -143.2591</span></span>
+<span><span class="co">#&gt; AIC   295.7543        NA        NA        NA</span></span>
+<span><span class="co">#&gt; BIC   316.8274        NA        NA        NA</span></span>
+<span><span class="co">#&gt; HQ    304.0234        NA        NA        NA</span></span>
+<span><span class="co">#&gt; WAIC  296.3049        NA  220.6911  371.9188</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="model-variants-are-classes">Model variants are classes<a class="anchor" aria-label="anchor" href="#model-variants-are-classes"></a>
+</h2>
 <p>The distribution of the inefficiency term is carried by the model’s class rather than by an argument, so each variant gets its own methods:</p>
 <table class="table">
 <colgroup>
-<col width="33%">
-<col width="33%">
-<col width="33%">
+<col width="35%">
+<col width="22%">
+<col width="42%">
 </colgroup>
 <thead><tr>
 <th>Constructor</th>
@@ -159,8 +201,8 @@
 </tr>
 </tbody>
 </table>
-<p>That split is not cosmetic. The prior on the inefficiency term is elicited from a prior median efficiency <code>r_star</code>, and the two models map that anchor differently:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>That split is not cosmetic. The prior on the inefficiency term is elicited from a prior median efficiency <code>r_star</code>, and the two distributions map that anchor differently, so the argument is named after the parameter it governs:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>, lambda <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span><span class="op">)</span>   <span class="co"># sfmodel_exp</span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span>, sigma_u <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span><span class="op">)</span>  <span class="co"># sfmodel_hn</span></span></code></pre></div>
 <p>For the exponential model the mapping is exact. With a gamma prior of shape 1 and rate <code>c = -log(r_star)</code> on the rate parameter, the implied marginal prior density of <code>u</code> is <code>c / (u + c)^2</code>, whose median is <code>c</code>, so the prior median of <code>exp(-u)</code> is exactly <code>r_star</code>. For the half-normal model the same target is matched only in expectation.</p>
@@ -201,15 +243,24 @@
 <div class="section level2">
 <h2 id="the-four-component-model">The four-component model<a class="anchor" aria-label="anchor" href="#the-four-component-model"></a>
 </h2>
-<p><code><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_exp()</a></code> and <code><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_hn()</a></code> split the disturbance into a unit effect, persistent inefficiency, noise and transient inefficiency:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_exp</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, data <span class="op">=</span> <span class="va">d</span>, id <span class="op">=</span> <span class="st">"id"</span>,</span>
-<span>                             iterations <span class="op">=</span> <span class="fl">5000</span>, burnin <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span>
+<p><code><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_exp()</a></code> and <code><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_hn()</a></code> split the disturbance into a unit effect, persistent inefficiency, noise and transient inefficiency. It needs panel data, so <code>id</code> is required.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sim_sf4.html">sim_sf4</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">120</span>, n_time <span class="op">=</span> <span class="fl">8</span>, beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.5</span>, <span class="fl">0.3</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"persistent"</span><span class="op">)</span>   <span class="co"># one score per unit</span></span>
-<span><span class="fu"><a href="reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"transient"</span><span class="op">)</span>    <span class="co"># one per observation</span></span>
-<span><span class="fu"><a href="reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"overall"</span><span class="op">)</span>      <span class="co"># the product of the two</span></span></code></pre></div>
+<span><span class="va">m4</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_sfmodel4_exp.html">create_sfmodel4_exp</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, data <span class="op">=</span> <span class="va">dp</span>, id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>                          iterations <span class="op">=</span> <span class="fl">5000</span>, burnin <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<span><span class="va">m4</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">m4</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">m4</span>, type <span class="op">=</span> <span class="st">"persistent"</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>   <span class="co"># one score per unit</span></span>
+<span><span class="co">#&gt;   unit      mean         sd        5%       50%       95%</span></span>
+<span><span class="co">#&gt; 1    1 0.8858415 0.11329293 0.6481284 0.9245224 0.9954616</span></span>
+<span><span class="co">#&gt; 2    2 0.9518964 0.04757242 0.8545106 0.9663032 0.9975351</span></span>
+<span><span class="co">#&gt; 3    3 0.8761482 0.12016605 0.6233711 0.9179951 0.9950433</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">m4</span>, type <span class="op">=</span> <span class="st">"transient"</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>    <span class="co"># one per observation</span></span>
+<span><span class="co">#&gt;   unit obs      mean         sd        5%       50%       95%</span></span>
+<span><span class="co">#&gt; 1    1   1 0.9320171 0.06035318 0.8064664 0.9489696 0.9955470</span></span>
+<span><span class="co">#&gt; 2    1   2 0.9207973 0.06993010 0.7780322 0.9408335 0.9957468</span></span>
+<span><span class="co">#&gt; 3    1   3 0.8695045 0.10475741 0.6639280 0.8961324 0.9912256</span></span></code></pre></div>
 <p>The unit effect enters none of the three scores, which is the point: in the time-invariant panel model every persistent difference between units — funding structure, soil quality, vintage of equipment — has nowhere to go but into inefficiency.</p>
 <p>The combination <code>mu_i - eta_i</code> is determined sharply by the data, but how it divides between the two depends on which of them has the wider spread: where the unit effect dominates it is recovered well and the persistent term is not, and where it is small the reverse holds. That is a property of the model rather than of the sampler, so a prior sensitivity check on <code>sigma_mu</code> and the persistent inefficiency parameter is worth running before reading much into the split. The frontier and the transient scores are unaffected. See the <code>four-component</code> vignette.</p>
 </div>
@@ -230,7 +281,7 @@
 <strong>LOOIC</strong>, once the Pareto smoothed importance sampling it needs has had its own testing pass.</li>
 </ol>
 <p>Each of these is a block of the specification rather than an argument to an estimator, which is why the package is organised around a model object.</p>
-<p><code><a href="reference/selection_criteria.html">selection_criteria()</a></code> does not provide LOOIC. The Pareto smoothed importance sampling it needs is a piece of machinery in its own right and deserves its own testing pass, so it is left out rather than added hastily. Note also that the pointwise log-likelihood, and therefore every criterion, is unavailable for panel models: the units share one inefficiency term, so integrating it out couples the observations that belong to the same unit.</p>
+<p>Note that the pointwise log-likelihood, and therefore every criterion, is unavailable for panel models: the units share one inefficiency term, so integrating it out couples the observations that belong to the same unit.</p>
 </div>
 <div class="section level2">
 <h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a>
@@ -244,12 +295,20 @@
 </h2>
 <p>Aigner, D., Lovell, C. A. K., &amp; Schmidt, P. (1977). Formulation and estimation of stochastic frontier production function models. <em>Journal of Econometrics</em>, 6(1), 21–37.</p>
 <p>Battese, G. E., &amp; Coelli, T. J. (1995). A model for technical inefficiency effects in a stochastic frontier production function for panel data. <em>Empirical Economics</em>, 20(2), 325–332.</p>
+<p>Colombi, R., Kumbhakar, S. C., Martini, G., &amp; Vittadini, G. (2014). Closed skew normal distribution and efficiency analysis. <em>Journal of Productivity Analysis</em>, 42(2), 123–136.</p>
 <p>Jondrow, J., Lovell, C. A. K., Materov, I. S., &amp; Schmidt, P. (1982). On the estimation of technical inefficiency in the stochastic frontier production function model. <em>Journal of Econometrics</em>, 19(2–3), 233–238.</p>
 <p>Koop, G. (2003). <em>Bayesian Econometrics</em>. Chichester: Wiley.</p>
 <p>Kumbhakar, S. C., Lien, G., &amp; Hjalmarsson, L. (2014). Technical efficiency in competing panel data models: A study of Norwegian grain farming. <em>Journal of Productivity Analysis</em>, 41(2), 321–337.</p>
 <p>Pitt, M. M., &amp; Lee, L.-F. (1981). The measurement and sources of technical inefficiency in the Indonesian weaving industry. <em>Journal of Development Economics</em>, 9(1), 43–64.</p>
 <p>Robert, C. P. (1995). Simulation of truncated normal variables. <em>Statistics and Computing</em>, 5(2), 121–125.</p>
 <p>van den Broeck, J., Koop, G., Osiewalski, J., &amp; Steel, M. F. J. (1994). Stochastic frontier models: A Bayesian perspective. <em>Journal of Econometrics</em>, 61(2), 273–303.</p>
+</div>
+<div class="section level2">
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
+</h2>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"bsfa"</span><span class="op">)</span></span></code></pre></div>
+<p>Released versions are archived on Zenodo, which mints a DOI for each release and a concept DOI that always resolves to the latest one. Please cite the software alongside van den Broeck, Koop, Osiewalski and Steel (1994), whose sampler it follows.</p>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
@@ -292,7 +351,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Franz X. Mohr <br><small class="roles"> Author, maintainer </small>   </li>
+<li>Franz X. Mohr <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0009-0003-8890-7781" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 

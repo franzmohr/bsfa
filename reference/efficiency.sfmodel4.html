@@ -19,7 +19,7 @@ which is the main reason to fit it."><!-- mathjax --><script src="https://cdnjs.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -108,7 +108,10 @@ which is the main reason to fit it.</p>
     <h2>Value</h2>
     <p>A data frame with the posterior mean, standard deviation and the
   requested quantiles of the efficiency score. Its first column gives the
-  unit, which for the observation-level types repeats.</p>
+  unit, which for the observation-level types repeats; those two carry a
+  second column <code>obs</code>, the row name of the observation in the model
+  frame, so that the scores can be joined back to the data they came from
+  rather than by position.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -157,13 +160,13 @@ out of the efficiency scores instead of depressing them.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5    5 0.9220100 0.06771719 0.7800032 0.9390818 0.9939192</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6    6 0.8800787 0.10607320 0.6762313 0.9120085 0.9942091</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">model</span>, type <span class="op">=</span> <span class="st">"transient"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   unit      mean         sd        5%       50%       95%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1 0.7171100 0.13516072 0.4973950 0.7125338 0.9482814</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1 0.8764703 0.09095615 0.7008286 0.8953910 0.9896506</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    1 0.8723234 0.09575061 0.6908287 0.8884124 0.9896725</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    1 0.9243401 0.06512307 0.7903379 0.9437243 0.9953917</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    1 0.8052547 0.11754685 0.6142509 0.8124616 0.9799137</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    1 0.9026462 0.07722976 0.7554801 0.9225453 0.9948563</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   unit obs      mean         sd        5%       50%       95%</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1   1 0.7171100 0.13516072 0.4973950 0.7125338 0.9482814</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1   2 0.8764703 0.09095615 0.7008286 0.8953910 0.9896506</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    1   3 0.8723234 0.09575061 0.6908287 0.8884124 0.9896725</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    1   4 0.9243401 0.06512307 0.7903379 0.9437243 0.9953917</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    1   5 0.8052547 0.11754685 0.6142509 0.8124616 0.9799137</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    1   6 0.9026462 0.07722976 0.7554801 0.9225453 0.9948563</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

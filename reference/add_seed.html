@@ -18,7 +18,7 @@ sampling, so that a model object fully determines its own output."><!-- mathjax 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -96,7 +96,8 @@ sampling, so that a model object fully determines its own output.</p>
     <div id="value">
     <h2>Value</h2>
     <p>The model object with the element <code>seed</code> of <code>model</code>
-  replaced.</p>
+  replaced. Any posterior draws it carried are discarded, since they were
+  simulated under the seed that has just been replaced.</p>
     </div>
     <div id="details">
     <h2>Details</h2>

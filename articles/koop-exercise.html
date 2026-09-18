@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -222,12 +222,12 @@ what the reference program uses:</p>
 <span><span class="co">#&gt; Draws:              250 after 25 burn-in, thinning 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
-<span><span class="co">#&gt;               mean     sd   2.5% median  97.5%</span></span>
-<span><span class="co">#&gt; (Intercept) 0.9916 0.0283 0.9363 0.9897 1.0465</span></span>
-<span><span class="co">#&gt; x1          0.7233 0.0334 0.6612 0.7231 0.7847</span></span>
-<span><span class="co">#&gt; x2          0.2696 0.0313 0.2079 0.2704 0.3323</span></span>
-<span><span class="co">#&gt; sigma_v     0.1976 0.0064 0.1858 0.1974 0.2096</span></span>
-<span><span class="co">#&gt; lambda      6.4162 0.8353 4.9951 6.3800 8.3297</span></span>
+<span><span class="co">#&gt;               mean     sd   2.5% median  97.5% ESS</span></span>
+<span><span class="co">#&gt; (Intercept) 0.9916 0.0283 0.9363 0.9897 1.0465 108</span></span>
+<span><span class="co">#&gt; x1          0.7233 0.0334 0.6612 0.7231 0.7847 161</span></span>
+<span><span class="co">#&gt; x2          0.2696 0.0313 0.2079 0.2704 0.3323 594</span></span>
+<span><span class="co">#&gt; sigma_v     0.1976 0.0064 0.1858 0.1974 0.2096 121</span></span>
+<span><span class="co">#&gt; lambda      6.4162 0.8353 4.9951 6.3800 8.3297  51</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior mean efficiency, per unit:</span></span>
 <span><span class="co">#&gt;   mean    min median    max </span></span>
@@ -257,13 +257,15 @@ a longer chain the picture firms up:</p>
 <span><span class="va">long</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_seed.html">add_seed</a></span><span class="op">(</span><span class="fu"><a href="../reference/add_initial_values.html">add_initial_values</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span>, <span class="fl">14013</span><span class="op">)</span></span>
 <span><span class="va">long</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span>, <span class="fl">4</span><span class="op">)</span></span>
-<span><span class="co">#&gt;               mean     sd   2.5% median  97.5%</span></span>
-<span><span class="co">#&gt; (Intercept) 0.9892 0.0290 0.9328 0.9892 1.0465</span></span>
-<span><span class="co">#&gt; x1          0.7231 0.0329 0.6589 0.7228 0.7882</span></span>
-<span><span class="co">#&gt; x2          0.2683 0.0314 0.2063 0.2685 0.3302</span></span>
-<span><span class="co">#&gt; sigma_v     0.1976 0.0069 0.1846 0.1974 0.2116</span></span>
-<span><span class="co">#&gt; lambda      6.4828 0.8924 4.9064 6.4275 8.4132</span></span></code></pre></div>
+<span><span class="va">tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span></span>
+<span><span class="va">stat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">tab</span><span class="op">)</span>, <span class="st">"ESS"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">tab</span><span class="op">[</span>, <span class="va">stat</span><span class="op">]</span>, <span class="fl">4</span><span class="op">)</span>, ESS <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">tab</span><span class="op">[</span>, <span class="st">"ESS"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;               mean     sd   2.5% median  97.5%   ESS</span></span>
+<span><span class="co">#&gt; (Intercept) 0.9892 0.0290 0.9328 0.9892 1.0465  5091</span></span>
+<span><span class="co">#&gt; x1          0.7231 0.0329 0.6589 0.7228 0.7882 15062</span></span>
+<span><span class="co">#&gt; x2          0.2683 0.0314 0.2063 0.2685 0.3302 14691</span></span>
+<span><span class="co">#&gt; sigma_v     0.1976 0.0069 0.1846 0.1974 0.2116 13008</span></span>
+<span><span class="co">#&gt; lambda      6.4828 0.8924 4.9064 6.4275 8.4132  3736</span></span></code></pre></div>
 <p>Comparing the two against the values used to simulate the data:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">theta</span>, <span class="va">sigma</span>, <span class="fl">1</span> <span class="op">/</span> <span class="va">mu_z</span><span class="op">)</span></span>

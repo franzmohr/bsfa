@@ -19,7 +19,7 @@ adds the draws to it."><!-- mathjax --><script src="https://cdnjs.cloudflare.com
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -108,9 +108,13 @@ argument <code>object</code>. If <code>NULL</code>, the package's own sampler is
 
 <dt id="arg-keep-u">keep_u<a class="anchor" aria-label="anchor" href="#arg-keep-u"></a></dt>
 <dd><p>whether to store the draws of the unit effects and of both
-one-sided terms. Required by <code><a href="efficiency.html">efficiency</a></code>. Note that the
-transient terms alone are as many as there are observations, so the stored
-object can become large.</p></dd>
+one-sided terms, which <code><a href="efficiency.html">efficiency</a></code> needs. The transient terms
+alone are one column per observation, so on a panel of any size this block
+dominates everything else: a hundred thousand observations and twenty
+thousand draws come to sixteen gigabytes. A positive whole number stores
+every that-many-th retained draw instead, which divides the storage by it
+and cannot exceed the number of retained draws. A warning is issued before
+anything is allocated if the block would exceed a gigabyte.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -179,14 +183,14 @@ trusting the split.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Draws:              500 after 200 burn-in, thinning 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior summary, 95% credible bands:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               mean     sd   2.5% median   97.5%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) 1.0161 0.0469 0.9343 1.0132  1.1025</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x1          0.4995 0.0128 0.4757 0.4993  0.5224</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> x2          0.3071 0.0111 0.2848 0.3072  0.3291</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_v     0.1917 0.0141 0.1620 0.1923  0.2172</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_mu    0.3396 0.0363 0.2783 0.3356  0.4170</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> lambda_eta  8.8366 3.3780 4.2919 8.1507 15.8140</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> lambda_u    5.8828 0.7059 4.6073 5.8919  7.1465</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               mean     sd   2.5% median   97.5% ESS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept) 1.0161 0.0469 0.9343 1.0132  1.1025  10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x1          0.4995 0.0128 0.4757 0.4993  0.5224 148</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> x2          0.3071 0.0111 0.2848 0.3072  0.3291 275</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_v     0.1917 0.0141 0.1620 0.1923  0.2172  33</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> sigma_mu    0.3396 0.0363 0.2783 0.3356  0.4170 180</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> lambda_eta  8.8366 3.3780 4.2919 8.1507 15.8140   6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> lambda_u    5.8828 0.7059 4.6073 5.8919  7.1465  18</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Posterior mean overall efficiency, per observation:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   mean    min median    max </span>
