@@ -40,6 +40,14 @@ This is the more honest choice when checking convergence, because running
 several chains from prior draws disperses the starting points rather than
 concentrating them all on the same least squares fit.
 
+How wide that dispersion is depends on the prior, and under a vague one it
+is very wide indeed: with the default shape and rate of 0.01 on the error
+precision, the median starting value for \eqn{\sigma_v^2} is of the order of
+\eqn{10^{28}}. Chains do come back from there within a few dozen sweeps, but
+a draw that overflows to \code{Inf} is not a starting point at all, so such
+a draw is repeated. An improper prior on the coefficients has no draw either
+and is reported rather than left to fail in the linear algebra.
+
 The function also stores the seed of the posterior simulation as element
 \code{seed} of \code{object$model}, unless the model has one already. It is
 drawn from R's random number generator, so \code{set.seed()} before this

@@ -42,7 +42,8 @@ object with its \code{posterior} element added.}
 row per retained draw, so it can be the largest part of the returned
 object. A positive whole number stores every that-many-th retained draw
 instead, which divides the storage by it and still leaves genuine
-posterior draws to summarise.}
+posterior draws to summarise. It cannot exceed the number of retained
+draws, since nothing would then be stored at all.}
 
 \item{verbose}{either \code{FALSE}, \code{TRUE} for progress at every ten
 per cent of iterations, or an integer reporting interval.}

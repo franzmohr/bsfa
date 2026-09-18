@@ -4,10 +4,13 @@
 \alias{augmented_thin}
 \title{Resolve keep_u to a thinning interval for the augmented blocks}
 \usage{
-augmented_thin(keep_u)
+augmented_thin(keep_u, n_keep)
 }
 \arguments{
 \item{keep_u}{\code{TRUE}, \code{FALSE}, or a positive whole number.}
+
+\item{n_keep}{the number of draws the chain retains, which the interval
+cannot exceed without leaving nothing to store.}
 }
 \value{
 \code{0L} if the draws are not to be stored, otherwise the interval.

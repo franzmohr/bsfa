@@ -41,7 +41,8 @@
 #'   row per retained draw, so it can be the largest part of the returned
 #'   object. A positive whole number stores every that-many-th retained draw
 #'   instead, which divides the storage by it and still leaves genuine
-#'   posterior draws to summarise.
+#'   posterior draws to summarise. It cannot exceed the number of retained
+#'   draws, since nothing would then be stored at all.
 #' @param verbose either \code{FALSE}, \code{TRUE} for progress at every ten
 #'   per cent of iterations, or an integer reporting interval.
 #' @param ... further arguments passed to or from other methods.
@@ -141,8 +142,9 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
   verbose_int <- if (isTRUE(verbose)) max(1L, floor(n_iter / 10)) else
     if (isFALSE(verbose)) 0L else as.integer(verbose)
 
-  u_thin <- augmented_thin(keep_u)
-  n_keep_u <- if (u_thin > 0) (object$iterations / object$thin) %/% u_thin else 0
+  n_keep <- object$iterations / object$thin
+  u_thin <- augmented_thin(keep_u, n_keep)
+  n_keep_u <- if (u_thin > 0) n_keep %/% u_thin else 0
   warn_augmented_size(object$data$n_units, n_keep_u)
 
   out <- .with_model_seed(

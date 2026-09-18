@@ -33,9 +33,9 @@ one-sided terms, which \code{\link{efficiency}} needs. The transient terms
 alone are one column per observation, so on a panel of any size this block
 dominates everything else: a hundred thousand observations and twenty
 thousand draws come to sixteen gigabytes. A positive whole number stores
-every that-many-th retained draw instead, which divides the storage by it.
-A warning is issued before anything is allocated if the block would exceed
-a gigabyte.}
+every that-many-th retained draw instead, which divides the storage by it
+and cannot exceed the number of retained draws. A warning is issued before
+anything is allocated if the block would exceed a gigabyte.}
 
 \item{verbose}{either \code{FALSE}, \code{TRUE} for progress at every ten
 per cent of iterations, or an integer reporting interval.}

@@ -14,6 +14,14 @@
 #' several chains from prior draws disperses the starting points rather than
 #' concentrating them all on the same least squares fit.
 #'
+#' How wide that dispersion is depends on the prior, and under a vague one it
+#' is very wide indeed: with the default shape and rate of 0.01 on the error
+#' precision, the median starting value for \eqn{\sigma_v^2} is of the order of
+#' \eqn{10^{28}}. Chains do come back from there within a few dozen sweeps, but
+#' a draw that overflows to \code{Inf} is not a starting point at all, so such
+#' a draw is repeated. An improper prior on the coefficients has no draw either
+#' and is reported rather than left to fail in the linear algebra.
+#'
 #' The function also stores the seed of the posterior simulation as element
 #' \code{seed} of \code{object$model}, unless the model has one already. It is
 #' drawn from R's random number generator, so \code{set.seed()} before this
@@ -53,10 +61,12 @@ add_initial_values.sfmodel_exp <- function(object, method = "ols", ...) {
   init <- initial_common(object, method)
 
   # Prior mean of the gamma prior on the exponential rate.
-  init$par_u <- switch(method,
-                       ols = object$priors$shape_u / object$priors$rate_u,
-                       prior = stats::rgamma(1, shape = object$priors$shape_u,
-                                             rate = object$priors$rate_u))
+  init$par_u <- switch(
+    method,
+    ols = object$priors$shape_u / object$priors$rate_u,
+    prior = draw_finite(
+      function() stats::rgamma(1, shape = object$priors$shape_u,
+                               rate = object$priors$rate_u), "lambda"))
 
   attach_initial(object, init)
 }
@@ -72,8 +82,10 @@ add_initial_values.sfmodel_hn <- function(object, method = "ols", ...) {
   init$par_u <- switch(
     method,
     ols = sqrt(object$priors$rate_u / (object$priors$shape_u - 1)),
-    prior = 1 / sqrt(stats::rgamma(1, shape = object$priors$shape_u,
-                                   rate = object$priors$rate_u)))
+    prior = draw_finite(
+      function() 1 / sqrt(stats::rgamma(1, shape = object$priors$shape_u,
+                                        rate = object$priors$rate_u)),
+      "sigma_u"))
 
   attach_initial(object, init)
 }
@@ -103,11 +115,22 @@ initial_common <- function(object, method) {
     resid <- y - X %*% beta
     sigma_v2 <- sum(resid^2) / (object$n - object$k)
   } else {
+    # A flat prior on the coefficients has no draw, so a singular precision is
+    # reported as the improper prior it is rather than as a LAPACK failure.
+    # Factorising the precision also avoids inverting it: with B0i = U'U, the
+    # vector U^-1 z has covariance B0i^-1.
+    U <- tryCatch(chol(object$priors$B0i), error = function(e) {
+      stop("Cannot draw starting values from an improper prior on the ",
+           "coefficients: 'coef$v_i' is singular, so the prior has no ",
+           "covariance to draw from. Use method = \"ols\", or give the ",
+           "coefficients a proper prior.")
+    })
     beta <- as.numeric(object$priors$b0 +
-                         t(chol(solve(object$priors$B0i))) %*%
-                         stats::rnorm(object$k))
-    sigma_v2 <- 1 / stats::rgamma(1, shape = object$priors$shape_v,
-                                  rate = object$priors$rate_v)
+                         backsolve(U, stats::rnorm(object$k)))
+    sigma_v2 <- draw_finite(
+      function() 1 / stats::rgamma(1, shape = object$priors$shape_v,
+                                   rate = object$priors$rate_v),
+      "sigma_v2")
   }
 
   list(beta = beta,

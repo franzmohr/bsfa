@@ -271,3 +271,67 @@ test_that("sim_sf4 returns the components it generated", {
                attr(d, "persistent")[d$id] * attr(d, "transient"))
   expect_error(sim_sf4(n = 10, n_time = 1), "at least 2")
 })
+
+test_that("starting values can be drawn from the prior", {
+  d <- sim_sf4(n = 20, n_time = 3, beta = c(1, 0.5))
+
+  # The four-component model is the one whose mixing needs dispersed chains,
+  # so this is the method its own documentation recommends.
+  for (ctor in list(create_sfmodel4_exp, create_sfmodel4_hn)) {
+    base <- add_priors(ctor(y ~ x1, data = d, id = "id"))
+    set.seed(91)
+    a <- add_initial_values(base, method = "prior")
+    set.seed(92)
+    b <- add_initial_values(base, method = "prior")
+
+    for (p in c("sigma_v2", "sigma_mu2", "par_eta", "par_u")) {
+      expect_true(is.finite(a$initial[[p]]))
+      expect_gt(a$initial[[p]], 0)
+      expect_false(isTRUE(all.equal(a$initial[[p]], b$initial[[p]])))
+    }
+    expect_equal(a$initial$method, "prior")
+    expect_equal(a$initial$mu, rep(0, 20))
+    expect_equal(a$initial$eta, rep(0, 20))
+    expect_equal(a$initial$u, rep(0, 60))
+
+    # Dispersed starting values still have to reach the same posterior.
+    fit <- add_posterior_coefficients(add_seed(a, 3), keep_u = FALSE)
+    expect_equal(nrow(as.matrix(fit$posterior$beta$coeffs)), 20000L)
+  }
+})
+
+test_that("an alternative sampler can be supplied", {
+  d <- sim_sf4(n = 10, n_time = 3, beta = c(1, 0.5))
+  m <- create_sfmodel4_exp(y ~ x1, data = d, id = "id", iterations = 50,
+                           burnin = 10)
+
+  elsewhere <- function(object) {
+    object$posterior <- list(beta = list(coeffs = matrix(1, 5, 2)))
+    object
+  }
+  out <- add_posterior_coefficients(m, posterior_function = elsewhere)
+  expect_s3_class(out, "sfmodel4_exp")
+  expect_equal(dim(out$posterior$beta$coeffs), c(5L, 2L))
+
+  expect_error(add_posterior_coefficients(m), "Add priors before simulating")
+})
+
+test_that("sim_sf4 draws half-normal components too", {
+  set.seed(93)
+  d <- sim_sf4(n = 200, n_time = 4, beta = c(1, 0.5), par_eta = 0.4,
+               par_u = 0.3, ineff = "halfnormal")
+
+  expect_true(all(attr(d, "eta") >= 0))
+  expect_true(all(attr(d, "u") >= 0))
+  # A half-normal with scale p has mean p * sqrt(2 / pi).
+  expect_equal(mean(attr(d, "eta")), 0.4 * sqrt(2 / pi), tolerance = 0.15)
+  expect_equal(mean(attr(d, "u")), 0.3 * sqrt(2 / pi), tolerance = 0.1)
+  expect_equal(attr(d, "persistent"), exp(-attr(d, "eta")))
+
+  # And the half-normal model recovers what they generated.
+  fit <- add_posterior_coefficients(add_seed(add_priors(
+    create_sfmodel4_hn(y ~ x1, data = d, id = "id", iterations = 2000,
+                       burnin = 500)), 94), keep_u = FALSE)
+  est <- colMeans(as.matrix(fit$posterior$beta$coeffs))
+  expect_equal(unname(est[2]), 0.5, tolerance = 0.05)
+})

@@ -365,3 +365,61 @@ test_that("the four-component model thins all three augmented blocks", {
   expect_equal(nrow(efficiency(est, "transient")), 60L)
   expect_equal(nrow(efficiency(est, "persistent")), 15L)
 })
+
+test_that("a keep_u interval wider than the chain is refused", {
+  d <- sim_sf(n = 40, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d, iterations = 100,
+                                     burnin = 10))
+
+  # Storing every 101st of 100 draws stores none, which used to come back as
+  # a missing block and sent efficiency() on to advise keep_u = TRUE.
+  expect_error(add_posterior_coefficients(m, keep_u = 101),
+               "retains only 100 draws")
+  expect_error(add_posterior_coefficients(m, keep_u = 500), "'keep_u' is 500")
+
+  # The boundary itself is fine and keeps the last draw.
+  at_limit <- add_posterior_coefficients(m, keep_u = 100)
+  expect_equal(nrow(as.matrix(at_limit$posterior$u$coeffs)), 1L)
+
+  # Thinning counts retained draws, so it is 'iterations / thin' that binds.
+  thinned <- add_priors(create_sfmodel_exp(y ~ x1, data = d,
+                                           iterations = 100, burnin = 10,
+                                           thin = 4))
+  expect_error(add_posterior_coefficients(thinned, keep_u = 26),
+               "retains only 25 draws")
+  expect_equal(nrow(as.matrix(
+    add_posterior_coefficients(thinned, keep_u = 25)$posterior$u$coeffs)), 1L)
+
+  m4 <- add_priors(create_sfmodel4_exp(
+    y ~ x1, data = sim_sf4(n = 10, n_time = 3, beta = c(1, 0.5)),
+    id = "id", iterations = 100, burnin = 10))
+  expect_error(add_posterior_coefficients(m4, keep_u = 101),
+               "retains only 100 draws")
+})
+
+test_that("progress is reported at the requested interval", {
+  d <- sim_sf(n = 30, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+  m <- add_priors(create_sfmodel_exp(y ~ x1, data = d, iterations = 20,
+                                     burnin = 10))
+
+  expect_output(add_posterior_coefficients(m, verbose = 10),
+                "Iteration 10 of 30")
+  expect_output(add_posterior_coefficients(m, verbose = TRUE),
+                "Iteration 30 of 30")
+  expect_silent(add_posterior_coefficients(m, verbose = FALSE))
+
+  m4 <- add_priors(create_sfmodel4_exp(
+    y ~ x1, data = sim_sf4(n = 8, n_time = 3, beta = c(1, 0.5)),
+    id = "id", iterations = 20, burnin = 10))
+  expect_output(add_posterior_coefficients(m4, verbose = 10),
+                "Iteration 30 of 30")
+})
+
+test_that("the size of the augmented draws is warned about in advance", {
+  # The warning has to fire before anything is allocated, so the helper is
+  # called directly rather than through a model nobody could hold in memory.
+  expect_warning(warn_augmented_size(2e4, 2e4), "about 3.0 GB")
+  expect_warning(warn_augmented_size(2e4, 2e4), "keep_u")
+  expect_silent(warn_augmented_size(100, 1000))
+  expect_silent(warn_augmented_size(0, 0))
+})

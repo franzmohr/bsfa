@@ -183,11 +183,13 @@ check_count <- function(x, what) {
 #' memory, so \code{keep_u} also accepts an interval at which to keep them.
 #'
 #' @param keep_u \code{TRUE}, \code{FALSE}, or a positive whole number.
+#' @param n_keep the number of draws the chain retains, which the interval
+#'   cannot exceed without leaving nothing to store.
 #'
 #' @return \code{0L} if the draws are not to be stored, otherwise the interval.
 #'
 #' @keywords internal
-augmented_thin <- function(keep_u) {
+augmented_thin <- function(keep_u, n_keep) {
 
   if (is.logical(keep_u)) {
     if (length(keep_u) != 1L || is.na(keep_u)) {
@@ -200,6 +202,15 @@ augmented_thin <- function(keep_u) {
       keep_u != trunc(keep_u) || keep_u < 0 ||
       keep_u > .Machine$integer.max) {
     stop("'keep_u' must be TRUE, FALSE or a positive whole number.")
+  }
+  # An interval wider than the chain would store nothing at all, which as a
+  # silent outcome is indistinguishable from keep_u = FALSE and leaves
+  # efficiency() advising the very argument that was just passed.
+  if (keep_u > n_keep) {
+    stop("'keep_u' is ", keep_u, ", but the chain retains only ", n_keep,
+         " draw", if (n_keep == 1L) "" else "s",
+         ", so not one augmented draw would be kept. The interval cannot ",
+         "exceed 'iterations' divided by 'thin'.")
   }
   as.integer(keep_u)
 }
@@ -246,4 +257,41 @@ mcmc_augmented <- function(object, x, u_thin) {
              start = object$burnin + step,
              end = object$burnin + step * NROW(x),
              thin = step)
+}
+
+#' Draw a starting value from a prior that may overflow
+#'
+#' A draw from a vague prior on a variance is a draw from an inverse gamma
+#' whose shape is near zero, and those routinely exceed what a double can hold:
+#' under the package's own default of shape and rate 0.01, about one draw in
+#' twelve hundred comes back as \code{Inf}, and under 0.001 nearly half of them
+#' do. Such a value is not a dispersed starting point but an unusable one. It
+#' turns the first sweep's inefficiency terms into \code{NaN}, and the run then
+#' fails inside the linear algebra with a message about a matrix inverse rather
+#' than about the prior it came from.
+#'
+#' The draw is therefore repeated until it is representable. That discards only
+#' values no chain could have started from in any case, and leaves the draw a
+#' draw from the prior everywhere it can be held.
+#'
+#' @param draw a function of no arguments returning one draw.
+#' @param what the name of the quantity, used in the error message.
+#'
+#' @return A finite positive draw.
+#'
+#' @keywords internal
+draw_finite <- function(draw, what) {
+
+  for (i in seq_len(100L)) {
+    x <- draw()
+    if (length(x) == 1L && is.finite(x) && x > 0) {
+      return(x)
+    }
+  }
+
+  stop("Could not draw a usable starting value for '", what, "': every one ",
+       "of 100 draws from its prior fell outside the range a double can ",
+       "hold. The prior is too vague to start a chain from. Use ",
+       "method = \"ols\", or give it a shape and rate that put some mass on ",
+       "values a variance could take.")
 }

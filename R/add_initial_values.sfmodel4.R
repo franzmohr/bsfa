@@ -67,24 +67,30 @@ initial_four <- function(object, method, ineff) {
     init$sigma_mu2 <- init$sigma_v2 / 4
     init$sigma_v2 <- init$sigma_v2 / 2
   } else {
-    init$sigma_mu2 <- 1 / stats::rgamma(1, shape = object$priors$shape_mu,
-                                        rate = object$priors$rate_mu)
+    init$sigma_mu2 <- draw_finite(
+      function() 1 / stats::rgamma(1, shape = object$priors$shape_mu,
+                                   rate = object$priors$rate_mu),
+      "sigma_mu2")
   }
 
-  from_prior <- function(shape, rate) {
+  from_prior <- function(shape, rate, what) {
     if (ineff == "exponential") {
       if (method == "ols") shape / rate else
-        stats::rgamma(1, shape = shape, rate = rate)
+        draw_finite(function() stats::rgamma(1, shape = shape, rate = rate),
+                    what)
     } else {
       # The gamma prior sits on the precision, so the scale is the square root
       # of the mean of its inverse.
       if (method == "ols") sqrt(rate / (shape - 1)) else
-        1 / sqrt(stats::rgamma(1, shape = shape, rate = rate))
+        draw_finite(function() 1 / sqrt(stats::rgamma(1, shape = shape,
+                                                      rate = rate)), what)
     }
   }
 
-  init$par_eta <- from_prior(object$priors$shape_eta, object$priors$rate_eta)
-  init$par_u <- from_prior(object$priors$shape_u, object$priors$rate_u)
+  init$par_eta <- from_prior(object$priors$shape_eta, object$priors$rate_eta,
+                             object$model$par_eta_name)
+  init$par_u <- from_prior(object$priors$shape_u, object$priors$rate_u,
+                           object$model$par_u_name)
 
   init$mu <- rep(0, object$data$n_units)
   init$eta <- rep(0, object$data$n_units)
