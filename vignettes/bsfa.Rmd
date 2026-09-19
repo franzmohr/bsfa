@@ -206,80 +206,35 @@ usual situation.
 
 ## Which regressors belong in the frontier
 
-Creating the model with `varsel = "ssvs"` places the frontier coefficients
-under the stochastic search variable selection of George, Sun and Ni (2008).
-Every selected coefficient then carries a mixture of two normal priors centred
-on zero, a tight one standing for the regressor being absent from the frontier
-and a loose one for its being present, and the sampler draws an inclusion
-indicator for it in every sweep.
-
-The prior is set through the `varsel` argument of `add_priors()`, which such a
-model requires and every other refuses. `semiautomatic` obtains the two
-standard deviations by scaling each coefficient's least squares standard error,
-which is the choice to make when the regressors sit on scales that differ.
+Creating the model with `varsel` places the frontier coefficients under a
+variable selection algorithm, which draws an inclusion indicator for each
+candidate regressor in every sweep rather than leaving the choice to be argued
+out of a table of credible bands afterwards.
 
 ```{r}
 d$z1 <- rnorm(nrow(d))   # a regressor the frontier has no use for
-d$z2 <- rnorm(nrow(d))
 
-sel <- create_sfmodel_exp(y ~ x1 + x2 + z1 + z2, data = d, varsel = "ssvs",
+sel <- create_sfmodel_exp(y ~ x1 + x2 + z1, data = d, varsel = "ssvs",
                           iterations = 4000, burnin = 1000)
 sel <- add_priors(sel, varsel = list(semiautomatic = c(0.1, 10)))
 sel <- add_posterior_coefficients(add_seed(sel, 1234))
 
-summary(sel)
+summary(sel)$coefficients
 ```
 
 The `PIP` column is the share of draws in which the regressor was in the
-frontier. The two that generated the data are kept throughout, the two that did
-not are dropped in most sweeps, and the intercept is `NA` because it was never
-a candidate: it is the level of the frontier rather than the effect of a
-regressor, so selecting it away would move every efficiency score instead of
-dropping a variable. Pass `exclude_intercept = FALSE` to select on it anyway.
+frontier: the two that generated the data are kept throughout, the one that did
+not is dropped in most sweeps. The mean and the band on the same row are
+averages over both states of the indicator, so this is model averaging rather
+than model choice, and the efficiency scores come out averaged over the
+frontiers the selection admits.
 
-The mean and the credible band on a selected row are averages over both states
-of the indicator, which is why a coefficient with a low `PIP` has a posterior
-concentrated near zero rather than one centred on its least squares value. This
-is model averaging rather than model choice: nothing is removed, and the
-efficiency scores that come out of the sampler are averaged over the frontiers
-the selection admits.
-
-`varsel = "bvs"` is the other algorithm bvartools offers, the Bayesian
-variable selection of Korobilis (2013). It switches the regressor itself off
-rather than tightening its prior, so the frontier is $x_i' \Lambda \beta$ with
-$\Lambda$ the diagonal matrix of indicators and an excluded coefficient is
-stored as an exact zero.
-
-```{r}
-bvs <- create_sfmodel_exp(y ~ x1 + x2 + z1 + z2, data = d, varsel = "bvs",
-                          iterations = 4000, burnin = 1000)
-bvs <- add_priors(bvs, coef = list(mu = 0, v_i = 1),
-                  varsel = list(inprior = 0.5))
-bvs <- add_posterior_coefficients(add_seed(bvs, 1234))
-
-round(colMeans(as.matrix(bvs$posterior$beta$coeffs) == 0), 3)
-```
-
-The coefficient prior matters more here than it does under SSVS, and it is set
-through `coef` rather than through `varsel`. A sweep that excludes a regressor
-draws its coefficient from that prior, so the prior has to be proper, and the
-wider it is the further the coefficient wanders and the less readily the
-likelihood admits it back. `add_priors()` refuses a prior precision of zero and
-reports one wide enough to leave the indicator stuck for a whole run. The
-package default is wide enough to do so, which is why `coef$v_i` is given
-above.
-
-That dependence does not vanish where the chain mixes: the posterior inclusion
-probability under BVS moves with the width of the prior, which is Bartlett's
-paradox and a property of the algorithm rather than of this implementation. Put
-the two side by side when it matters, and report the prior that produced the
-probability. SSVS is the easier of the two to use with a prior that was not
-chosen with the selection in mind, and it mixes better when the regressors are
-correlated; BVS gives exact zeros and an indicator that means what it says.
-
-The selection touches the frontier alone. The inefficiency term and the error
-are drawn exactly as they are without it, and `varsel` sits in the same place
-in the four-component model.
+`"ssvs"` is the stochastic search variable selection of George, Sun and Ni
+(2008), which tightens the prior of an excluded coefficient, and `"bvs"` is the
+Bayesian variable selection of Korobilis (2013), which switches the regressor
+itself off so that an excluded coefficient is stored as an exact zero. The two
+differ in what they need from the prior and in how they mix; see the
+`variable-selection` vignette.
 
 ## Panel data
 

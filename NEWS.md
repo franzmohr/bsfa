@@ -36,9 +36,14 @@
 * The selection applies to the frontier only. The inefficiency term, the error
   and the efficiency scores are drawn exactly as they are without it, except
   that they are now averaged over the frontiers the selection admits. AIC, BIC
-  and HQ still charge the model for every coefficient it was written with, since
-  a selection that shrinks a coefficient to zero does not remove it; WAIC reads
-  the effective number of parameters off the draws and accounts for it.
+  and HQ still charge the model for every coefficient the frontier was written
+  with, because the number the selection keeps is not the same in every draw and
+  there is no whole number to subtract; WAIC reads the effective number of
+  parameters off the draws and accounts for it.
+* A new `variable-selection` vignette covers both algorithms: what an inclusion
+  probability means and how it should not be read, what each of them asks of the
+  coefficient prior, why a prior too wide for BVS leaves the indicators stuck,
+  and which of the two to reach for.
 
 ## Priors
 

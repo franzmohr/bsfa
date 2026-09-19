@@ -338,6 +338,10 @@ draw, so there is no whole number to subtract. WAIC reads the effective
 number of parameters off the draws and accounts for the selection by
 itself.
 
+What the two algorithms ask of the prior, how far apart their answers
+can fall and how to read an inclusion probability are set out in the
+`variable-selection` vignette.
+
 ## Roadmap
 
 The planned extensions, roughly in order:
