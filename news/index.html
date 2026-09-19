@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bsfa</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.0</span>
       </span>
     </div>
 
@@ -64,9 +64,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="development version" id="bsfa-development-version">bsfa (development version)<a class="anchor" aria-label="anchor" href="#bsfa-development-version"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.0" id="bsfa-020">bsfa 0.2.0<a class="anchor" aria-label="anchor" href="#bsfa-020"></a></h2>
 <div class="section level3">
-<h3 id="priors-development-version">Priors<a class="anchor" aria-label="anchor" href="#priors-development-version"></a></h3>
+<h3 id="priors-0-2-0">Priors<a class="anchor" aria-label="anchor" href="#priors-0-2-0"></a></h3>
 <ul><li>
 <p><code><a href="../reference/add_priors.html">add_priors()</a></code> now matches <code>r_star</code> on the median of the marginal prior of the inefficiency term, after the parameter of its distribution has been integrated out, so that the prior median efficiency is <code>r_star</code> exactly for both models and at any shape.</p>
 <p>This changes the priors that were released in 0.1.0, and so the posteriors drawn under them. The half-normal anchor was previously matched through the prior mean of the squared scale, which left it optimistic by a factor that depended only on the shape: at the default shape of 2.5 the implied prior median efficiency was <code>r_star^0.834</code>, so that asking for 0.75 gave 0.787 and asking for 0.5 gave 0.561. The exponential anchor was matched exactly at the default shape of 1, and only there; at shape 2 an <code>r_star</code> of 0.75 implied a prior median efficiency of 0.888.</p>
