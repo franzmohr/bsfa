@@ -104,7 +104,32 @@ selection_criteria.sfmodel <- function(object, ci = 0.95, ...) {
   }
   check_probability(ci, "ci")
 
+  # The criteria are built from two things that have to come out of one run:
+  # the log-likelihood draws, and the posterior means of the parameters the
+  # deviance is evaluated at. Neither was checked here, so a posterior handed
+  # in through 'posterior_function' could omit a parameter block and return a
+  # table of NA, or carry a log-likelihood of the wrong width and return a
+  # WAIC that looks perfectly reasonable and is not the WAIC of this model.
+  check_posterior_blocks(object, c("beta", sf_scalar_blocks(object)))
+
   ll <- as.matrix(object$posterior$loglik)
+  if (!is.numeric(ll) || NROW(ll) == 0L || NCOL(ll) == 0L) {
+    stop("posterior$loglik has no usable draws. It has to be a numeric ",
+         "matrix with one row per draw and one column per observation.")
+  }
+  if (NCOL(ll) != object$n) {
+    stop("posterior$loglik has ", NCOL(ll), " column(s) but the model has ",
+         object$n, " observation(s). The criteria are built from the ",
+         "pointwise log-likelihood, which carries one column per ",
+         "observation.")
+  }
+  if (NROW(ll) != NROW(object$posterior$beta$coeffs)) {
+    stop("posterior$loglik holds ", NROW(ll), " draw(s) and posterior$beta ",
+         "holds ", NROW(object$posterior$beta$coeffs), ". The deviance is ",
+         "taken at the posterior mean of the parameters and the WAIC from ",
+         "the log-likelihood draws, so both have to come from one run.")
+  }
+
   tt <- ncol(ll)
   kappa <- object$k + 2
 

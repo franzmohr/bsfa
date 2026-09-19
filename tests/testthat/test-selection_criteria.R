@@ -160,3 +160,58 @@ test_that("a non-finite credible band names the argument at fault", {
     expect_error(plot(est, type = "efficiency", ci = bad), "between 0 and 1")
   }
 })
+
+test_that("a posterior that cannot support the criteria is refused", {
+  m <- fitted_model()
+  damage <- function(f) f(m)
+
+  # The parameter blocks. The deviance the penalties are added to is taken at
+  # the posterior mean of these, so a missing one used to produce a table of
+  # NA behind a warning from mean(), and a mis-shaped beta reached the
+  # likelihood and failed there with R's own message about conformability.
+  expect_error(selection_criteria(damage(function(x) {
+    x$posterior$beta <- NULL; x })), "no usable draws")
+  expect_error(selection_criteria(damage(function(x) {
+    x$posterior$sigma_v <- NULL; x })), "no usable draws")
+  expect_error(selection_criteria(damage(function(x) {
+    x$posterior$lambda <- NULL; x })), "no usable draws")
+  expect_error(selection_criteria(damage(function(x) {
+    x$posterior$beta$coeffs <- x$posterior$beta$coeffs[, 1, drop = FALSE]
+    x })), "but the model has 2 coefficient(s)", fixed = TRUE)
+  expect_error(selection_criteria(damage(function(x) {
+    x$posterior$sigma_v$coeffs <- x$posterior$sigma_v$coeffs[1:5, , drop = FALSE]
+    x })), "different numbers of draws")
+
+  # The log-likelihood itself. A matrix of the wrong width is the one that
+  # matters: every criterion is built from it, so the result came back looking
+  # entirely reasonable and was the WAIC of nothing in particular.
+  expect_error(selection_criteria(damage(function(x) {
+    x$posterior$loglik <- x$posterior$loglik[, 1:5]
+    x })), "has 5 column(s) but the model has 150 observation(s)", fixed = TRUE)
+  expect_error(selection_criteria(damage(function(x) {
+    x$posterior$loglik <- matrix("a", 10, 150); x })), "no usable draws")
+  expect_error(selection_criteria(damage(function(x) {
+    x$posterior$loglik <- x$posterior$loglik[1:5, , drop = FALSE]
+    x })), "holds 5 draw(s) and posterior$beta holds", fixed = TRUE)
+})
+
+test_that("thinning and dropped rows are not mistaken for damage", {
+  set.seed(24)
+  d <- sim_sf(n = 120, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
+
+  # Thinning shortens the draws and an incomplete row shortens the sample.
+  # Both change the shape of the log-likelihood legitimately, so the checks
+  # are made against the model rather than against a remembered size.
+  thinned <- add_posterior_loglik(add_posterior_coefficients(add_priors(
+    create_sfmodel_exp(y ~ x1, data = d, iterations = 500, burnin = 200,
+                       thin = 5))))
+  expect_equal(nrow(thinned$posterior$loglik), 100L)
+  expect_s3_class(selection_criteria(thinned), "selcrit")
+
+  d$y[1:7] <- NA
+  dropped <- suppressMessages(add_posterior_loglik(add_posterior_coefficients(
+    add_priors(create_sfmodel_exp(y ~ x1, data = d, iterations = 300,
+                                  burnin = 100)))))
+  expect_equal(ncol(dropped$posterior$loglik), 113L)
+  expect_s3_class(selection_criteria(dropped), "selcrit")
+})
