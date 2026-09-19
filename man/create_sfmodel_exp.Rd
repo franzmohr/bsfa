@@ -10,6 +10,7 @@ create_sfmodel_exp(
   data,
   id = NULL,
   type = c("production", "cost"),
+  varsel = NULL,
   iterations = 20000,
   burnin = 2000,
   thin = 1
@@ -20,6 +21,7 @@ create_sfmodel_hn(
   data,
   id = NULL,
   type = c("production", "cost"),
+  varsel = NULL,
   iterations = 20000,
   burnin = 2000,
   thin = 1
@@ -35,6 +37,9 @@ of the same length as the data, identifying the units that own the
 inefficiency terms. See details.}
 
 \item{type}{either \code{"production"} or \code{"cost"}.}
+
+\item{varsel}{either \code{NULL} for no variable selection, or
+\code{"ssvs"} for stochastic search variable selection. See details.}
 
 \item{iterations}{number of iterations retained after burn-in, before
 thinning.}
@@ -86,6 +91,23 @@ a known quantity is imposed rather than estimated: a capacity that the
 frontier cannot exceed, or a scale factor whose elasticity is known to be
 one. The efficiency scores are measured from the frontier including it.
 
+With \code{varsel = "ssvs"} the frontier coefficients are placed under the
+stochastic search variable selection of George, Sun and Ni (2008), as in the
+\pkg{bvartools} package. Each coefficient then carries a mixture of two
+normal priors centred on zero, a tight one standing for its absence from the
+frontier and a loose one for its presence, and the sampler draws an
+inclusion indicator for it in every sweep. The posterior mean of that
+indicator is the posterior probability that the regressor belongs in the
+frontier, which \code{\link{summary.sfmodel}} reports beside the
+coefficient. The prior is set through the \code{varsel} argument of
+\code{\link{add_priors}}, which is required for such a model and not
+allowed for any other.
+
+Variable selection applies to the frontier only. The inefficiency term and
+the error are untouched by it, so the efficiency scores are read off the
+draws as they always are, but they are now averaged over the frontiers the
+selection admits rather than conditioned on one.
+
 If \code{id} is supplied, one inefficiency term is drawn per unit and held
 fixed over that unit's observations, which is the time-invariant panel model
 of Pitt and Lee (1981). This attributes all persistent heterogeneity between
@@ -103,6 +125,9 @@ model
 
 }
 \references{
+George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
+model restrictions. \emph{Journal of Econometrics}, 142(1), 553--580.
+
 Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical
 inefficiency in the Indonesian weaving industry. \emph{Journal of
 Development Economics}, 9(1), 43--64.

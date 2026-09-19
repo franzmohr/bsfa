@@ -36,6 +36,11 @@
 #'   of persistent inefficiency, with elements \code{r_star} and \code{shape}.
 #' @param sigma_u a named list for the scale of the half-normal distribution of
 #'   transient inefficiency, with elements \code{r_star} and \code{shape}.
+#' @param varsel a named list of prior specifications for the variable
+#'   selection algorithm. Required if the model was created with
+#'   \code{varsel = "ssvs"}, and not allowed otherwise. It takes the same
+#'   elements as in \code{\link{add_priors}} for the two-component models, and
+#'   applies to the frontier coefficients only.
 #' @param ... unused, for compatibility with the generic.
 #'
 #' @return The model object with the element \code{priors} attached.
@@ -65,6 +70,7 @@ add_priors.sfmodel4_exp <- function(object,
                                                     rate = 0.01),
                                     lambda_eta = list(r_star = 0.9, shape = 1),
                                     lambda_u = list(r_star = 0.9, shape = 1),
+                                    varsel = NULL,
                                     ...) {
 
   defaults <- list(r_star = 0.9, shape = 1)
@@ -73,7 +79,7 @@ add_priors.sfmodel4_exp <- function(object,
 
   prior_four(object, coef, sigma, sigma_mu,
              elicit_exp(eta, "lambda_eta"), elicit_exp(u, "lambda_u"),
-             c(persistent = eta$r_star, transient = u$r_star))
+             c(persistent = eta$r_star, transient = u$r_star), varsel)
 }
 
 #' @rdname add_priors.sfmodel4_exp
@@ -85,6 +91,7 @@ add_priors.sfmodel4_hn <- function(object,
                                    sigma_eta = list(r_star = 0.9,
                                                     shape = 2.5),
                                    sigma_u = list(r_star = 0.9, shape = 2.5),
+                                   varsel = NULL,
                                    ...) {
 
   defaults <- list(r_star = 0.9, shape = 2.5)
@@ -93,7 +100,7 @@ add_priors.sfmodel4_hn <- function(object,
 
   prior_four(object, coef, sigma, sigma_mu,
              elicit_hn(eta, "sigma_eta"), elicit_hn(u, "sigma_u"),
-             c(persistent = eta$r_star, transient = u$r_star))
+             c(persistent = eta$r_star, transient = u$r_star), varsel)
 }
 
 #' Assemble the prior blocks of a four-component model
@@ -105,11 +112,13 @@ add_priors.sfmodel4_hn <- function(object,
 #' @param eta the elicited prior on the persistent inefficiency parameter.
 #' @param u the elicited prior on the transient inefficiency parameter.
 #' @param r_star the two prior median efficiencies, named.
+#' @param varsel the variable selection specification, or \code{NULL}.
 #'
 #' @return The model object with \code{priors} attached.
 #'
 #' @keywords internal
-prior_four <- function(object, coef, sigma, sigma_mu, eta, u, r_star) {
+prior_four <- function(object, coef, sigma, sigma_mu, eta, u, r_star,
+                       varsel = NULL) {
 
   sigma_mu <- merge_prior_list(sigma_mu, list(shape = 0.01, rate = 0.01),
                                "sigma_mu")
@@ -123,7 +132,7 @@ prior_four <- function(object, coef, sigma, sigma_mu, eta, u, r_star) {
          "small.")
   }
 
-  object$priors <- c(prior_coef_sigma(object, coef, sigma),
+  object$priors <- c(prior_coef_sigma(object, coef, sigma, varsel),
                      list(shape_mu = sigma_mu$shape,
                           rate_mu = sigma_mu$rate,
                           shape_eta = eta$shape,

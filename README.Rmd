@@ -150,6 +150,7 @@ half-normal model it is a half $t$, whose median sets the rate.
 | Inefficiency | exponential, half-normal |
 | Frontier | production, cost |
 | Data | cross-section, time-invariant panel (Pitt and Lee, 1981), four-component panel (Kumbhakar, Lien and Hjalmarsson, 2014) |
+| Variable selection | SSVS (George, Sun and Ni, 2008) on the frontier coefficients |
 | Output | posterior draws of coefficients, variances and unit-level efficiency |
 | Inference | `summary()`, `plot()`, `efficiency()`, `selection_criteria()` (LL, AIC, BIC, HQ, WAIC) |
 
@@ -183,6 +184,49 @@ of the sampler, so a prior sensitivity check on `sigma_mu` and the persistent
 inefficiency parameter is worth running before reading much into the split. The
 frontier and the transient scores are unaffected. See the `four-component`
 vignette.
+
+## Variable selection
+
+`varsel = "ssvs"` puts the frontier coefficients under the stochastic search
+variable selection of George, Sun and Ni (2008), the algorithm
+[bvartools](https://github.com/franzmohr/bvartools) uses for its VAR
+coefficients. Each coefficient then carries a mixture of two normal priors
+centred on zero, a tight one standing for the regressor being absent from the
+frontier and a loose one for its being present, and the sampler draws an
+inclusion indicator for it in every sweep.
+
+```{r ssvs}
+d$z1 <- rnorm(500)   # a regressor the frontier has no use for
+
+ssvs <- create_sfmodel_exp(y ~ x1 + x2 + z1, data = d, varsel = "ssvs",
+                           iterations = 5000, burnin = 2000)
+ssvs <- add_priors(ssvs, varsel = list(semiautomatic = c(0.1, 10)))
+ssvs <- add_posterior_coefficients(add_seed(ssvs, 1234))
+
+summary(ssvs)
+```
+
+The `PIP` column is the posterior probability that the regressor belongs in the
+frontier, and the mean and band on the same row are averages over both states,
+so a coefficient with a low `PIP` has a posterior concentrated near zero.
+
+`semiautomatic` scales each coefficient's least squares standard error by the
+two factors given, which is what to use when the regressors are on scales that
+differ; `tau = c(tau0, tau1)` sets the two standard deviations directly.
+`inprior` sets the prior inclusion probability, 0.5 by default, and `include`
+and `exclude_intercept` choose which coefficients are candidates. The intercept
+is left out by default, since it is the level of the frontier rather than the
+effect of a regressor and selecting it away would move every efficiency score.
+
+The selection touches the frontier only. The inefficiency term, the error and
+the efficiency scores are drawn exactly as they are without it, except that
+they are now averaged over the frontiers the selection admits. The same holds
+for the four-component model, which takes `varsel` in the same place.
+
+Note that AIC, BIC and HQ charge the model for every coefficient it was written
+with, since the selection shrinks a coefficient to zero rather than removing
+it. WAIC reads the effective number of parameters off the draws and accounts
+for the selection by itself.
 
 ## Roadmap
 
@@ -240,6 +284,9 @@ effects in a stochastic frontier production function for panel data.
 Colombi, R., Kumbhakar, S. C., Martini, G., & Vittadini, G. (2014). Closed-skew
 normality in stochastic frontiers with individual effects and long/short-run
 efficiency. *Journal of Productivity Analysis*, 42(2), 123–136.
+
+George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
+model restrictions. *Journal of Econometrics*, 142(1), 553–580.
 
 Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On the
 estimation of technical inefficiency in the stochastic frontier production

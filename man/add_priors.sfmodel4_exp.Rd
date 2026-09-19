@@ -12,6 +12,7 @@
   sigma_mu = list(shape = 0.01, rate = 0.01),
   lambda_eta = list(r_star = 0.9, shape = 1),
   lambda_u = list(r_star = 0.9, shape = 1),
+  varsel = NULL,
   ...
 )
 
@@ -22,6 +23,7 @@
   sigma_mu = list(shape = 0.01, rate = 0.01),
   sigma_eta = list(r_star = 0.9, shape = 2.5),
   sigma_u = list(r_star = 0.9, shape = 2.5),
+  varsel = NULL,
   ...
 )
 }
@@ -44,6 +46,12 @@ of persistent inefficiency, with elements \code{r_star} and \code{shape}.}
 
 \item{lambda_u}{a named list for the rate of the exponential distribution of
 transient inefficiency, with elements \code{r_star} and \code{shape}.}
+
+\item{varsel}{a named list of prior specifications for the variable
+selection algorithm. Required if the model was created with
+\code{varsel = "ssvs"}, and not allowed otherwise. It takes the same
+elements as in \code{\link{add_priors}} for the two-component models, and
+applies to the frontier coefficients only.}
 
 \item{...}{unused, for compatibility with the generic.}
 

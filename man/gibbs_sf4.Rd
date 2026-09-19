@@ -11,6 +11,10 @@ gibbs_sf4(
   n_units,
   b0,
   B0i,
+  ssvs_idx,
+  tau0,
+  tau1,
+  prob_prior,
   a_v,
   b_v,
   a_mu,
@@ -48,6 +52,17 @@ gibbs_sf4(
 \item{b0}{prior mean of the frontier coefficients.}
 
 \item{B0i}{prior precision matrix of the frontier coefficients.}
+
+\item{ssvs_idx}{zero-based positions of the coefficients placed under
+stochastic search variable selection; empty for no variable selection.}
+
+\item{tau0}{prior standard deviations of those coefficients when they are
+excluded from the frontier.}
+
+\item{tau1}{prior standard deviations of those coefficients when they are
+included.}
+
+\item{prob_prior}{prior inclusion probabilities of those coefficients.}
 
 \item{a_v}{shape of the gamma prior on the error precision.}
 

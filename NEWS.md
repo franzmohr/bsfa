@@ -1,5 +1,32 @@
 # bsfa 0.2.0
 
+## Variable selection
+
+* `create_sfmodel_exp()`, `create_sfmodel_hn()`, `create_sfmodel4_exp()` and
+  `create_sfmodel4_hn()` gain the argument `varsel`, which with `"ssvs"` places
+  the frontier coefficients under the stochastic search variable selection of
+  George, Sun and Ni (2008), the algorithm the bvartools package uses for its
+  VAR coefficients. Each selected coefficient carries a mixture of two normal
+  priors centred on zero, a tight one standing for the regressor being absent
+  from the frontier and a loose one for its being present, and the sampler
+  draws an inclusion indicator for it in every sweep.
+* `add_priors()` gains the matching argument `varsel`, a list with either `tau`,
+  the two prior standard deviations, or `semiautomatic`, the two factors to
+  scale the least squares standard error of each coefficient by. It also takes
+  `inprior`, the prior inclusion probability, and `include` and
+  `exclude_intercept` to choose the candidates. It is required for a model
+  created with `varsel = "ssvs"` and not allowed for any other.
+* The draws of the indicators are added to the posterior as the block
+  `inclusion`, one column per selected coefficient, and `summary()` reports
+  their means as `PIP`, the posterior probability that the regressor belongs in
+  the frontier, beside the coefficient it belongs to.
+* The selection applies to the frontier only. The inefficiency term, the error
+  and the efficiency scores are drawn exactly as they are without it, except
+  that they are now averaged over the frontiers the selection admits. AIC, BIC
+  and HQ still charge the model for every coefficient it was written with, since
+  a selection that shrinks a coefficient to zero does not remove it; WAIC reads
+  the effective number of parameters off the draws and accounts for it.
+
 ## Priors
 
 * `add_priors()` now matches `r_star` on the median of the marginal prior of

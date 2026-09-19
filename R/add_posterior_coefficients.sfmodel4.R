@@ -109,6 +109,8 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
   n_keep_u <- if (u_thin > 0) n_keep %/% u_thin else 0
   warn_augmented_size(2 * object$data$n_units + object$n, n_keep_u)
 
+  sel <- varsel_args(object)
+
   out <- .with_model_seed(
     object$model$seed,
     gibbs_sf4(y = object$data$y,
@@ -117,6 +119,10 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
               n_units = object$data$n_units,
               b0 = object$priors$b0,
               B0i = object$priors$B0i,
+              ssvs_idx = sel$ssvs_idx,
+              tau0 = sel$tau0,
+              tau1 = sel$tau1,
+              prob_prior = sel$prob_prior,
               a_v = object$priors$shape_v,
               b_v = object$priors$rate_v,
               a_mu = object$priors$shape_mu,
@@ -159,6 +165,8 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
                                        object$model$par_eta_name)))
   posterior[[object$model$par_u_name]] <- list(
     coeffs = .mcmc_draws(object, named(out$par_u, object$model$par_u_name)))
+
+  posterior <- add_inclusion_draws(object, posterior, out$inclusion)
 
   if (!is.null(out$u)) {
     colnames(out$mu) <- object$data$unit_labels

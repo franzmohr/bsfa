@@ -58,6 +58,9 @@
 #'   same length as the data, identifying the units. Required, since the model
 #'   cannot separate its components without repeated observations.
 #' @param type either \code{"production"} or \code{"cost"}.
+#' @param varsel either \code{NULL} for no variable selection, or
+#'   \code{"ssvs"} for stochastic search variable selection on the frontier
+#'   coefficients, as in \code{\link{create_sfmodel_exp}}.
 #' @param iterations number of iterations retained after burn-in, before
 #'   thinning.
 #' @param burnin number of discarded iterations.
@@ -96,12 +99,14 @@ create_sfmodel4_exp <- function(formula,
                                 data,
                                 id,
                                 type = c("production", "cost"),
+                                varsel = NULL,
                                 iterations = 20000,
                                 burnin = 2000,
                                 thin = 1) {
 
   object <- sfmodel4_skeleton(formula = formula, data = data, id = id,
-                              type = match.arg(type), iterations = iterations,
+                              type = match.arg(type), varsel = varsel,
+                              iterations = iterations,
                               burnin = burnin, thin = thin,
                               ineff = "exponential", cl = match.call())
   class(object) <- c("sfmodel4_exp", "sfmodel4", "sfmodel")
@@ -114,12 +119,14 @@ create_sfmodel4_hn <- function(formula,
                                data,
                                id,
                                type = c("production", "cost"),
+                               varsel = NULL,
                                iterations = 20000,
                                burnin = 2000,
                                thin = 1) {
 
   object <- sfmodel4_skeleton(formula = formula, data = data, id = id,
-                              type = match.arg(type), iterations = iterations,
+                              type = match.arg(type), varsel = varsel,
+                              iterations = iterations,
                               burnin = burnin, thin = thin,
                               ineff = "halfnormal", cl = match.call())
   class(object) <- c("sfmodel4_hn", "sfmodel4", "sfmodel")
@@ -132,6 +139,7 @@ create_sfmodel4_hn <- function(formula,
 #' @param data a data frame.
 #' @param id unit identifier.
 #' @param type \code{"production"} or \code{"cost"}.
+#' @param varsel \code{NULL} or \code{"ssvs"}.
 #' @param iterations,burnin,thin MCMC settings.
 #' @param ineff \code{"exponential"} or \code{"halfnormal"}.
 #' @param cl the originating call.
@@ -139,8 +147,8 @@ create_sfmodel4_hn <- function(formula,
 #' @return A list with the model data and specification.
 #'
 #' @keywords internal
-sfmodel4_skeleton <- function(formula, data, id, type, iterations, burnin,
-                              thin, ineff, cl) {
+sfmodel4_skeleton <- function(formula, data, id, type, varsel, iterations,
+                              burnin, thin, ineff, cl) {
 
   if (missing(id) || is.null(id)) {
     stop("The four-component model needs an 'id': without repeated ",
@@ -148,7 +156,8 @@ sfmodel4_skeleton <- function(formula, data, id, type, iterations, burnin,
   }
 
   object <- sfmodel_skeleton(formula = formula, data = data, id = id,
-                             type = type, iterations = iterations,
+                             type = type, varsel = varsel,
+                             iterations = iterations,
                              burnin = burnin, thin = thin, ineff = ineff,
                              cl = cl)
 

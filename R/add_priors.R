@@ -49,6 +49,38 @@
 #' matched exactly at shape 1 but not at any other, where the error was larger
 #' still: at shape 2, \eqn{r^* = 0.75} implied 0.888.
 #'
+#' A model created with \code{varsel = "ssvs"} takes one further argument.
+#' Each coefficient under selection then carries the two-point mixture prior of
+#' George, Sun and Ni (2008): a normal centred on zero with standard deviation
+#' \eqn{\tau_0} when the regressor is absent from the frontier and one with
+#' \eqn{\tau_1 > \tau_0} when it is present. The element \code{varsel} can
+#' contain
+#' \describe{
+#'   \item{\code{tau}}{two positive numbers, \eqn{\tau_0} and
+#'     \eqn{\tau_1}, in that order.}
+#'   \item{\code{semiautomatic}}{two positive factors by which the least
+#'     squares standard error of each coefficient is multiplied to obtain its
+#'     \eqn{\tau_0} and \eqn{\tau_1}. This is the semiautomatic approach of
+#'     George, Sun and Ni (2008), and it is the choice to make when the
+#'     regressors are on scales that differ, since the two standard deviations
+#'     then follow the scale of each coefficient instead of being the same for
+#'     all of them.}
+#'   \item{\code{inprior}}{the prior probability that a regressor belongs in
+#'     the frontier, one number or one per coefficient under selection.
+#'     Defaults to 0.5.}
+#'   \item{\code{include}}{the columns of the design matrix to place under
+#'     selection, by name or by position. Defaults to all of them.}
+#'   \item{\code{exclude_intercept}}{whether to leave the intercept out of
+#'     the selection, which it is by default. The intercept is the level of the
+#'     frontier rather than the effect of a regressor, and selecting it away
+#'     would move every efficiency score rather than drop a variable.}
+#' }
+#' Exactly one of \code{tau} and \code{semiautomatic} must be given. A
+#' coefficient under selection takes its prior precision from \code{varsel}
+#' rather than from \code{coef$v_i}, and its prior mean has to be zero, since
+#' the excluded half of the mixture stands for the regressor being absent from
+#' the frontier rather than for its coefficient sitting at some other value.
+#'
 #' @param object an object of class \code{"sfmodel_exp"} or
 #'   \code{"sfmodel_hn"}.
 #' @param coef a named list of prior specifications for the frontier
@@ -64,11 +96,20 @@
 #' @param sigma_u a named list of prior specifications for the scale of the
 #'   half-normal inefficiency distribution, with elements \code{r_star} and
 #'   \code{shape}.
+#' @param varsel a named list of prior specifications for the variable
+#'   selection algorithm. Required if the model was created with
+#'   \code{varsel = "ssvs"}, and not allowed otherwise. See details.
 #' @param ... unused, for compatibility with the generic.
 #'
-#' @return The model object with the element \code{priors} attached.
+#' @return The model object with the element \code{priors} attached. With
+#'   variable selection it also holds \code{varsel}, the positions under
+#'   selection and the \eqn{\tau_0}, \eqn{\tau_1} and prior inclusion
+#'   probability of each.
 #'
 #' @references
+#' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
+#' model restrictions. \emph{Journal of Econometrics}, 142(1), 553--580.
+#'
 #' van den Broeck, J., Koop, G., Osiewalski, J., & Steel, M. F. J. (1994).
 #' Stochastic frontier models: A Bayesian perspective. \emph{Journal of
 #' Econometrics}, 61(2), 273--303.
@@ -82,6 +123,13 @@
 #' model <- add_priors(model, lambda = list(r_star = 0.85))
 #' model$priors$rate_u
 #'
+#' # Stochastic search variable selection on the frontier coefficients.
+#' selected <- create_sfmodel_exp(y ~ x1 + x2, data = d, varsel = "ssvs",
+#'                                iterations = 500, burnin = 200)
+#' selected <- add_priors(selected,
+#'                        varsel = list(semiautomatic = c(0.1, 10)))
+#' selected$priors$varsel$names
+#'
 #' @export
 add_priors <- function(object, ...) {
   UseMethod("add_priors")
@@ -93,12 +141,13 @@ add_priors.sfmodel_exp <- function(object,
                                    coef = list(mu = 0, v_i = 0.01),
                                    sigma = list(shape = 0.01, rate = 0.01),
                                    lambda = list(r_star = 0.75, shape = 1),
+                                   varsel = NULL,
                                    ...) {
 
   lambda <- merge_prior_list(lambda, list(r_star = 0.75, shape = 1), "lambda")
   el <- elicit_exp(lambda, "lambda")
 
-  object$priors <- c(prior_coef_sigma(object, coef, sigma),
+  object$priors <- c(prior_coef_sigma(object, coef, sigma, varsel),
                      list(shape_u = el$shape, rate_u = el$rate,
                           r_star = lambda$r_star))
   drop_stale_posterior(object)
@@ -110,13 +159,14 @@ add_priors.sfmodel_hn <- function(object,
                                   coef = list(mu = 0, v_i = 0.01),
                                   sigma = list(shape = 0.01, rate = 0.01),
                                   sigma_u = list(r_star = 0.75, shape = 2.5),
+                                  varsel = NULL,
                                   ...) {
 
   sigma_u <- merge_prior_list(sigma_u, list(r_star = 0.75, shape = 2.5),
                               "sigma_u")
   el <- elicit_hn(sigma_u, "sigma_u")
 
-  object$priors <- c(prior_coef_sigma(object, coef, sigma),
+  object$priors <- c(prior_coef_sigma(object, coef, sigma, varsel),
                      list(shape_u = el$shape, rate_u = el$rate,
                           r_star = sigma_u$r_star))
   drop_stale_posterior(object)
@@ -203,11 +253,13 @@ check_shape <- function(shape, what, min) {
 #' @param object a model object.
 #' @param coef a named list with elements \code{mu} and \code{v_i}.
 #' @param sigma a named list with elements \code{shape} and \code{rate}.
+#' @param varsel the variable selection specification, or \code{NULL}.
 #'
-#' @return A list with \code{b0}, \code{B0i}, \code{shape_v} and \code{rate_v}.
+#' @return A list with \code{b0}, \code{B0i}, \code{shape_v},
+#'   \code{rate_v} and \code{varsel}.
 #'
 #' @keywords internal
-prior_coef_sigma <- function(object, coef, sigma) {
+prior_coef_sigma <- function(object, coef, sigma, varsel = NULL) {
 
   k <- object$k
 
@@ -249,7 +301,17 @@ prior_coef_sigma <- function(object, coef, sigma) {
          "non-negative.")
   }
 
-  list(b0 = b0, B0i = B0i, shape_v = sigma$shape, rate_v = sigma$rate)
+  sel <- prior_varsel(object, varsel, b0, B0i)
+  if (!is.null(sel)) {
+    # The sampler rewrites these entries in every sweep. They are set to the
+    # precision of an included coefficient here so that the object carries a
+    # complete prior: it is the one the chain starts from, and the one
+    # add_initial_values(method = "prior") draws its starting values from.
+    B0i[cbind(sel$include, sel$include)] <- 1 / sel$tau1^2
+  }
+
+  list(b0 = b0, B0i = B0i, shape_v = sigma$shape, rate_v = sigma$rate,
+       varsel = sel)
 }
 
 #' Check that a prior precision matrix is one

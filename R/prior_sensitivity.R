@@ -147,6 +147,12 @@ sensitivity_priors <- function(object, rs) {
   if (!is.null(p)) {
     args$coef <- list(mu = p$b0, v_i = p$B0i)
     args$sigma <- list(shape = p$shape_v, rate = p$rate_v)
+    # The variable selection is carried over as it was specified rather than
+    # as it was expanded, so that add_priors() derives the same two standard
+    # deviations again and the fits differ in the anchor alone.
+    if (!is.null(p$varsel)) {
+      args$varsel <- p$varsel$spec
+    }
     if (four) {
       args$sigma_mu <- list(shape = p$shape_mu, rate = p$rate_mu)
     }

@@ -59,6 +59,11 @@
 #'       specification and the scale for the half-normal one.}
 #'     \item{\code{u}}{the inefficiency terms, one column per unit, if
 #'       \code{keep_u} is \code{TRUE}.}
+#'     \item{\code{inclusion}}{the inclusion indicators, one column per
+#'       coefficient under stochastic search variable selection, if the model
+#'       was created with \code{varsel = "ssvs"}. Their posterior means are the
+#'       posterior inclusion probabilities that \code{\link{summary.sfmodel}}
+#'       reports.}
 #'   }
 #'
 #' @references
@@ -146,6 +151,8 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
   n_keep_u <- if (u_thin > 0) n_keep %/% u_thin else 0
   warn_augmented_size(object$data$n_units, n_keep_u)
 
+  sel <- varsel_args(object)
+
   out <- .with_model_seed(
     object$model$seed,
     gibbs_sf(y = object$data$y,
@@ -154,6 +161,10 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
              n_units = object$data$n_units,
              b0 = object$priors$b0,
              B0i = object$priors$B0i,
+             ssvs_idx = sel$ssvs_idx,
+             tau0 = sel$tau0,
+             tau1 = sel$tau1,
+             prob_prior = sel$prob_prior,
              a_v = object$priors$shape_v,
              b_v = object$priors$rate_v,
              a_u = object$priors$shape_u,
@@ -182,6 +193,8 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
                   dimnames = list(NULL, object$model$par_u_name))
   posterior[[object$model$par_u_name]] <- list(
     coeffs = .mcmc_draws(object, par_u))
+
+  posterior <- add_inclusion_draws(object, posterior, out$inclusion)
 
   if (!is.null(out$u)) {
     colnames(out$u) <- object$data$unit_labels

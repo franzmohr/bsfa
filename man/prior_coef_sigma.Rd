@@ -4,7 +4,7 @@
 \alias{prior_coef_sigma}
 \title{Build the prior blocks shared by both inefficiency distributions}
 \usage{
-prior_coef_sigma(object, coef, sigma)
+prior_coef_sigma(object, coef, sigma, varsel = NULL)
 }
 \arguments{
 \item{object}{a model object.}
@@ -12,9 +12,12 @@ prior_coef_sigma(object, coef, sigma)
 \item{coef}{a named list with elements \code{mu} and \code{v_i}.}
 
 \item{sigma}{a named list with elements \code{shape} and \code{rate}.}
+
+\item{varsel}{the variable selection specification, or \code{NULL}.}
 }
 \value{
-A list with \code{b0}, \code{B0i}, \code{shape_v} and \code{rate_v}.
+A list with \code{b0}, \code{B0i}, \code{shape_v},
+  \code{rate_v} and \code{varsel}.
 }
 \description{
 Build the prior blocks shared by both inefficiency distributions

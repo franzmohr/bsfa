@@ -204,6 +204,50 @@ that specification. They are not always so decisive: the two distributions are
 hard to tell apart when inefficiency is small relative to noise, which is the
 usual situation.
 
+## Which regressors belong in the frontier
+
+Creating the model with `varsel = "ssvs"` places the frontier coefficients
+under the stochastic search variable selection of George, Sun and Ni (2008).
+Every selected coefficient then carries a mixture of two normal priors centred
+on zero, a tight one standing for the regressor being absent from the frontier
+and a loose one for its being present, and the sampler draws an inclusion
+indicator for it in every sweep.
+
+The prior is set through the `varsel` argument of `add_priors()`, which such a
+model requires and every other refuses. `semiautomatic` obtains the two
+standard deviations by scaling each coefficient's least squares standard error,
+which is the choice to make when the regressors sit on scales that differ.
+
+```{r}
+d$z1 <- rnorm(nrow(d))   # a regressor the frontier has no use for
+d$z2 <- rnorm(nrow(d))
+
+sel <- create_sfmodel_exp(y ~ x1 + x2 + z1 + z2, data = d, varsel = "ssvs",
+                          iterations = 4000, burnin = 1000)
+sel <- add_priors(sel, varsel = list(semiautomatic = c(0.1, 10)))
+sel <- add_posterior_coefficients(add_seed(sel, 1234))
+
+summary(sel)
+```
+
+The `PIP` column is the share of draws in which the regressor was in the
+frontier. The two that generated the data are kept throughout, the two that did
+not are dropped in most sweeps, and the intercept is `NA` because it was never
+a candidate: it is the level of the frontier rather than the effect of a
+regressor, so selecting it away would move every efficiency score instead of
+dropping a variable. Pass `exclude_intercept = FALSE` to select on it anyway.
+
+The mean and the credible band on a selected row are averages over both states
+of the indicator, which is why a coefficient with a low `PIP` has a posterior
+concentrated near zero rather than one centred on its least squares value. This
+is model averaging rather than model choice: nothing is removed, and the
+efficiency scores that come out of the sampler are averaged over the frontiers
+the selection admits.
+
+The selection touches the frontier alone. The inefficiency term and the error
+are drawn exactly as they are without it, and `varsel` sits in the same place
+in the four-component model.
+
 ## Panel data
 
 Supplying `id` gives each unit a single inefficiency term held fixed over its
@@ -254,6 +298,9 @@ do.call(rbind, chains)
 ```
 
 ## References
+
+George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
+model restrictions. *Journal of Econometrics*, 142(1), 553–580.
 
 Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On the
 estimation of technical inefficiency in the stochastic frontier production

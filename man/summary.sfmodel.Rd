@@ -29,7 +29,9 @@ a call to \code{\link{summary.sfmodel}}.}
   \code{"summary.sfmodel"}, which contains the following components:
   \item{coefficients}{summary statistics of the posterior draws of the
     frontier coefficients and the two error components, ending in
-    \code{ESS}, the effective sample size of each block. It is the number of
+    \code{ESS}, the effective sample size of each block, and, for a model
+    with variable selection, in \code{PIP}, the posterior probability that
+    the regressor belongs in the frontier. It is the number of
     independent draws the chain is worth, so the Monte Carlo error of a
     posterior mean is about its standard deviation divided by the square
     root of it. A value far below the number of draws is the sign that the

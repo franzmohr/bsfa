@@ -79,15 +79,15 @@ summary(model)
 #> 
 #> Posterior summary, 95% credible bands:
 #>               mean     sd   2.5% median  97.5%  ESS
-#> (Intercept) 1.0460 0.0210 1.0041 1.0467 1.0861  290
-#> x1          0.5087 0.0128 0.4826 0.5087 0.5340 1304
-#> x2          0.2889 0.0136 0.2616 0.2888 0.3165 1438
-#> sigma_v     0.1876 0.0148 0.1613 0.1867 0.2186  296
-#> lambda      3.3359 0.2644 2.8624 3.3156 3.8956  328
+#> (Intercept) 1.0443 0.0200 1.0050 1.0442 1.0823  320
+#> x1          0.5082 0.0125 0.4833 0.5083 0.5326 1239
+#> x2          0.2883 0.0135 0.2615 0.2883 0.3141 1314
+#> sigma_v     0.1890 0.0140 0.1634 0.1884 0.2188  362
+#> lambda      3.3527 0.2564 2.8989 3.3388 3.8862  418
 #> 
 #> Posterior mean efficiency, per observation:
 #>   mean    min median    max 
-#> 0.7681 0.1995 0.8229 0.9549
+#> 0.7691 0.2007 0.8256 0.9556
 ```
 
 The data were simulated with $\beta = (1, 0.5, 0.3)$, $\sigma_v = 0.2$
@@ -149,11 +149,11 @@ selection_criteria(model)
 #> Inefficiency: exponential
 #> 
 #>           mean    median    qlower    qupper
-#> LL   -145.4157 -145.0797 -149.4518 -143.2591
-#> AIC   295.7543        NA        NA        NA
-#> BIC   316.8274        NA        NA        NA
-#> HQ    304.0234        NA        NA        NA
-#> WAIC  296.3049        NA  220.6911  371.9188
+#> LL   -145.3482 -145.0101 -149.3054 -143.2755
+#> AIC   295.7794        NA        NA        NA
+#> BIC   316.8524        NA        NA        NA
+#> HQ    304.0484        NA        NA        NA
+#> WAIC  295.9733        NA  220.4779  371.4686
 ```
 
 ## Model variants are classes
@@ -192,6 +192,7 @@ for the half-normal model it is a half $t$, whose median sets the rate.
 | Inefficiency | exponential, half-normal |
 | Frontier | production, cost |
 | Data | cross-section, time-invariant panel (Pitt and Lee, 1981), four-component panel (Kumbhakar, Lien and Hjalmarsson, 2014) |
+| Variable selection | SSVS (George, Sun and Ni, 2008) on the frontier coefficients |
 | Output | posterior draws of coefficients, variances and unit-level efficiency |
 | Inference | `summary()`, `plot()`, `efficiency()`, `selection_criteria()` (LL, AIC, BIC, HQ, WAIC) |
 
@@ -209,15 +210,15 @@ m4 <- create_sfmodel4_exp(y ~ x1 + x2, data = dp, id = "id",
 m4 <- add_posterior_coefficients(add_priors(m4))
 
 head(efficiency(m4, type = "persistent"), 3)   # one score per unit
-#>   unit      mean         sd        5%       50%       95%
-#> 1    1 0.8858415 0.11329293 0.6481284 0.9245224 0.9954616
-#> 2    2 0.9518964 0.04757242 0.8545106 0.9663032 0.9975351
-#> 3    3 0.8761482 0.12016605 0.6233711 0.9179951 0.9950433
+#>   unit      mean         sd       5%       50%       95%
+#> 1    1 0.7945873 0.15701652 0.505467 0.8254475 0.9892329
+#> 2    2 0.9356330 0.06169995 0.806458 0.9538089 0.9966346
+#> 3    3 0.7658228 0.17435764 0.448957 0.7971668 0.9883174
 head(efficiency(m4, type = "transient"), 3)    # one per observation
 #>   unit obs      mean         sd        5%       50%       95%
-#> 1    1   1 0.9320171 0.06035318 0.8064664 0.9489696 0.9955470
-#> 2    1   2 0.9207973 0.06993010 0.7780322 0.9408335 0.9957468
-#> 3    1   3 0.8695045 0.10475741 0.6639280 0.8961324 0.9912256
+#> 1    1   1 0.9292819 0.06252166 0.8025554 0.9471838 0.9956866
+#> 2    1   2 0.9192284 0.06996841 0.7789144 0.9386785 0.9949919
+#> 3    1   3 0.8638980 0.10265547 0.6657852 0.8824033 0.9908603
 ```
 
 The unit effect enters none of the three scores, which is the point: in
@@ -234,6 +235,77 @@ sensitivity check on `sigma_mu` and the persistent inefficiency
 parameter is worth running before reading much into the split. The
 frontier and the transient scores are unaffected. See the
 `four-component` vignette.
+
+## Variable selection
+
+`varsel = "ssvs"` puts the frontier coefficients under the stochastic
+search variable selection of George, Sun and Ni (2008), the algorithm
+[bvartools](https://github.com/franzmohr/bvartools) uses for its VAR
+coefficients. Each coefficient then carries a mixture of two normal
+priors centred on zero, a tight one standing for the regressor being
+absent from the frontier and a loose one for its being present, and the
+sampler draws an inclusion indicator for it in every sweep.
+
+``` r
+d$z1 <- rnorm(500)   # a regressor the frontier has no use for
+
+ssvs <- create_sfmodel_exp(y ~ x1 + x2 + z1, data = d, varsel = "ssvs",
+                           iterations = 5000, burnin = 2000)
+ssvs <- add_priors(ssvs, varsel = list(semiautomatic = c(0.1, 10)))
+ssvs <- add_posterior_coefficients(add_seed(ssvs, 1234))
+
+summary(ssvs)
+#> Bayesian stochastic frontier model
+#> 
+#> Call:
+#> create_sfmodel_exp(formula = y ~ x1 + x2 + z1, data = d, varsel = "ssvs", 
+#>     iterations = 5000, burnin = 2000)
+#> 
+#> Frontier:           production
+#> Variable selection: SSVS
+#> Inefficiency:       exponential
+#> Observations:       500
+#> Units:              500
+#> Draws:              5000 after 2000 burn-in, thinning 1
+#> 
+#> Posterior summary, 95% credible bands:
+#>                mean     sd    2.5% median  97.5%   PIP  ESS
+#> (Intercept)  1.0429 0.0204  1.0011 1.0432 1.0826    NA  314
+#> x1           0.5055 0.0125  0.4811 0.5055 0.5297 1.000 1365
+#> x2           0.2868 0.0135  0.2589 0.2872 0.3131 1.000 1418
+#> z1          -0.0001 0.0046 -0.0098 0.0000 0.0085 0.096 2115
+#> sigma_v      0.1894 0.0145  0.1616 0.1893 0.2181    NA  306
+#> lambda       3.3660 0.2572  2.9013 3.3504 3.9089    NA  432
+#> 
+#> Posterior mean efficiency, per observation:
+#>   mean    min median    max 
+#> 0.7699 0.2014 0.8256 0.9550
+```
+
+The `PIP` column is the posterior probability that the regressor belongs
+in the frontier, and the mean and band on the same row are averages over
+both states, so a coefficient with a low `PIP` has a posterior
+concentrated near zero.
+
+`semiautomatic` scales each coefficient’s least squares standard error
+by the two factors given, which is what to use when the regressors are
+on scales that differ; `tau = c(tau0, tau1)` sets the two standard
+deviations directly. `inprior` sets the prior inclusion probability, 0.5
+by default, and `include` and `exclude_intercept` choose which
+coefficients are candidates. The intercept is left out by default, since
+it is the level of the frontier rather than the effect of a regressor
+and selecting it away would move every efficiency score.
+
+The selection touches the frontier only. The inefficiency term, the
+error and the efficiency scores are drawn exactly as they are without
+it, except that they are now averaged over the frontiers the selection
+admits. The same holds for the four-component model, which takes
+`varsel` in the same place.
+
+Note that AIC, BIC and HQ charge the model for every coefficient it was
+written with, since the selection shrinks a coefficient to zero rather
+than removing it. WAIC reads the effective number of parameters off the
+draws and accounts for the selection by itself.
 
 ## Roadmap
 
@@ -297,6 +369,9 @@ Colombi, R., Kumbhakar, S. C., Martini, G., & Vittadini, G. (2014).
 Closed-skew normality in stochastic frontiers with individual effects
 and long/short-run efficiency. *Journal of Productivity Analysis*,
 42(2), 123–136.
+
+George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for
+VAR model restrictions. *Journal of Econometrics*, 142(1), 553–580.
 
 Jondrow, J., Lovell, C. A. K., Materov, I. S., & Schmidt, P. (1982). On
 the estimation of technical inefficiency in the stochastic frontier

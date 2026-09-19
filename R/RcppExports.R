@@ -13,6 +13,13 @@
 #' @param n_units number of distinct units in \code{g}.
 #' @param b0 prior mean of the frontier coefficients.
 #' @param B0i prior precision matrix of the frontier coefficients.
+#' @param ssvs_idx zero-based positions of the coefficients placed under
+#'   stochastic search variable selection; empty for no variable selection.
+#' @param tau0 prior standard deviations of those coefficients when they are
+#'   excluded from the frontier.
+#' @param tau1 prior standard deviations of those coefficients when they are
+#'   included.
+#' @param prob_prior prior inclusion probabilities of those coefficients.
 #' @param a_v shape of the gamma prior on the error precision.
 #' @param b_v rate of the gamma prior on the error precision.
 #' @param a_u shape of the gamma prior on the inefficiency parameter.
@@ -36,8 +43,8 @@
 #' @return A named list of draw matrices.
 #'
 #' @keywords internal
-gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
-    .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
+gibbs_sf <- function(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
+    .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
 }
 
 #' Gibbs sampler for the four-component stochastic frontier model
@@ -52,6 +59,13 @@ gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, s
 #' @param n_units number of distinct units in \code{g}.
 #' @param b0 prior mean of the frontier coefficients.
 #' @param B0i prior precision matrix of the frontier coefficients.
+#' @param ssvs_idx zero-based positions of the coefficients placed under
+#'   stochastic search variable selection; empty for no variable selection.
+#' @param tau0 prior standard deviations of those coefficients when they are
+#'   excluded from the frontier.
+#' @param tau1 prior standard deviations of those coefficients when they are
+#'   included.
+#' @param prob_prior prior inclusion probabilities of those coefficients.
 #' @param a_v shape of the gamma prior on the error precision.
 #' @param b_v rate of the gamma prior on the error precision.
 #' @param a_mu shape of the gamma prior on the precision of the unit effect.
@@ -84,7 +98,7 @@ gibbs_sf <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_u, b_u, beta_init, s
 #' @return A named list of draw matrices.
 #'
 #' @keywords internal
-gibbs_sf4 <- function(y, X, g, n_units, b0, B0i, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
-    .Call(`_bsfa_gibbs_sf4`, y, X, g, n_units, b0, B0i, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
+gibbs_sf4 <- function(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
+    .Call(`_bsfa_gibbs_sf4`, y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
 }
 

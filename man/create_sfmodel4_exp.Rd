@@ -10,6 +10,7 @@ create_sfmodel4_exp(
   data,
   id,
   type = c("production", "cost"),
+  varsel = NULL,
   iterations = 20000,
   burnin = 2000,
   thin = 1
@@ -20,6 +21,7 @@ create_sfmodel4_hn(
   data,
   id,
   type = c("production", "cost"),
+  varsel = NULL,
   iterations = 20000,
   burnin = 2000,
   thin = 1
@@ -35,6 +37,10 @@ same length as the data, identifying the units. Required, since the model
 cannot separate its components without repeated observations.}
 
 \item{type}{either \code{"production"} or \code{"cost"}.}
+
+\item{varsel}{either \code{NULL} for no variable selection, or
+\code{"ssvs"} for stochastic search variable selection on the frontier
+coefficients, as in \code{\link{create_sfmodel_exp}}.}
 
 \item{iterations}{number of iterations retained after burn-in, before
 thinning.}

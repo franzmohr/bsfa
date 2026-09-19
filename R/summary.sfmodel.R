@@ -16,7 +16,9 @@
 #'   \code{"summary.sfmodel"}, which contains the following components:
 #'   \item{coefficients}{summary statistics of the posterior draws of the
 #'     frontier coefficients and the two error components, ending in
-#'     \code{ESS}, the effective sample size of each block. It is the number of
+#'     \code{ESS}, the effective sample size of each block, and, for a model
+#'     with variable selection, in \code{PIP}, the posterior probability that
+#'     the regressor belongs in the frontier. It is the number of
 #'     independent draws the chain is worth, so the Monte Carlo error of a
 #'     posterior mean is about its standard deviation divided by the square
 #'     root of it. A value far below the number of draws is the sign that the
@@ -61,6 +63,17 @@ summary.sfmodel <- function(object, ci = 0.95, ...) {
                qs,
                ESS = sf_ess(pars))
 
+  # Under variable selection the posterior inclusion probability sits beside
+  # the coefficient it belongs to. It is the share of draws in which the
+  # regressor was in the frontier, and the mean and band on the same row are
+  # averages over both states, so a coefficient with a low probability here has
+  # a posterior concentrated near zero because most of its draws came from the
+  # excluded half of the prior.
+  tab <- add_pip_column(object, tab)
+
+  varsel <- if (is.null(object$posterior$inclusion$coeffs)) NULL else
+    object$model$varsel
+
   # For a four-component model the efficiency method returns the overall score,
   # which is the one a two-component model would report; the split between the
   # persistent and transient parts is left to efficiency() itself.
@@ -81,6 +94,7 @@ summary.sfmodel <- function(object, ci = 0.95, ...) {
                                n = object$n,
                                k = object$k,
                                n_units = object$data$n_units,
+                               varsel = varsel,
                                iterations = object$iterations,
                                burnin = object$burnin,
                                thin = object$thin,
@@ -102,6 +116,8 @@ print.summary.sfmodel <- function(x, digits = 4, ...) {
   cat("Call:\n")
   print(spec$call)
   cat("\nFrontier:           ", spec$type,
+      if (is.null(spec$varsel)) "" else
+        paste0("\nVariable selection: ", toupper(spec$varsel)),
       "\nInefficiency:       ", spec$ineff,
       if (four) ", persistent and transient" else "",
       "\nObservations:       ", spec$n,

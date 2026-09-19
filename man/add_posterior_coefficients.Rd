@@ -61,6 +61,11 @@ The object in \code{object} with the element \code{posterior} added.
       specification and the scale for the half-normal one.}
     \item{\code{u}}{the inefficiency terms, one column per unit, if
       \code{keep_u} is \code{TRUE}.}
+    \item{\code{inclusion}}{the inclusion indicators, one column per
+      coefficient under stochastic search variable selection, if the model
+      was created with \code{varsel = "ssvs"}. Their posterior means are the
+      posterior inclusion probabilities that \code{\link{summary.sfmodel}}
+      reports.}
   }
 }
 \description{

@@ -4,7 +4,18 @@
 \alias{sfmodel_skeleton}
 \title{Assemble the common parts of a stochastic frontier model object}
 \usage{
-sfmodel_skeleton(formula, data, id, type, iterations, burnin, thin, ineff, cl)
+sfmodel_skeleton(
+  formula,
+  data,
+  id,
+  type,
+  varsel,
+  iterations,
+  burnin,
+  thin,
+  ineff,
+  cl
+)
 }
 \arguments{
 \item{formula}{a model formula.}
@@ -14,6 +25,8 @@ sfmodel_skeleton(formula, data, id, type, iterations, burnin, thin, ineff, cl)
 \item{id}{unit identifier, or \code{NULL}.}
 
 \item{type}{\code{"production"} or \code{"cost"}.}
+
+\item{varsel}{\code{NULL} or \code{"ssvs"}.}
 
 \item{iterations, burnin, thin}{MCMC settings.}
 

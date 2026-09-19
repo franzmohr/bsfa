@@ -16,10 +16,38 @@
 // model: the two-component panel sampler in gibbs_sf.cpp has only eta_i, so
 // every persistent difference between units is booked as inefficiency.
 
+// As in gibbs_sf.cpp, coefficients may be placed under stochastic search
+// variable selection (George, Sun and Ni, 2008).
+
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
 using namespace Rcpp;
+
+// Draw the inclusion indicators of the coefficients under stochastic search
+// variable selection and write the implied prior precisions into the diagonal
+// of 'Bi', as in gibbs_sf.cpp. The two mixture components are compared on the
+// log scale, where the tight one does not underflow.
+static void draw_inclusion4(arma::vec& inc,
+                            arma::mat& Bi,
+                            const arma::vec& beta,
+                            const arma::uvec& idx,
+                            const arma::vec& tau0,
+                            const arma::vec& tau1,
+                            const arma::vec& prob) {
+  for (arma::uword j = 0; j < idx.n_elem; j++) {
+    const double b = beta(idx(j));
+    const double l1 = -std::log(tau1(j)) - 0.5 * b * b / (tau1(j) * tau1(j)) +
+      std::log(prob(j));
+    const double l0 = -std::log(tau0(j)) - 0.5 * b * b / (tau0(j) * tau0(j)) +
+      std::log(1.0 - prob(j));
+    const double p = 1.0 / (1.0 + std::exp(l0 - l1));
+    const bool in = ::unif_rand() < p;
+    inc(j) = in ? 1.0 : 0.0;
+    const double tau = in ? tau1(j) : tau0(j);
+    Bi(idx(j), idx(j)) = 1.0 / (tau * tau);
+  }
+}
 
 // Draw from the standard normal distribution truncated to [alpha, Inf), as in
 // gibbs_sf.cpp: naive rejection for moderate alpha, and the exponential
@@ -58,6 +86,13 @@ static double rtnorm_pos4(const double mu, const double sd) {
 //' @param n_units number of distinct units in \code{g}.
 //' @param b0 prior mean of the frontier coefficients.
 //' @param B0i prior precision matrix of the frontier coefficients.
+//' @param ssvs_idx zero-based positions of the coefficients placed under
+//'   stochastic search variable selection; empty for no variable selection.
+//' @param tau0 prior standard deviations of those coefficients when they are
+//'   excluded from the frontier.
+//' @param tau1 prior standard deviations of those coefficients when they are
+//'   included.
+//' @param prob_prior prior inclusion probabilities of those coefficients.
 //' @param a_v shape of the gamma prior on the error precision.
 //' @param b_v rate of the gamma prior on the error precision.
 //' @param a_mu shape of the gamma prior on the precision of the unit effect.
@@ -97,6 +132,10 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
                      const int n_units,
                      const arma::vec& b0,
                      const arma::mat& B0i,
+                     const arma::uvec& ssvs_idx,
+                     const arma::vec& tau0,
+                     const arma::vec& tau1,
+                     const arma::vec& prob_prior,
                      const double a_v, const double b_v,
                      const double a_mu, const double b_mu,
                      const double a_eta, const double b_eta,
@@ -123,8 +162,15 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
   // returns. They carry a thinning interval of their own.
   const int n_keep_u = (u_thin > 0) ? n_keep / u_thin : 0;
 
+  // The prior precision changes across sweeps under variable selection, but
+  // only in the diagonal entries of the coefficients it selects on, whose
+  // prior mean add_priors() has pinned at zero; B0i * b0 is therefore the same
+  // in every sweep either way.
   const arma::mat XtX = X.t() * X;
   const arma::vec B0ib0 = B0i * b0;
+  const arma::uword n_sel = ssvs_idx.n_elem;
+  arma::mat Bi = B0i;
+  arma::vec inc(n_sel, arma::fill::ones);
 
   arma::vec unit_size(n_units, arma::fill::zeros);
   for (arma::uword i = 0; i < n; i++) {
@@ -151,6 +197,7 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
   arma::mat mu_store(n_keep_u > 0 ? n_units : 0, n_keep_u, arma::fill::zeros);
   arma::mat eta_store(n_keep_u > 0 ? n_units : 0, n_keep_u, arma::fill::zeros);
   arma::mat u_store(n_keep_u > 0 ? n : 0, n_keep_u, arma::fill::zeros);
+  arma::mat inc_store(n_sel, n_keep, arma::fill::zeros);
 
   const int n_iter = burnin + draws;
   int store = 0;
@@ -209,13 +256,20 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
       y_tilde(i) = y(i) - mu(g(i)) - s * eta(g(i)) - s * u(i);
     }
 
-    const arma::mat V = arma::inv_sympd(B0i + XtX / sigma_v2);
+    const arma::mat V = arma::inv_sympd(Bi + XtX / sigma_v2);
     const arma::vec m = V * (B0ib0 + X.t() * y_tilde / sigma_v2);
     arma::vec z(k);
     for (arma::uword j = 0; j < k; j++) {
       z(j) = ::norm_rand();
     }
     beta = m + arma::chol(V, "lower") * z;
+
+    // --- Inclusion indicators ----------------------------------------------
+    // Drawn after the coefficients, so that the pair stored in a retained
+    // sweep is a draw from their joint posterior as that sweep left it.
+    if (n_sel > 0) {
+      draw_inclusion4(inc, Bi, beta, ssvs_idx, tau0, tau1, prob_prior);
+    }
 
     // --- Variance parameters -----------------------------------------------
     const arma::vec eps = y_tilde - X * beta;
@@ -244,6 +298,9 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
     // to them in R.
     if (iter >= burnin && ((iter - burnin + 1) % thin == 0) && store < n_keep) {
       beta_store.col(store) = beta;
+      if (n_sel > 0) {
+        inc_store.col(store) = inc;
+      }
       sigma_v_store(store) = std::sqrt(sigma_v2);
       sigma_mu_store(store) = std::sqrt(sigma_mu2);
       par_eta_store(store) = (ineff == 0) ? std::sqrt(sigma_eta2) : lambda_eta;
@@ -273,5 +330,7 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
     Rcpp::Named("par_u") = par_u_store,
     Rcpp::Named("mu") = n_keep_u > 0 ? Rcpp::wrap(mu_store.t()) : R_NilValue,
     Rcpp::Named("eta") = n_keep_u > 0 ? Rcpp::wrap(eta_store.t()) : R_NilValue,
-    Rcpp::Named("u") = n_keep_u > 0 ? Rcpp::wrap(u_store.t()) : R_NilValue);
+    Rcpp::Named("u") = n_keep_u > 0 ? Rcpp::wrap(u_store.t()) : R_NilValue,
+    Rcpp::Named("inclusion") = n_sel > 0 ? Rcpp::wrap(inc_store.t()) :
+                                           R_NilValue);
 }

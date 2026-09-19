@@ -32,6 +32,23 @@
 #' frontier cannot exceed, or a scale factor whose elasticity is known to be
 #' one. The efficiency scores are measured from the frontier including it.
 #'
+#' With \code{varsel = "ssvs"} the frontier coefficients are placed under the
+#' stochastic search variable selection of George, Sun and Ni (2008), as in the
+#' \pkg{bvartools} package. Each coefficient then carries a mixture of two
+#' normal priors centred on zero, a tight one standing for its absence from the
+#' frontier and a loose one for its presence, and the sampler draws an
+#' inclusion indicator for it in every sweep. The posterior mean of that
+#' indicator is the posterior probability that the regressor belongs in the
+#' frontier, which \code{\link{summary.sfmodel}} reports beside the
+#' coefficient. The prior is set through the \code{varsel} argument of
+#' \code{\link{add_priors}}, which is required for such a model and not
+#' allowed for any other.
+#'
+#' Variable selection applies to the frontier only. The inefficiency term and
+#' the error are untouched by it, so the efficiency scores are read off the
+#' draws as they always are, but they are now averaged over the frontiers the
+#' selection admits rather than conditioned on one.
+#'
 #' If \code{id} is supplied, one inefficiency term is drawn per unit and held
 #' fixed over that unit's observations, which is the time-invariant panel model
 #' of Pitt and Lee (1981). This attributes all persistent heterogeneity between
@@ -45,6 +62,8 @@
 #'   of the same length as the data, identifying the units that own the
 #'   inefficiency terms. See details.
 #' @param type either \code{"production"} or \code{"cost"}.
+#' @param varsel either \code{NULL} for no variable selection, or
+#'   \code{"ssvs"} for stochastic search variable selection. See details.
 #' @param iterations number of iterations retained after burn-in, before
 #'   thinning.
 #' @param burnin number of discarded iterations.
@@ -63,6 +82,9 @@
 #'   \code{\link{skewness_test}}
 #'
 #' @references
+#' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
+#' model restrictions. \emph{Journal of Econometrics}, 142(1), 553--580.
+#'
 #' Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical
 #' inefficiency in the Indonesian weaving industry. \emph{Journal of
 #' Development Economics}, 9(1), 43--64.
@@ -80,12 +102,14 @@ create_sfmodel_exp <- function(formula,
                                data,
                                id = NULL,
                                type = c("production", "cost"),
+                               varsel = NULL,
                                iterations = 20000,
                                burnin = 2000,
                                thin = 1) {
 
   object <- sfmodel_skeleton(formula = formula, data = data, id = id,
-                             type = match.arg(type), iterations = iterations,
+                             type = match.arg(type), varsel = varsel,
+                             iterations = iterations,
                              burnin = burnin, thin = thin,
                              ineff = "exponential", cl = match.call())
   class(object) <- c("sfmodel_exp", "sfmodel")
@@ -98,12 +122,14 @@ create_sfmodel_hn <- function(formula,
                               data,
                               id = NULL,
                               type = c("production", "cost"),
+                              varsel = NULL,
                               iterations = 20000,
                               burnin = 2000,
                               thin = 1) {
 
   object <- sfmodel_skeleton(formula = formula, data = data, id = id,
-                             type = match.arg(type), iterations = iterations,
+                             type = match.arg(type), varsel = varsel,
+                             iterations = iterations,
                              burnin = burnin, thin = thin,
                              ineff = "halfnormal", cl = match.call())
   class(object) <- c("sfmodel_hn", "sfmodel")
@@ -116,6 +142,7 @@ create_sfmodel_hn <- function(formula,
 #' @param data a data frame.
 #' @param id unit identifier, or \code{NULL}.
 #' @param type \code{"production"} or \code{"cost"}.
+#' @param varsel \code{NULL} or \code{"ssvs"}.
 #' @param iterations,burnin,thin MCMC settings.
 #' @param ineff \code{"exponential"} or \code{"halfnormal"}.
 #' @param cl the originating call.
@@ -124,8 +151,10 @@ create_sfmodel_hn <- function(formula,
 #'   \code{na.action} recording any rows that were dropped.
 #'
 #' @keywords internal
-sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
-                             thin, ineff, cl) {
+sfmodel_skeleton <- function(formula, data, id, type, varsel, iterations,
+                             burnin, thin, ineff, cl) {
+
+  varsel <- check_varsel(varsel)
 
   check_count(iterations, "iterations")
   check_count(burnin, "burnin")
@@ -270,6 +299,7 @@ sfmodel_skeleton <- function(formula, data, id, type, iterations, burnin,
   list(data = list(y = y, X = X, offset = offs, g = g,
                    n_units = length(unique(g)), unit_labels = unit_labels),
        model = list(ineff = ineff, type = type, panel = panel,
+                    varsel = varsel,
                     components = 2L,
                     par_u_name = if (ineff == "exponential") "lambda" else
                       "sigma_u"),
@@ -307,7 +337,10 @@ print.sfmodel <- function(x, ...) {
   if (!is.null(x$data$offset)) {
     cat("Offset:             subtracted from the response\n")
   }
-  cat("Coefficients:       ", x$k, "\n", sep = "")
+  cat("Coefficients:       ", x$k,
+      if (is.null(x$model$varsel)) "" else
+        paste0(" (", toupper(x$model$varsel), " variable selection)"),
+      "\n", sep = "")
   cat("Inefficiency terms: ", x$data$n_units,
       if (x$model$panel) " (one per unit, time invariant)" else
         " (one per observation)", "\n", sep = "")
