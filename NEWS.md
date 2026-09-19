@@ -3,19 +3,32 @@
 ## Variable selection
 
 * `create_sfmodel_exp()`, `create_sfmodel_hn()`, `create_sfmodel4_exp()` and
-  `create_sfmodel4_hn()` gain the argument `varsel`, which with `"ssvs"` places
-  the frontier coefficients under the stochastic search variable selection of
-  George, Sun and Ni (2008), the algorithm the bvartools package uses for its
-  VAR coefficients. Each selected coefficient carries a mixture of two normal
+  `create_sfmodel4_hn()` gain the argument `varsel`, which places the frontier
+  coefficients under one of the two variable selection algorithms of the
+  bvartools package. Either way the sampler draws an inclusion indicator per
+  selected coefficient in every sweep.
+* `varsel = "ssvs"` is the stochastic search variable selection of George, Sun
+  and Ni (2008). Each selected coefficient carries a mixture of two normal
   priors centred on zero, a tight one standing for the regressor being absent
-  from the frontier and a loose one for its being present, and the sampler
-  draws an inclusion indicator for it in every sweep.
-* `add_priors()` gains the matching argument `varsel`, a list with either `tau`,
-  the two prior standard deviations, or `semiautomatic`, the two factors to
-  scale the least squares standard error of each coefficient by. It also takes
+  from the frontier and a loose one for its being present, and the indicator
+  says which is in force. The regressor never leaves the design.
+* `varsel = "bvs"` is the Bayesian variable selection of Korobilis (2013). The
+  frontier is `X %*% diag(lambda) %*% beta`, so an excluded regressor leaves
+  the likelihood outright and the coefficient stored for it is an exact zero.
+  Its prior is the ordinary normal in `coef`, which has to be proper, since the
+  sweeps that exclude the regressor draw the coefficient from it. A prior
+  precision of zero is refused, and one wide enough that the likelihood would
+  never admit the coefficient back is reported: measured against the least
+  squares standard error of the same coefficient, a prior standard deviation of
+  two hundred times it left the indicator of an irrelevant regressor stuck for
+  a whole run of 2000 sweeps.
+* `add_priors()` gains the matching argument `varsel`. Both algorithms take
   `inprior`, the prior inclusion probability, and `include` and
-  `exclude_intercept` to choose the candidates. It is required for a model
-  created with `varsel = "ssvs"` and not allowed for any other.
+  `exclude_intercept` to choose the candidates; SSVS takes in addition either
+  `tau`, the two prior standard deviations, or `semiautomatic`, the two factors
+  to scale the least squares standard error of each coefficient by. It is
+  required for a model created with a `varsel` algorithm and not allowed for
+  any other.
 * The draws of the indicators are added to the posterior as the block
   `inclusion`, one column per selected coefficient, and `summary()` reports
   their means as `PIP`, the posterior probability that the regressor belongs in

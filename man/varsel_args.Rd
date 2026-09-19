@@ -10,11 +10,12 @@ varsel_args(object)
 \item{object}{a model object with priors attached.}
 }
 \value{
-A list with \code{ssvs_idx}, \code{tau0}, \code{tau1} and
-  \code{prob_prior}.
+A list with \code{ssvs_idx}, \code{tau0}, \code{tau1},
+  \code{prob_prior} and \code{varsel}.
 }
 \description{
-Both samplers take the same four, and take them empty when the model has no
-variable selection, so that the block is simply skipped.
+Both samplers take the same five, and take them empty when the model has no
+variable selection, so that the block is simply skipped. The two standard
+deviations are empty under \code{"bvs"} as well, which has no mixture.
 }
 \keyword{internal}

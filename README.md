@@ -192,7 +192,7 @@ for the half-normal model it is a half $t$, whose median sets the rate.
 | Inefficiency | exponential, half-normal |
 | Frontier | production, cost |
 | Data | cross-section, time-invariant panel (Pitt and Lee, 1981), four-component panel (Kumbhakar, Lien and Hjalmarsson, 2014) |
-| Variable selection | SSVS (George, Sun and Ni, 2008) on the frontier coefficients |
+| Variable selection | SSVS (George, Sun and Ni, 2008) and BVS (Korobilis, 2013) on the frontier coefficients |
 | Output | posterior draws of coefficients, variances and unit-level efficiency |
 | Inference | `summary()`, `plot()`, `efficiency()`, `selection_criteria()` (LL, AIC, BIC, HQ, WAIC) |
 
@@ -238,13 +238,18 @@ frontier and the transient scores are unaffected. See the
 
 ## Variable selection
 
-`varsel = "ssvs"` puts the frontier coefficients under the stochastic
-search variable selection of George, Sun and Ni (2008), the algorithm
-[bvartools](https://github.com/franzmohr/bvartools) uses for its VAR
-coefficients. Each coefficient then carries a mixture of two normal
-priors centred on zero, a tight one standing for the regressor being
-absent from the frontier and a loose one for its being present, and the
-sampler draws an inclusion indicator for it in every sweep.
+`varsel` puts the frontier coefficients under one of the two variable
+selection algorithms of
+[bvartools](https://github.com/franzmohr/bvartools). Either way the
+sampler draws an inclusion indicator per selected coefficient in every
+sweep, and its posterior mean is the probability that the regressor
+belongs in the frontier.
+
+`"ssvs"` is the stochastic search variable selection of George, Sun and
+Ni (2008): the coefficient carries a mixture of two normal priors
+centred on zero, a tight one standing for the regressor being absent
+from the frontier and a loose one for its being present, and the
+indicator says which is in force.
 
 ``` r
 d$z1 <- rnorm(500)   # a regressor the frontier has no use for
@@ -296,6 +301,31 @@ coefficients are candidates. The intercept is left out by default, since
 it is the level of the frontier rather than the effect of a regressor
 and selecting it away would move every efficiency score.
 
+`"bvs"` is the Bayesian variable selection of Korobilis (2013), which
+switches the regressor itself off rather than tightening its prior, so
+an excluded coefficient is stored as an exact zero:
+
+``` r
+bvs <- create_sfmodel_exp(y ~ x1 + x2 + z1, data = d, varsel = "bvs",
+                          iterations = 5000, burnin = 2000)
+bvs <- add_priors(bvs, coef = list(mu = 0, v_i = 1),
+                  varsel = list(inprior = 0.5))
+bvs <- add_posterior_coefficients(add_seed(bvs, 1234))
+
+round(colMeans(as.matrix(bvs$posterior$beta$coeffs) == 0), 3)
+#> (Intercept)          x1          x2          z1 
+#>        0.00        0.00        0.00        0.99
+```
+
+BVS needs a proper prior on the coefficients it selects on, because the
+sweeps that exclude a regressor draw its coefficient from that prior.
+The wider the prior, the further the coefficient wanders while it is out
+and the less readily the likelihood admits it back, so `add_priors()`
+reports a prior that is wide enough to leave the indicator stuck. The
+package default is one of them, which is why `coef$v_i` is set above;
+SSVS has no such requirement, since its excluded coefficients never
+leave the neighbourhood of zero.
+
 The selection touches the frontier only. The inefficiency term, the
 error and the efficiency scores are drawn exactly as they are without
 it, except that they are now averaged over the frontiers the selection
@@ -303,9 +333,10 @@ admits. The same holds for the four-component model, which takes
 `varsel` in the same place.
 
 Note that AIC, BIC and HQ charge the model for every coefficient it was
-written with, since the selection shrinks a coefficient to zero rather
-than removing it. WAIC reads the effective number of parameters off the
-draws and accounts for the selection by itself.
+written with. The number the selection keeps is not the same in every
+draw, so there is no whole number to subtract. WAIC reads the effective
+number of parameters off the draws and accounts for the selection by
+itself.
 
 ## Roadmap
 
@@ -378,6 +409,9 @@ the estimation of technical inefficiency in the stochastic frontier
 production function model. *Journal of Econometrics*, 19(2–3), 233–238.
 
 Koop, G. (2003). *Bayesian Econometrics*. Chichester: Wiley.
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+*Journal of Applied Econometrics*, 28(2), 204–230.
 
 Kumbhakar, S. C., Lien, G., & Hjalmarsson, L. (2014). Technical
 efficiency in competing panel data models: A study of Norwegian grain

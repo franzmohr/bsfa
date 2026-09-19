@@ -1,8 +1,9 @@
 #' Check the variable selection argument of a model constructor
 #'
-#' @param varsel the value supplied, \code{NULL} or \code{"ssvs"}.
+#' @param varsel the value supplied, \code{NULL}, \code{"ssvs"} or
+#'   \code{"bvs"}.
 #'
-#' @return \code{NULL} or \code{"ssvs"}.
+#' @return \code{NULL}, \code{"ssvs"} or \code{"bvs"}.
 #'
 #' @keywords internal
 check_varsel <- function(varsel) {
@@ -11,11 +12,23 @@ check_varsel <- function(varsel) {
     return(NULL)
   }
   if (length(varsel) != 1L || !is.character(varsel) || is.na(varsel) ||
-      !identical(varsel, "ssvs")) {
-    stop("'varsel' must be NULL for no variable selection, or \"ssvs\" for ",
-         "stochastic search variable selection.")
+      !varsel %in% c("ssvs", "bvs")) {
+    stop("'varsel' must be NULL for no variable selection, \"ssvs\" for ",
+         "stochastic search variable selection, or \"bvs\" for the Bayesian ",
+         "variable selection of Korobilis (2013).")
   }
-  "ssvs"
+  varsel
+}
+
+#' The integer code the samplers take for a variable selection algorithm
+#'
+#' @param varsel \code{NULL}, \code{"ssvs"} or \code{"bvs"}.
+#'
+#' @return \code{0L}, \code{1L} or \code{2L}.
+#'
+#' @keywords internal
+varsel_code <- function(varsel) {
+  if (is.null(varsel)) 0L else if (identical(varsel, "ssvs")) 1L else 2L
 }
 
 #' Build the prior of the stochastic search variable selection
@@ -26,11 +39,18 @@ check_varsel <- function(varsel) {
 #' coefficient that is included, and one prior inclusion probability, each per
 #' coefficient under selection.
 #'
-#' The mixture is the one of George, Sun and Ni (2008), which is also what
-#' \pkg{bvartools} uses. It is a prior on the coefficient rather than a
-#' restriction on it: an excluded coefficient is not set to zero but given a
-#' prior so tight around zero that it cannot move away from it, so the sampler
-#' stays a Gibbs sampler and the draws of every other block are unaffected.
+#' Under \code{"ssvs"} the mixture is the one of George, Sun and Ni (2008),
+#' which is also what \pkg{bvartools} uses. It is a prior on the coefficient
+#' rather than a restriction on it: an excluded coefficient is not set to zero
+#' but given a prior so tight around zero that it cannot move away from it, so
+#' the sampler stays a Gibbs sampler and the draws of every other block are
+#' unaffected.
+#'
+#' Under \code{"bvs"} the selection of Korobilis (2013) switches the regressor
+#' itself off, so there is no mixture and no pair of standard deviations: the
+#' coefficient keeps the normal prior in \code{coef}, and the only thing to
+#' elicit is the prior inclusion probability. That prior has to be proper,
+#' since an excluded coefficient is drawn from it.
 #'
 #' @param object a model object.
 #' @param varsel the \code{varsel} argument of \code{\link{add_priors}}.
@@ -46,36 +66,81 @@ check_varsel <- function(varsel) {
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
 #' model restrictions. \emph{Journal of Econometrics}, 142(1), 553--580.
 #'
+#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+#' \emph{Journal of Applied Econometrics}, 28(2), 204--230.
+#'
 #' @keywords internal
 prior_varsel <- function(object, varsel, b0, B0i) {
 
-  if (!identical(object$model$varsel, "ssvs")) {
+  alg <- object$model$varsel
+
+  if (is.null(alg)) {
     if (!is.null(varsel)) {
-      stop("'varsel' was given, but the model was not created with ",
-           "varsel = \"ssvs\", so there is no variable selection for it to ",
-           "set a prior for. Pass varsel = \"ssvs\" to the create_sfmodel ",
-           "call instead.")
+      stop("'varsel' was given, but the model was not created with a ",
+           "variable selection algorithm, so there is nothing for it to set ",
+           "a prior for. Pass varsel = \"ssvs\" or varsel = \"bvs\" to the ",
+           "create_sfmodel call instead.")
     }
     return(NULL)
   }
   if (is.null(varsel)) {
-    stop("The model was created with varsel = \"ssvs\", so 'varsel' must be ",
-         "given. It needs either 'tau', the prior standard deviations of an ",
-         "excluded and an included coefficient, or 'semiautomatic', the ",
-         "factors to scale their least squares standard errors by. See ",
-         "?add_priors.")
+    stop("The model was created with varsel = \"", alg, "\", so 'varsel' ",
+         "must be given. It needs ",
+         if (alg == "ssvs")
+           paste("either 'tau', the prior standard deviations of an excluded",
+                 "and an included coefficient, or 'semiautomatic', the",
+                 "factors to scale their least squares standard errors by")
+         else "'inprior', the prior probability that a regressor is included",
+         ". See ?add_priors.")
   }
 
   nms <- colnames(object$data$X)
-  spec <- merge_prior_list(varsel,
-                           list(inprior = 0.5, tau = NULL,
-                                semiautomatic = NULL, include = NULL,
-                                exclude_intercept = TRUE),
-                           "varsel")
+  ssvs <- identical(alg, "ssvs")
+  defaults <- list(inprior = 0.5, include = NULL, exclude_intercept = TRUE)
+  if (ssvs) {
+    defaults <- c(defaults, list(tau = NULL, semiautomatic = NULL))
+  } else {
+    # Reported here rather than left to the unknown-element message, which
+    # would say that 'tau' is not an element of 'varsel' without saying that
+    # it is an element of the other algorithm's.
+    mixture <- intersect(names(varsel), c("tau", "semiautomatic"))
+    if (length(mixture) > 0) {
+      stop("'varsel$", mixture[1], "' belongs to SSVS, which sets a ",
+           "coefficient's prior by its inclusion indicator. The Bayesian ",
+           "variable selection of Korobilis (2013) switches the regressor ",
+           "off instead and leaves the coefficient the normal prior in ",
+           "'coef', so it has no pair of standard deviations to set. Give ",
+           "'varsel$inprior', or create the model with varsel = \"ssvs\".")
+    }
+  }
+  spec <- merge_prior_list(varsel, defaults, "varsel")
 
   idx <- varsel_include(spec, nms)
-  taus <- varsel_tau(spec, object, idx)
   inprior <- varsel_inprior(spec$inprior, length(idx))
+  taus <- if (ssvs) varsel_tau(spec, object, idx) else
+    list(tau0 = numeric(0), tau1 = numeric(0))
+
+  if (ssvs) {
+    varsel_check_ssvs_prior(idx, nms, b0, B0i)
+  } else {
+    varsel_check_bvs_prior(idx, nms, B0i, ols_se(object))
+  }
+
+  list(algorithm = alg, include = idx, names = nms[idx], tau0 = taus$tau0,
+       tau1 = taus$tau1, inprior = inprior, spec = spec)
+}
+
+#' Check the coefficient prior that stochastic search variable selection needs
+#'
+#' @param idx the positions under selection.
+#' @param nms the column names of the design matrix.
+#' @param b0 the prior mean of the coefficients.
+#' @param B0i the prior precision of the coefficients.
+#'
+#' @return Invisibly \code{TRUE}; called for the errors it raises.
+#'
+#' @keywords internal
+varsel_check_ssvs_prior <- function(idx, nms, b0, B0i) {
 
   # The restricted half of the mixture stands for the regressor being absent
   # from the frontier, which it only does if the prior is centred on zero. A
@@ -109,8 +174,78 @@ prior_varsel <- function(object, varsel, b0, B0i) {
          "for ", paste(nms[idx], collapse = ", "), ".")
   }
 
-  list(include = idx, names = nms[idx], tau0 = taus$tau0, tau1 = taus$tau1,
-       inprior = inprior, spec = spec)
+  invisible(TRUE)
+}
+
+#' Check the coefficient prior that Bayesian variable selection needs
+#'
+#' A coefficient the indicators have switched off is absent from the
+#' likelihood, so the sweep draws it from its prior. A prior precision of zero
+#' leaves no prior to draw from, and the flat limiting prior that the package
+#' otherwise allows is therefore refused here.
+#'
+#' A proper but very wide prior is worse than it looks, and is the reason this
+#' check is scale-aware rather than a fixed bound. The wider the prior, the
+#' further an excluded coefficient wanders while it is out, and a coefficient
+#' far from anything the data support is one the likelihood will not admit
+#' back. Measured against the least squares standard error of the same
+#' coefficient, on 400 observations of simulated data: at a prior standard
+#' deviation of six times that error the indicator of an irrelevant regressor
+#' changed state 342 times in 2000 sweeps, at twenty times 116, at sixty times
+#' 48, and at two hundred times not once, leaving an effective sample size of
+#' zero and a posterior inclusion probability of exactly zero that reflects the
+#' chain being stuck rather than the data. The bound is therefore set at a
+#' hundred, and this is a warning rather than an error because a stuck chain is
+#' visible in the draws and the user may have a reason.
+#'
+#' Note that the prior width moves the answer even where the chain mixes: the
+#' posterior inclusion probability of the irrelevant regressor above fell from
+#' 0.17 to 0.03 over the range that still mixed. That is Bartlett's paradox and
+#' is a property of the algorithm, not of this implementation. It is why the
+#' stochastic search of George, Sun and Ni (2008), whose excluded coefficients
+#' never leave the neighbourhood of zero, is the easier of the two to use with
+#' a prior that was not chosen with the selection in mind.
+#'
+#' @param idx the positions under selection.
+#' @param nms the column names of the design matrix.
+#' @param B0i the prior precision of the coefficients.
+#' @param se the least squares standard errors of the coefficients.
+#'
+#' @return Invisibly \code{TRUE}; called for the error it raises.
+#'
+#' @keywords internal
+varsel_check_bvs_prior <- function(idx, nms, B0i, se) {
+
+  prec <- diag(B0i)[idx]
+
+  flat <- idx[prec <= 0]
+  if (length(flat) > 0) {
+    stop("A coefficient under the Bayesian variable selection of Korobilis ",
+         "(2013) needs a proper prior, since the sweeps in which it is ",
+         "excluded draw it from that prior rather than from the data. ",
+         "'coef$v_i' is zero for ", paste(nms[flat], collapse = ", "),
+         ". Give ", if (length(flat) == 1L) "it" else "them",
+         " a positive prior precision, or use varsel = \"ssvs\", whose ",
+         "excluded coefficients are held at zero by the prior itself.")
+  }
+
+  ratio <- (1 / sqrt(prec)) / se[idx]
+  wide <- ratio > 100
+  if (any(wide)) {
+    worst <- max(ratio[wide])
+    warning("The prior on ", paste(nms[idx][wide], collapse = ", "),
+            " is too wide for the Bayesian variable selection to move: its ",
+            "standard deviation is ", format(round(worst)), " times the ",
+            "least squares standard error of the coefficient, so a sweep ",
+            "that excludes the regressor draws a coefficient the likelihood ",
+            "will not admit back, and the indicator is likely to stay where ",
+            "it started for the whole run. Give 'coef$v_i' a precision of ",
+            "the order of the inverse squared scale of the coefficient, or ",
+            "use varsel = \"ssvs\", which does not have to travel between ",
+            "the prior and the data to change state.", call. = FALSE)
+  }
+
+  invisible(TRUE)
 }
 
 #' Resolve which coefficients are placed under variable selection
@@ -261,13 +396,14 @@ ols_se <- function(object) {
 
 #' Arguments the samplers take for the variable selection block
 #'
-#' Both samplers take the same four, and take them empty when the model has no
-#' variable selection, so that the block is simply skipped.
+#' Both samplers take the same five, and take them empty when the model has no
+#' variable selection, so that the block is simply skipped. The two standard
+#' deviations are empty under \code{"bvs"} as well, which has no mixture.
 #'
 #' @param object a model object with priors attached.
 #'
-#' @return A list with \code{ssvs_idx}, \code{tau0}, \code{tau1} and
-#'   \code{prob_prior}.
+#' @return A list with \code{ssvs_idx}, \code{tau0}, \code{tau1},
+#'   \code{prob_prior} and \code{varsel}.
 #'
 #' @keywords internal
 varsel_args <- function(object) {
@@ -275,12 +411,13 @@ varsel_args <- function(object) {
   sel <- object$priors$varsel
   if (is.null(sel)) {
     return(list(ssvs_idx = integer(0), tau0 = numeric(0), tau1 = numeric(0),
-                prob_prior = numeric(0)))
+                prob_prior = numeric(0), varsel = 0L))
   }
   list(ssvs_idx = as.integer(sel$include) - 1L,
        tau0 = as.numeric(sel$tau0),
        tau1 = as.numeric(sel$tau1),
-       prob_prior = as.numeric(sel$inprior))
+       prob_prior = as.numeric(sel$inprior),
+       varsel = varsel_code(sel$algorithm))
 }
 
 #' Add the posterior inclusion probabilities to a summary table

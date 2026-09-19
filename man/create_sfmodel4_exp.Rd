@@ -38,9 +38,9 @@ cannot separate its components without repeated observations.}
 
 \item{type}{either \code{"production"} or \code{"cost"}.}
 
-\item{varsel}{either \code{NULL} for no variable selection, or
-\code{"ssvs"} for stochastic search variable selection on the frontier
-coefficients, as in \code{\link{create_sfmodel_exp}}.}
+\item{varsel}{either \code{NULL} for no variable selection, \code{"ssvs"}
+or \code{"bvs"} for variable selection on the frontier coefficients, as in
+\code{\link{create_sfmodel_exp}}.}
 
 \item{iterations}{number of iterations retained after burn-in, before
 thinning.}

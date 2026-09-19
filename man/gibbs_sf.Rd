@@ -15,6 +15,7 @@ gibbs_sf(
   tau0,
   tau1,
   prob_prior,
+  varsel,
   a_v,
   b_v,
   a_u,
@@ -56,6 +57,9 @@ excluded from the frontier.}
 included.}
 
 \item{prob_prior}{prior inclusion probabilities of those coefficients.}
+
+\item{varsel}{0 for no variable selection, 1 for stochastic search variable
+selection and 2 for the Bayesian variable selection of Korobilis (2013).}
 
 \item{a_v}{shape of the gamma prior on the error precision.}
 

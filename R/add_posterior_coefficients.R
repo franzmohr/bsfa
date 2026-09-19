@@ -60,10 +60,12 @@
 #'     \item{\code{u}}{the inefficiency terms, one column per unit, if
 #'       \code{keep_u} is \code{TRUE}.}
 #'     \item{\code{inclusion}}{the inclusion indicators, one column per
-#'       coefficient under stochastic search variable selection, if the model
-#'       was created with \code{varsel = "ssvs"}. Their posterior means are the
-#'       posterior inclusion probabilities that \code{\link{summary.sfmodel}}
-#'       reports.}
+#'       coefficient under variable selection, if the model was created with
+#'       \code{varsel}. Their posterior means are the posterior inclusion
+#'       probabilities that \code{\link{summary.sfmodel}} reports. Under
+#'       \code{varsel = "bvs"} the draws in \code{beta} are the coefficients
+#'       the frontier was built from, so a regressor an indicator switched off
+#'       appears there as an exact zero.}
 #'   }
 #'
 #' @references
@@ -165,6 +167,7 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
              tau0 = sel$tau0,
              tau1 = sel$tau1,
              prob_prior = sel$prob_prior,
+             varsel = sel$varsel,
              a_v = object$priors$shape_v,
              b_v = object$priors$rate_v,
              a_u = object$priors$shape_u,

@@ -58,9 +58,9 @@
 #'   same length as the data, identifying the units. Required, since the model
 #'   cannot separate its components without repeated observations.
 #' @param type either \code{"production"} or \code{"cost"}.
-#' @param varsel either \code{NULL} for no variable selection, or
-#'   \code{"ssvs"} for stochastic search variable selection on the frontier
-#'   coefficients, as in \code{\link{create_sfmodel_exp}}.
+#' @param varsel either \code{NULL} for no variable selection, \code{"ssvs"}
+#'   or \code{"bvs"} for variable selection on the frontier coefficients, as in
+#'   \code{\link{create_sfmodel_exp}}.
 #' @param iterations number of iterations retained after burn-in, before
 #'   thinning.
 #' @param burnin number of discarded iterations.
@@ -139,7 +139,7 @@ create_sfmodel4_hn <- function(formula,
 #' @param data a data frame.
 #' @param id unit identifier.
 #' @param type \code{"production"} or \code{"cost"}.
-#' @param varsel \code{NULL} or \code{"ssvs"}.
+#' @param varsel \code{NULL}, \code{"ssvs"} or \code{"bvs"}.
 #' @param iterations,burnin,thin MCMC settings.
 #' @param ineff \code{"exponential"} or \code{"halfnormal"}.
 #' @param cl the originating call.

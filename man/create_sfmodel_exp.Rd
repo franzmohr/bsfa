@@ -38,8 +38,9 @@ inefficiency terms. See details.}
 
 \item{type}{either \code{"production"} or \code{"cost"}.}
 
-\item{varsel}{either \code{NULL} for no variable selection, or
-\code{"ssvs"} for stochastic search variable selection. See details.}
+\item{varsel}{either \code{NULL} for no variable selection, \code{"ssvs"}
+for stochastic search variable selection, or \code{"bvs"} for the Bayesian
+variable selection of Korobilis (2013). See details.}
 
 \item{iterations}{number of iterations retained after burn-in, before
 thinning.}
@@ -91,17 +92,35 @@ a known quantity is imposed rather than estimated: a capacity that the
 frontier cannot exceed, or a scale factor whose elasticity is known to be
 one. The efficiency scores are measured from the frontier including it.
 
-With \code{varsel = "ssvs"} the frontier coefficients are placed under the
-stochastic search variable selection of George, Sun and Ni (2008), as in the
-\pkg{bvartools} package. Each coefficient then carries a mixture of two
-normal priors centred on zero, a tight one standing for its absence from the
-frontier and a loose one for its presence, and the sampler draws an
-inclusion indicator for it in every sweep. The posterior mean of that
-indicator is the posterior probability that the regressor belongs in the
-frontier, which \code{\link{summary.sfmodel}} reports beside the
-coefficient. The prior is set through the \code{varsel} argument of
-\code{\link{add_priors}}, which is required for such a model and not
-allowed for any other.
+The argument \code{varsel} places the frontier coefficients under one of the
+two variable selection algorithms of the \pkg{bvartools} package. Either way
+the sampler draws an inclusion indicator per selected coefficient in every
+sweep, and the posterior mean of that indicator is the posterior probability
+that the regressor belongs in the frontier, which
+\code{\link{summary.sfmodel}} reports beside the coefficient. The prior is
+set through the \code{varsel} argument of \code{\link{add_priors}}, which is
+required for such a model and not allowed for any other.
+
+\code{"ssvs"} is the stochastic search variable selection of George, Sun and
+Ni (2008). The coefficient carries a mixture of two normal priors centred on
+zero, a tight one standing for its absence from the frontier and a loose one
+for its presence, and the indicator says which of the two is in force. The
+regressor never leaves the design, and an excluded coefficient is held near
+zero rather than at it.
+
+\code{"bvs"} is the Bayesian variable selection of Korobilis (2013). The
+frontier is \eqn{x_i' \Lambda \beta} with \eqn{\Lambda} the diagonal matrix
+of indicators, so an excluded regressor leaves the likelihood outright and
+the coefficient the sampler stores for it is an exact zero. Its coefficient
+keeps the ordinary normal prior of \code{coef}, which is the only prior to
+set, but that prior has to be proper: the sweeps in which the regressor is
+out draw the coefficient from it, and the vaguer it is the further the
+coefficient wanders and the less readily the likelihood admits it back.
+
+Which to prefer is mostly a question of what the coefficients are for.
+\code{"bvs"} gives exact zeros and a cleaner reading of the indicator, and
+\code{"ssvs"} mixes better when the regressors are correlated, since nothing
+has to travel between the prior and the data to change state.
 
 Variable selection applies to the frontier only. The inefficiency term and
 the error are untouched by it, so the efficiency scores are read off the
@@ -127,6 +146,9 @@ model
 \references{
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
 model restrictions. \emph{Journal of Econometrics}, 142(1), 553--580.
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+\emph{Journal of Applied Econometrics}, 28(2), 204--230.
 
 Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical
 inefficiency in the Indonesian weaving industry. \emph{Journal of

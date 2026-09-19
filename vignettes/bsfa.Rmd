@@ -244,6 +244,39 @@ is model averaging rather than model choice: nothing is removed, and the
 efficiency scores that come out of the sampler are averaged over the frontiers
 the selection admits.
 
+`varsel = "bvs"` is the other algorithm bvartools offers, the Bayesian
+variable selection of Korobilis (2013). It switches the regressor itself off
+rather than tightening its prior, so the frontier is $x_i' \Lambda \beta$ with
+$\Lambda$ the diagonal matrix of indicators and an excluded coefficient is
+stored as an exact zero.
+
+```{r}
+bvs <- create_sfmodel_exp(y ~ x1 + x2 + z1 + z2, data = d, varsel = "bvs",
+                          iterations = 4000, burnin = 1000)
+bvs <- add_priors(bvs, coef = list(mu = 0, v_i = 1),
+                  varsel = list(inprior = 0.5))
+bvs <- add_posterior_coefficients(add_seed(bvs, 1234))
+
+round(colMeans(as.matrix(bvs$posterior$beta$coeffs) == 0), 3)
+```
+
+The coefficient prior matters more here than it does under SSVS, and it is set
+through `coef` rather than through `varsel`. A sweep that excludes a regressor
+draws its coefficient from that prior, so the prior has to be proper, and the
+wider it is the further the coefficient wanders and the less readily the
+likelihood admits it back. `add_priors()` refuses a prior precision of zero and
+reports one wide enough to leave the indicator stuck for a whole run. The
+package default is wide enough to do so, which is why `coef$v_i` is given
+above.
+
+That dependence does not vanish where the chain mixes: the posterior inclusion
+probability under BVS moves with the width of the prior, which is Bartlett's
+paradox and a property of the algorithm rather than of this implementation. Put
+the two side by side when it matters, and report the prior that produced the
+probability. SSVS is the easier of the two to use with a prior that was not
+chosen with the selection in mind, and it mixes better when the regressors are
+correlated; BVS gives exact zeros and an indicator that means what it says.
+
 The selection touches the frontier alone. The inefficiency term and the error
 are drawn exactly as they are without it, and `varsel` sits in the same place
 in the four-component model.
@@ -307,6 +340,9 @@ estimation of technical inefficiency in the stochastic frontier production
 function model. *Journal of Econometrics*, 19(2–3), 233–238.
 
 Koop, G. (2003). *Bayesian Econometrics*. Chichester: Wiley.
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+*Journal of Applied Econometrics*, 28(2), 204–230.
 
 Pitt, M. M., & Lee, L.-F. (1981). The measurement and sources of technical
 inefficiency in the Indonesian weaving industry. *Journal of Development

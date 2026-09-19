@@ -20,7 +20,7 @@ test_that("varsel is checked when the model is created", {
   expect_identical(
     create_sfmodel_exp(y ~ x1, data = d, varsel = "ssvs")$model$varsel,
     "ssvs")
-  expect_error(create_sfmodel_exp(y ~ x1, data = d, varsel = "bvs"),
+  expect_error(create_sfmodel_exp(y ~ x1, data = d, varsel = "lasso"),
                "must be NULL")
   expect_error(create_sfmodel_exp(y ~ x1, data = d, varsel = TRUE),
                "must be NULL")
@@ -34,7 +34,7 @@ test_that("the varsel prior is required exactly when the model has one", {
   d <- sim_with_noise()
   expect_error(add_priors(create_sfmodel_exp(y ~ x1 + x2, data = d),
                           varsel = list(tau = c(0.1, 10))),
-               "not created with varsel")
+               "not created with a variable selection")
   expect_error(add_priors(ssvs_model(d)), "'varsel' must be given")
 })
 

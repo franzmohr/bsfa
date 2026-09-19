@@ -7,10 +7,11 @@
 check_varsel(varsel)
 }
 \arguments{
-\item{varsel}{the value supplied, \code{NULL} or \code{"ssvs"}.}
+\item{varsel}{the value supplied, \code{NULL}, \code{"ssvs"} or
+\code{"bvs"}.}
 }
 \value{
-\code{NULL} or \code{"ssvs"}.
+\code{NULL}, \code{"ssvs"} or \code{"bvs"}.
 }
 \description{
 Check the variable selection argument of a model constructor

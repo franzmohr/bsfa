@@ -49,22 +49,9 @@
 #' matched exactly at shape 1 but not at any other, where the error was larger
 #' still: at shape 2, \eqn{r^* = 0.75} implied 0.888.
 #'
-#' A model created with \code{varsel = "ssvs"} takes one further argument.
-#' Each coefficient under selection then carries the two-point mixture prior of
-#' George, Sun and Ni (2008): a normal centred on zero with standard deviation
-#' \eqn{\tau_0} when the regressor is absent from the frontier and one with
-#' \eqn{\tau_1 > \tau_0} when it is present. The element \code{varsel} can
-#' contain
+#' A model created with a \code{varsel} algorithm takes one further argument of
+#' that name, which every other model refuses. Both algorithms take
 #' \describe{
-#'   \item{\code{tau}}{two positive numbers, \eqn{\tau_0} and
-#'     \eqn{\tau_1}, in that order.}
-#'   \item{\code{semiautomatic}}{two positive factors by which the least
-#'     squares standard error of each coefficient is multiplied to obtain its
-#'     \eqn{\tau_0} and \eqn{\tau_1}. This is the semiautomatic approach of
-#'     George, Sun and Ni (2008), and it is the choice to make when the
-#'     regressors are on scales that differ, since the two standard deviations
-#'     then follow the scale of each coefficient instead of being the same for
-#'     all of them.}
 #'   \item{\code{inprior}}{the prior probability that a regressor belongs in
 #'     the frontier, one number or one per coefficient under selection.
 #'     Defaults to 0.5.}
@@ -75,11 +62,39 @@
 #'     frontier rather than the effect of a regressor, and selecting it away
 #'     would move every efficiency score rather than drop a variable.}
 #' }
-#' Exactly one of \code{tau} and \code{semiautomatic} must be given. A
-#' coefficient under selection takes its prior precision from \code{varsel}
-#' rather than from \code{coef$v_i}, and its prior mean has to be zero, since
-#' the excluded half of the mixture stands for the regressor being absent from
-#' the frontier rather than for its coefficient sitting at some other value.
+#'
+#' Under \code{varsel = "ssvs"} each selected coefficient carries the two-point
+#' mixture prior of George, Sun and Ni (2008): a normal centred on zero with
+#' standard deviation \eqn{\tau_0} when the regressor is absent from the
+#' frontier and one with \eqn{\tau_1 > \tau_0} when it is present. Exactly one
+#' of
+#' \describe{
+#'   \item{\code{tau}}{two positive numbers, \eqn{\tau_0} and
+#'     \eqn{\tau_1}, in that order;}
+#'   \item{\code{semiautomatic}}{two positive factors by which the least
+#'     squares standard error of each coefficient is multiplied to obtain its
+#'     \eqn{\tau_0} and \eqn{\tau_1}. This is the semiautomatic approach of
+#'     George, Sun and Ni (2008), and it is the choice to make when the
+#'     regressors are on scales that differ, since the two standard deviations
+#'     then follow the scale of each coefficient instead of being the same for
+#'     all of them;}
+#' }
+#' must be given. A coefficient under selection takes its prior precision from
+#' \code{varsel} rather than from \code{coef$v_i}, and its prior mean has to be
+#' zero, since the excluded half of the mixture stands for the regressor being
+#' absent from the frontier rather than for its coefficient sitting at some
+#' other value.
+#'
+#' Under \code{varsel = "bvs"} the selection of Korobilis (2013) switches the
+#' regressor itself off, so there is no mixture and neither \code{tau} nor
+#' \code{semiautomatic} applies. The coefficient keeps the normal prior in
+#' \code{coef}, which may have any mean and may tie it to the other
+#' coefficients, but which has to be proper: the sweeps in which the regressor
+#' is excluded draw its coefficient from that prior rather than from the data.
+#' A prior precision of zero is refused for that reason, and a very vague one
+#' is reported, since the further an excluded coefficient wanders the less
+#' readily the likelihood admits it back and the more slowly the indicators
+#' mix.
 #'
 #' @param object an object of class \code{"sfmodel_exp"} or
 #'   \code{"sfmodel_hn"}.
@@ -97,8 +112,8 @@
 #'   half-normal inefficiency distribution, with elements \code{r_star} and
 #'   \code{shape}.
 #' @param varsel a named list of prior specifications for the variable
-#'   selection algorithm. Required if the model was created with
-#'   \code{varsel = "ssvs"}, and not allowed otherwise. See details.
+#'   selection algorithm. Required if the model was created with a
+#'   \code{varsel} algorithm, and not allowed otherwise. See details.
 #' @param ... unused, for compatibility with the generic.
 #'
 #' @return The model object with the element \code{priors} attached. With
@@ -109,6 +124,9 @@
 #' @references
 #' George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
 #' model restrictions. \emph{Journal of Econometrics}, 142(1), 553--580.
+#'
+#' Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+#' \emph{Journal of Applied Econometrics}, 28(2), 204--230.
 #'
 #' van den Broeck, J., Koop, G., Osiewalski, J., & Steel, M. F. J. (1994).
 #' Stochastic frontier models: A Bayesian perspective. \emph{Journal of
@@ -129,6 +147,14 @@
 #' selected <- add_priors(selected,
 #'                        varsel = list(semiautomatic = c(0.1, 10)))
 #' selected$priors$varsel$names
+#'
+#' # The Bayesian variable selection of Korobilis (2013) instead, which needs
+#' # a proper prior on the coefficients it selects on.
+#' switched <- create_sfmodel_exp(y ~ x1 + x2, data = d, varsel = "bvs",
+#'                                iterations = 500, burnin = 200)
+#' switched <- add_priors(switched, coef = list(mu = 0, v_i = 1),
+#'                        varsel = list(inprior = 0.5))
+#' switched$priors$varsel$inprior
 #'
 #' @export
 add_priors <- function(object, ...) {
@@ -302,7 +328,7 @@ prior_coef_sigma <- function(object, coef, sigma, varsel = NULL) {
   }
 
   sel <- prior_varsel(object, varsel, b0, B0i)
-  if (!is.null(sel)) {
+  if (identical(sel$algorithm, "ssvs")) {
     # The sampler rewrites these entries in every sweep. They are set to the
     # precision of an included coefficient here so that the object carries a
     # complete prior: it is the one the chain starts from, and the one

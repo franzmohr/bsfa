@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // gibbs_sf
-Rcpp::List gibbs_sf(const arma::vec& y, const arma::mat& X, const arma::uvec& g, const int n_units, const arma::vec& b0, const arma::mat& B0i, const arma::uvec& ssvs_idx, const arma::vec& tau0, const arma::vec& tau1, const arma::vec& prob_prior, const double a_v, const double b_v, const double a_u, const double b_u, const arma::vec& beta_init, const double sigma_v2_init, const double par_u_init, const arma::vec& u_init, const int ineff, const double s, const int draws, const int burnin, const int thin, const int u_thin, const int verbose);
-RcppExport SEXP _bsfa_gibbs_sf(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP n_unitsSEXP, SEXP b0SEXP, SEXP B0iSEXP, SEXP ssvs_idxSEXP, SEXP tau0SEXP, SEXP tau1SEXP, SEXP prob_priorSEXP, SEXP a_vSEXP, SEXP b_vSEXP, SEXP a_uSEXP, SEXP b_uSEXP, SEXP beta_initSEXP, SEXP sigma_v2_initSEXP, SEXP par_u_initSEXP, SEXP u_initSEXP, SEXP ineffSEXP, SEXP sSEXP, SEXP drawsSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP u_thinSEXP, SEXP verboseSEXP) {
+Rcpp::List gibbs_sf(const arma::vec& y, const arma::mat& X, const arma::uvec& g, const int n_units, const arma::vec& b0, const arma::mat& B0i, const arma::uvec& ssvs_idx, const arma::vec& tau0, const arma::vec& tau1, const arma::vec& prob_prior, const int varsel, const double a_v, const double b_v, const double a_u, const double b_u, const arma::vec& beta_init, const double sigma_v2_init, const double par_u_init, const arma::vec& u_init, const int ineff, const double s, const int draws, const int burnin, const int thin, const int u_thin, const int verbose);
+RcppExport SEXP _bsfa_gibbs_sf(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP n_unitsSEXP, SEXP b0SEXP, SEXP B0iSEXP, SEXP ssvs_idxSEXP, SEXP tau0SEXP, SEXP tau1SEXP, SEXP prob_priorSEXP, SEXP varselSEXP, SEXP a_vSEXP, SEXP b_vSEXP, SEXP a_uSEXP, SEXP b_uSEXP, SEXP beta_initSEXP, SEXP sigma_v2_initSEXP, SEXP par_u_initSEXP, SEXP u_initSEXP, SEXP ineffSEXP, SEXP sSEXP, SEXP drawsSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP u_thinSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,6 +27,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type tau0(tau0SEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type tau1(tau1SEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type prob_prior(prob_priorSEXP);
+    Rcpp::traits::input_parameter< const int >::type varsel(varselSEXP);
     Rcpp::traits::input_parameter< const double >::type a_v(a_vSEXP);
     Rcpp::traits::input_parameter< const double >::type b_v(b_vSEXP);
     Rcpp::traits::input_parameter< const double >::type a_u(a_uSEXP);
@@ -42,13 +43,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< const int >::type u_thin(u_thinSEXP);
     Rcpp::traits::input_parameter< const int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(gibbs_sf(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose));
+    rcpp_result_gen = Rcpp::wrap(gibbs_sf(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
 // gibbs_sf4
-Rcpp::List gibbs_sf4(const arma::vec& y, const arma::mat& X, const arma::uvec& g, const int n_units, const arma::vec& b0, const arma::mat& B0i, const arma::uvec& ssvs_idx, const arma::vec& tau0, const arma::vec& tau1, const arma::vec& prob_prior, const double a_v, const double b_v, const double a_mu, const double b_mu, const double a_eta, const double b_eta, const double a_u, const double b_u, const arma::vec& beta_init, const double sigma_v2_init, const double sigma_mu2_init, const double par_eta_init, const double par_u_init, const arma::vec& mu_init, const arma::vec& eta_init, const arma::vec& u_init, const int ineff, const double s, const int draws, const int burnin, const int thin, const int u_thin, const int verbose);
-RcppExport SEXP _bsfa_gibbs_sf4(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP n_unitsSEXP, SEXP b0SEXP, SEXP B0iSEXP, SEXP ssvs_idxSEXP, SEXP tau0SEXP, SEXP tau1SEXP, SEXP prob_priorSEXP, SEXP a_vSEXP, SEXP b_vSEXP, SEXP a_muSEXP, SEXP b_muSEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP a_uSEXP, SEXP b_uSEXP, SEXP beta_initSEXP, SEXP sigma_v2_initSEXP, SEXP sigma_mu2_initSEXP, SEXP par_eta_initSEXP, SEXP par_u_initSEXP, SEXP mu_initSEXP, SEXP eta_initSEXP, SEXP u_initSEXP, SEXP ineffSEXP, SEXP sSEXP, SEXP drawsSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP u_thinSEXP, SEXP verboseSEXP) {
+Rcpp::List gibbs_sf4(const arma::vec& y, const arma::mat& X, const arma::uvec& g, const int n_units, const arma::vec& b0, const arma::mat& B0i, const arma::uvec& ssvs_idx, const arma::vec& tau0, const arma::vec& tau1, const arma::vec& prob_prior, const int varsel, const double a_v, const double b_v, const double a_mu, const double b_mu, const double a_eta, const double b_eta, const double a_u, const double b_u, const arma::vec& beta_init, const double sigma_v2_init, const double sigma_mu2_init, const double par_eta_init, const double par_u_init, const arma::vec& mu_init, const arma::vec& eta_init, const arma::vec& u_init, const int ineff, const double s, const int draws, const int burnin, const int thin, const int u_thin, const int verbose);
+RcppExport SEXP _bsfa_gibbs_sf4(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP n_unitsSEXP, SEXP b0SEXP, SEXP B0iSEXP, SEXP ssvs_idxSEXP, SEXP tau0SEXP, SEXP tau1SEXP, SEXP prob_priorSEXP, SEXP varselSEXP, SEXP a_vSEXP, SEXP b_vSEXP, SEXP a_muSEXP, SEXP b_muSEXP, SEXP a_etaSEXP, SEXP b_etaSEXP, SEXP a_uSEXP, SEXP b_uSEXP, SEXP beta_initSEXP, SEXP sigma_v2_initSEXP, SEXP sigma_mu2_initSEXP, SEXP par_eta_initSEXP, SEXP par_u_initSEXP, SEXP mu_initSEXP, SEXP eta_initSEXP, SEXP u_initSEXP, SEXP ineffSEXP, SEXP sSEXP, SEXP drawsSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP u_thinSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -62,6 +63,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type tau0(tau0SEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type tau1(tau1SEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type prob_prior(prob_priorSEXP);
+    Rcpp::traits::input_parameter< const int >::type varsel(varselSEXP);
     Rcpp::traits::input_parameter< const double >::type a_v(a_vSEXP);
     Rcpp::traits::input_parameter< const double >::type b_v(b_vSEXP);
     Rcpp::traits::input_parameter< const double >::type a_mu(a_muSEXP);
@@ -85,14 +87,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< const int >::type u_thin(u_thinSEXP);
     Rcpp::traits::input_parameter< const int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(gibbs_sf4(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose));
+    rcpp_result_gen = Rcpp::wrap(gibbs_sf4(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bsfa_gibbs_sf", (DL_FUNC) &_bsfa_gibbs_sf, 25},
-    {"_bsfa_gibbs_sf4", (DL_FUNC) &_bsfa_gibbs_sf4, 33},
+    {"_bsfa_gibbs_sf", (DL_FUNC) &_bsfa_gibbs_sf, 26},
+    {"_bsfa_gibbs_sf4", (DL_FUNC) &_bsfa_gibbs_sf4, 34},
     {NULL, NULL, 0}
 };
 

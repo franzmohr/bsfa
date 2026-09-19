@@ -37,8 +37,8 @@
 #' @param sigma_u a named list for the scale of the half-normal distribution of
 #'   transient inefficiency, with elements \code{r_star} and \code{shape}.
 #' @param varsel a named list of prior specifications for the variable
-#'   selection algorithm. Required if the model was created with
-#'   \code{varsel = "ssvs"}, and not allowed otherwise. It takes the same
+#'   selection algorithm. Required if the model was created with a
+#'   \code{varsel} algorithm, and not allowed otherwise. It takes the same
 #'   elements as in \code{\link{add_priors}} for the two-component models, and
 #'   applies to the frontier coefficients only.
 #' @param ... unused, for compatibility with the generic.

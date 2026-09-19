@@ -62,13 +62,12 @@ are not counted, which is the convention but is worth stating: a model with
 one \eqn{u} per observation has as many latent variables as observations, and
 a count that included them would be meaningless.
 
-Under \code{varsel = "ssvs"} that count is the number of coefficients the
-frontier was written with, not the number the selection kept. The
-coefficients it excludes are shrunk to zero rather than removed, so there is
-no whole number of them to subtract, and AIC, BIC and HQ therefore charge
-the model for every coefficient it could have used. WAIC does not: it reads
-the effective number of parameters off the draws, and so accounts for the
-selection by itself.
+Under either \code{varsel} algorithm that count is the number of coefficients
+the frontier was written with, not the number the selection kept. The number
+kept is not the same in every draw, so there is no whole number to subtract,
+and AIC, BIC and HQ therefore charge the model for every coefficient it
+could have used. WAIC does not: it reads the effective number of parameters
+off the draws, and so accounts for the selection by itself.
 
 AIC, BIC and HQ are point estimates rather than quantities with a posterior
 distribution, so their credible bands are \code{NA}. WAIC is a point estimate

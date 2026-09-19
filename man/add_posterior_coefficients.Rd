@@ -62,10 +62,12 @@ The object in \code{object} with the element \code{posterior} added.
     \item{\code{u}}{the inefficiency terms, one column per unit, if
       \code{keep_u} is \code{TRUE}.}
     \item{\code{inclusion}}{the inclusion indicators, one column per
-      coefficient under stochastic search variable selection, if the model
-      was created with \code{varsel = "ssvs"}. Their posterior means are the
-      posterior inclusion probabilities that \code{\link{summary.sfmodel}}
-      reports.}
+      coefficient under variable selection, if the model was created with
+      \code{varsel}. Their posterior means are the posterior inclusion
+      probabilities that \code{\link{summary.sfmodel}} reports. Under
+      \code{varsel = "bvs"} the draws in \code{beta} are the coefficients
+      the frontier was built from, so a regressor an indicator switched off
+      appears there as an exact zero.}
   }
 }
 \description{

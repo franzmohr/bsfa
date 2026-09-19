@@ -29,14 +29,24 @@ coefficient that is included, and one prior inclusion probability, each per
 coefficient under selection.
 }
 \details{
-The mixture is the one of George, Sun and Ni (2008), which is also what
-\pkg{bvartools} uses. It is a prior on the coefficient rather than a
-restriction on it: an excluded coefficient is not set to zero but given a
-prior so tight around zero that it cannot move away from it, so the sampler
-stays a Gibbs sampler and the draws of every other block are unaffected.
+Under \code{"ssvs"} the mixture is the one of George, Sun and Ni (2008),
+which is also what \pkg{bvartools} uses. It is a prior on the coefficient
+rather than a restriction on it: an excluded coefficient is not set to zero
+but given a prior so tight around zero that it cannot move away from it, so
+the sampler stays a Gibbs sampler and the draws of every other block are
+unaffected.
+
+Under \code{"bvs"} the selection of Korobilis (2013) switches the regressor
+itself off, so there is no mixture and no pair of standard deviations: the
+coefficient keeps the normal prior in \code{coef}, and the only thing to
+elicit is the prior inclusion probability. That prior has to be proper,
+since an excluded coefficient is drawn from it.
 }
 \references{
 George, E. I., Sun, D., & Ni, S. (2008). Bayesian stochastic search for VAR
 model restrictions. \emph{Journal of Econometrics}, 142(1), 553--580.
+
+Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+\emph{Journal of Applied Econometrics}, 28(2), 204--230.
 }
 \keyword{internal}

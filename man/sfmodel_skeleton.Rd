@@ -26,7 +26,7 @@ sfmodel_skeleton(
 
 \item{type}{\code{"production"} or \code{"cost"}.}
 
-\item{varsel}{\code{NULL} or \code{"ssvs"}.}
+\item{varsel}{\code{NULL}, \code{"ssvs"} or \code{"bvs"}.}
 
 \item{iterations, burnin, thin}{MCMC settings.}
 
