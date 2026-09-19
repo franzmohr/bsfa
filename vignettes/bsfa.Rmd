@@ -90,10 +90,11 @@ lambda <- rgamma(1e5, shape = m$priors$shape_u, rate = m$priors$rate_u)
 median(exp(-rexp(length(lambda), rate = lambda)))
 ```
 
-No such closed form is available for the half-normal model, where the anchor is
-matched only in expectation: the prior mean of $\sigma_u^2$ is set to the value
-that would place the median of $u$ at $-\log(r^*)$. The two models therefore
-need different elicitations of the same quantity, which is exactly what the
+The half-normal model reaches the same place by a different route. Its prior
+sits on $\sigma_u^2$ and is inverse gamma, so $u$ is marginally half $t$ on
+$2a$ degrees of freedom, and the rate is set from the median of that. The
+anchor is exact there too, and at any shape. The two models therefore need
+different elicitations of the same quantity, which is exactly what the
 separate `add_priors()` methods provide — and why the argument is named after
 the parameter it governs, `lambda` for one model and `sigma_u` for the other.
 

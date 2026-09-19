@@ -178,11 +178,12 @@ model <- add_priors(model, lambda = list(r_star = 0.85))   # sfmodel_exp
 model <- add_priors(model, sigma_u = list(r_star = 0.85))  # sfmodel_hn
 ```
 
-For the exponential model the mapping is exact. With a gamma prior of
-shape 1 and rate `c = -log(r_star)` on the rate parameter, the implied
-marginal prior density of `u` is `c / (u + c)^2`, whose median is `c`,
-so the prior median of `exp(-u)` is exactly `r_star`. For the
-half-normal model the same target is matched only in expectation.
+The anchor is matched on the median of the marginal prior of `u`, after
+the parameter of its distribution has been integrated out, so the prior
+median efficiency is `r_star` exactly in both models and at any shape.
+For the exponential model at the default shape of 1 that marginal
+density is `c / (u + c)^2` with `c = -log(r_star)`, whose median is `c`;
+for the half-normal model it is a half $t$, whose median sets the rate.
 
 ## What is implemented
 

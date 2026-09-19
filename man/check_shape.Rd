@@ -18,8 +18,11 @@ Invisibly \code{TRUE}; called for the error it raises.
 }
 \description{
 The exponential model needs a positive shape for the prior to be proper.
-The half-normal model needs one above 1 as well, because its anchor is
-matched through the prior mean of the squared scale, which is the ratio
-\code{rate / (shape - 1)} and exists only then.
+The half-normal model needs one above 1 as well, though no longer for the
+reason it once did: the anchor used to be matched through the prior mean
+of the squared scale, which is \code{rate / (shape - 1)} and exists only
+then, and is now matched through the median of the marginal prior, which
+exists for any positive shape. The bound stays because the starting value
+\code{method = "ols"} derives is still that mean.
 }
 \keyword{internal}

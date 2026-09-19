@@ -18,21 +18,36 @@
 #' to output in levels will return efficiency scores that depend on the units
 #' the output happens to be measured in.
 #'
-#' For the exponential model the mapping is exact. Placing a gamma prior of
-#' shape 1 and rate \eqn{c = -\log(r^*)} on the rate parameter \eqn{\lambda}
-#' implies the marginal prior density
-#' \deqn{p(u) = \int_0^\infty \lambda e^{-\lambda u} c e^{-c\lambda} d\lambda
-#'            = c / (u + c)^2,}
-#' whose median is exactly \eqn{c}, so that the prior median of \eqn{\exp(-u)}
-#' is \eqn{r^*}. This is the elicitation of van den Broeck, Koop, Osiewalski and
-#' Steel (1994), and the default shape of 1 corresponds to the two degrees of
-#' freedom they use.
+#' In both models the anchor is matched on the marginal prior of \eqn{u},
+#' that is after the parameter of the inefficiency distribution has been
+#' integrated out, so that the prior median of \eqn{\exp(-u)} is \eqn{r^*}
+#' exactly, whatever shape is used.
 #'
-#' For the half-normal model no such exact result is available, and the anchor
-#' is matched only in expectation: the prior mean of \eqn{\sigma_u^2} is set to
-#' the value that would place the median of \eqn{u} at \eqn{-\log(r^*)}, namely
-#' \eqn{(-\log(r^*) / \Phi^{-1}(0.75))^2}. The shape must exceed one for that
-#' mean to exist, hence the higher default.
+#' For the exponential model, a gamma prior of shape \eqn{a} and rate \eqn{b}
+#' on \eqn{\lambda} implies the marginal prior density
+#' \deqn{p(u) = \int_0^\infty \lambda e^{-\lambda u}
+#'              \frac{b^a}{\Gamma(a)} \lambda^{a - 1} e^{-b\lambda} d\lambda
+#'            = \frac{a b^a}{(u + b)^{a + 1}},}
+#' a Lomax density whose median is \eqn{b (2^{1/a} - 1)}, so the rate is set to
+#' \eqn{-\log(r^*) / (2^{1/a} - 1)}. At the default shape of 1 this is simply
+#' \eqn{-\log(r^*)} and the density is \eqn{c / (u + c)^2}, which is the
+#' elicitation of van den Broeck, Koop, Osiewalski and Steel (1994); their two
+#' degrees of freedom are that default.
+#'
+#' For the half-normal model the prior sits on \eqn{\sigma_u^2} and is inverse
+#' gamma, so \eqn{u} is marginally half t on \eqn{2a} degrees of freedom with
+#' scale \eqn{\sqrt{b / a}}, and the rate is set to
+#' \eqn{a \left( -\log(r^*) / t_{2a}^{-1}(0.75) \right)^2}. The shape must
+#' still exceed one, because the starting values that \code{method = "ols"}
+#' derives use the prior mean of \eqn{\sigma_u^2}, hence the higher default.
+#'
+#' Earlier versions matched the half-normal anchor through the prior mean of
+#' \eqn{\sigma_u^2} rather than through this median, which left it optimistic
+#' by a factor that depended only on the shape: at the default of 2.5 the
+#' implied prior median efficiency was \eqn{(r^*)^{0.834}}, so that asking for
+#' 0.75 gave 0.787 and asking for 0.5 gave 0.561. The exponential model was
+#' matched exactly at shape 1 but not at any other, where the error was larger
+#' still: at shape 2, \eqn{r^* = 0.75} implied 0.888.
 #'
 #' @param object an object of class \code{"sfmodel_exp"} or
 #'   \code{"sfmodel_hn"}.
@@ -109,6 +124,14 @@ add_priors.sfmodel_hn <- function(object,
 
 #' Elicit the gamma prior on an exponential inefficiency rate
 #'
+#' Sets the rate so that the median of the marginal prior on \eqn{u}, after
+#' the rate parameter has been integrated out, falls at \code{-log(r_star)}.
+#' That marginal is a Lomax distribution of shape \code{shape} and scale
+#' \code{rate}, whose median is \code{rate * (2^(1/shape) - 1)}, so the
+#' scale has to be divided by that factor. At the default shape of one the
+#' factor is one and the rate is \code{-log(r_star)}, which is the
+#' elicitation of van den Broeck, Koop, Osiewalski and Steel (1994).
+#'
 #' @param spec a list with elements \code{r_star} and \code{shape}.
 #' @param what the name of the argument the specification came from, used in
 #'   error messages.
@@ -119,13 +142,17 @@ add_priors.sfmodel_hn <- function(object,
 elicit_exp <- function(spec, what) {
   check_probability(spec$r_star, paste0(what, "$r_star"))
   check_shape(spec$shape, what, min = 0)
-  list(shape = spec$shape, rate = -log(spec$r_star))
+  list(shape = spec$shape,
+       rate = -log(spec$r_star) / (2^(1 / spec$shape) - 1))
 }
 
 #' Elicit the gamma prior on a half-normal inefficiency scale
 #'
-#' Matches the prior mean of the squared scale to the value that places the
-#' median of a half-normal variate at \code{-log(r_star)}.
+#' Sets the rate so that the median of the marginal prior on \eqn{u}, after
+#' the scale has been integrated out, falls at \code{-log(r_star)}. With an
+#' inverse gamma prior on \eqn{\sigma_u^2} that marginal is a half t on
+#' \code{2 * shape} degrees of freedom and scale \code{sqrt(rate / shape)},
+#' so the rate follows from its median.
 #'
 #' @param spec a list with elements \code{r_star} and \code{shape}.
 #' @param what the name of the argument the specification came from, used in
@@ -137,16 +164,19 @@ elicit_exp <- function(spec, what) {
 elicit_hn <- function(spec, what) {
   check_probability(spec$r_star, paste0(what, "$r_star"))
   check_shape(spec$shape, what, min = 1)
-  scale2 <- (-log(spec$r_star) / stats::qnorm(0.75))^2
-  list(shape = spec$shape, rate = scale2 * (spec$shape - 1))
+  scale2 <- (-log(spec$r_star) / stats::qt(0.75, df = 2 * spec$shape))^2
+  list(shape = spec$shape, rate = spec$shape * scale2)
 }
 
 #' Check the shape of a gamma prior on an inefficiency parameter
 #'
 #' The exponential model needs a positive shape for the prior to be proper.
-#' The half-normal model needs one above 1 as well, because its anchor is
-#' matched through the prior mean of the squared scale, which is the ratio
-#' \code{rate / (shape - 1)} and exists only then.
+#' The half-normal model needs one above 1 as well, though no longer for the
+#' reason it once did: the anchor used to be matched through the prior mean
+#' of the squared scale, which is \code{rate / (shape - 1)} and exists only
+#' then, and is now matched through the median of the marginal prior, which
+#' exists for any positive shape. The bound stays because the starting value
+#' \code{method = "ols"} derives is still that mean.
 #'
 #' @param shape the value to check.
 #' @param what the name of the argument it came from.
@@ -161,7 +191,8 @@ check_shape <- function(shape, what, min) {
     stop("The shape of a ",
          if (min == 0) "gamma prior on an exponential rate must be positive"
          else paste("half-normal scale prior must exceed 1, so that the",
-                    "prior mean of its square exists"),
+                    "prior mean of its square exists and can be used as a",
+                    "starting value"),
          "; '", what, "$shape' is not.")
   }
   invisible(TRUE)

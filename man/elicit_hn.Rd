@@ -16,7 +16,10 @@ error messages.}
 A list with \code{shape} and \code{rate}.
 }
 \description{
-Matches the prior mean of the squared scale to the value that places the
-median of a half-normal variate at \code{-log(r_star)}.
+Sets the rate so that the median of the marginal prior on \eqn{u}, after
+the scale has been integrated out, falls at \code{-log(r_star)}. With an
+inverse gamma prior on \eqn{\sigma_u^2} that marginal is a half t on
+\code{2 * shape} degrees of freedom and scale \code{sqrt(rate / shape)},
+so the rate follows from its median.
 }
 \keyword{internal}

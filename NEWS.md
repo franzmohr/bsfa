@@ -1,3 +1,28 @@
+# bsfa (development version)
+
+## Priors
+
+* `add_priors()` now matches `r_star` on the median of the marginal prior of
+  the inefficiency term, after the parameter of its distribution has been
+  integrated out, so that the prior median efficiency is `r_star` exactly for
+  both models and at any shape.
+
+  This changes the priors that were released in 0.1.0, and so the posteriors
+  drawn under them. The half-normal anchor was previously matched through the
+  prior mean of the squared scale, which left it optimistic by a factor that
+  depended only on the shape: at the default shape of 2.5 the implied prior
+  median efficiency was `r_star^0.834`, so that asking for 0.75 gave 0.787 and
+  asking for 0.5 gave 0.561. The exponential anchor was matched exactly at the
+  default shape of 1, and only there; at shape 2 an `r_star` of 0.75 implied a
+  prior median efficiency of 0.888.
+
+  An exponential prior at the default shape is unaffected, which is the
+  elicitation of van den Broeck, Koop, Osiewalski and Steel (1994) and was
+  already exact. Every half-normal prior moves, as does any exponential prior
+  with a shape other than 1. The efficiency scores of a sample that is
+  informative about the level will barely notice; those of one that is not
+  will follow the anchor, which is what `prior_sensitivity()` measures.
+
 # bsfa 0.1.0
 
 First release.

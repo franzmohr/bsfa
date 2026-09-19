@@ -39,8 +39,9 @@ test_that("both one-sided terms are elicited separately", {
 
   h <- add_priors(create_sfmodel4_hn(y ~ x1, data = d, id = "id"),
                   sigma_eta = list(r_star = 0.95))
-  expect_equal(h$priors$rate_eta / (h$priors$shape_eta - 1),
-               (-log(0.95) / qnorm(0.75))^2)
+  expect_equal(h$priors$rate_eta,
+               h$priors$shape_eta *
+                 (-log(0.95) / qt(0.75, df = 2 * h$priors$shape_eta))^2)
 })
 
 test_that("four-component prior arguments are validated", {

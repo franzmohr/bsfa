@@ -16,13 +16,31 @@ test_that("the exponential prior reproduces the target median efficiency", {
   }
 })
 
-test_that("the half-normal prior centres sigma_u on the elicited value", {
+test_that("the half-normal prior reproduces the target median efficiency", {
+  # The prior sits on sigma_u^2 and is inverse gamma, so u is marginally half
+  # t on 2 * shape degrees of freedom with scale sqrt(rate / shape), and the
+  # rate is set from its median. An earlier version matched the prior mean of
+  # sigma_u^2 instead, which left the anchor optimistic by a factor that
+  # depended on the shape alone: at the default of 2.5 asking for 0.75 gave a
+  # prior median efficiency of 0.787.
   d <- sim_sf(n = 50, beta = c(1, 0.5), sigma_v = 0.2, par_u = 4)
-  m <- add_priors(create_sfmodel_hn(y ~ x1, data = d),
-                  sigma_u = list(r_star = 0.75))
 
-  sigma_u <- -log(0.75) / qnorm(0.75)
-  expect_equal(m$priors$rate_u / (m$priors$shape_u - 1), sigma_u^2)
+  for (r_star in c(0.5, 0.75, 0.9)) {
+    for (shape in c(1.5, 2.5, 5)) {
+      m <- add_priors(create_sfmodel_hn(y ~ x1, data = d),
+                      sigma_u = list(r_star = r_star, shape = shape))
+      expect_equal(m$priors$shape_u, shape)
+      expect_equal(m$priors$rate_u,
+                   shape * (-log(r_star) / qt(0.75, df = 2 * shape))^2)
+
+      # The median of the marginal prior of exp(-u) is r_star itself, which is
+      # what the anchor claims and is the whole point of the elicitation.
+      set.seed(42)
+      s2 <- 1 / rgamma(2e5, shape = m$priors$shape_u, rate = m$priors$rate_u)
+      u <- sqrt(s2) * abs(rnorm(length(s2)))
+      expect_equal(median(exp(-u)), r_star, tolerance = 0.01)
+    }
+  }
 })
 
 test_that("the two methods elicit the same anchor differently", {

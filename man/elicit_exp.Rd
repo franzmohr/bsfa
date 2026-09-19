@@ -16,6 +16,12 @@ error messages.}
 A list with \code{shape} and \code{rate}.
 }
 \description{
-Elicit the gamma prior on an exponential inefficiency rate
+Sets the rate so that the median of the marginal prior on \eqn{u}, after
+the rate parameter has been integrated out, falls at \code{-log(r_star)}.
+That marginal is a Lomax distribution of shape \code{shape} and scale
+\code{rate}, whose median is \code{rate * (2^(1/shape) - 1)}, so the
+scale has to be divided by that factor. At the default shape of one the
+factor is one and the rate is \code{-log(r_star)}, which is the
+elicitation of van den Broeck, Koop, Osiewalski and Steel (1994).
 }
 \keyword{internal}

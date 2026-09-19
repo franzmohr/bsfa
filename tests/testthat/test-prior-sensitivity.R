@@ -86,7 +86,9 @@ test_that("the rest of the prior specification survives the refit", {
   expect_equal(rebuilt$priors$rate_v, 0.5)
   expect_equal(rebuilt$priors$shape_u, 3)
   expect_equal(rebuilt$priors$r_star, 0.9)
-  expect_equal(rebuilt$priors$rate_u, -log(0.9))
+  # The rate carries the shape, because the anchor is matched on the median of
+  # the marginal prior rather than on the rate alone.
+  expect_equal(rebuilt$priors$rate_u, -log(0.9) / (2^(1 / 3) - 1))
 
   # And a model with no priors at all simply gets the defaults.
   bare <- bsfa:::sensitivity_priors(
