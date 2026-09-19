@@ -223,15 +223,15 @@ what the reference program uses:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
 <span><span class="co">#&gt;               mean     sd   2.5% median  97.5% ESS</span></span>
-<span><span class="co">#&gt; (Intercept) 0.9895 0.0278 0.9360 0.9893 1.0431 110</span></span>
-<span><span class="co">#&gt; x1          0.7247 0.0334 0.6588 0.7255 0.7853 149</span></span>
-<span><span class="co">#&gt; x2          0.2697 0.0302 0.2101 0.2713 0.3314 188</span></span>
-<span><span class="co">#&gt; sigma_v     0.1970 0.0069 0.1838 0.1970 0.2091  91</span></span>
-<span><span class="co">#&gt; lambda      6.3943 0.8258 5.0849 6.3656 8.0077  59</span></span>
+<span><span class="co">#&gt; (Intercept) 0.9916 0.0283 0.9363 0.9897 1.0465 108</span></span>
+<span><span class="co">#&gt; x1          0.7233 0.0334 0.6612 0.7231 0.7847 161</span></span>
+<span><span class="co">#&gt; x2          0.2696 0.0313 0.2079 0.2704 0.3323 594</span></span>
+<span><span class="co">#&gt; sigma_v     0.1976 0.0064 0.1858 0.1974 0.2096 121</span></span>
+<span><span class="co">#&gt; lambda      6.4162 0.8353 4.9951 6.3800 8.3297  51</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior mean efficiency, per unit:</span></span>
 <span><span class="co">#&gt;   mean    min median    max </span></span>
-<span><span class="co">#&gt; 0.8676 0.5581 0.9041 0.9750</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.8669 0.5581 0.9032 0.9747</span></span></code></pre></div>
 <p>Supplying <code>id</code> is what makes this the Pitt and Lee
 specification: one inefficiency term per individual, held fixed over
 that individual’s periods, exactly as <code>zdraw</code> is in the
@@ -261,11 +261,11 @@ a longer chain the picture firms up:</p>
 <span><span class="va">stat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">tab</span><span class="op">)</span>, <span class="st">"ESS"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">tab</span><span class="op">[</span>, <span class="va">stat</span><span class="op">]</span>, <span class="fl">4</span><span class="op">)</span>, ESS <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">tab</span><span class="op">[</span>, <span class="st">"ESS"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;               mean     sd   2.5% median  97.5%   ESS</span></span>
-<span><span class="co">#&gt; (Intercept) 0.9885 0.0290 0.9317 0.9883 1.0459  4849</span></span>
-<span><span class="co">#&gt; x1          0.7235 0.0331 0.6580 0.7235 0.7881 15610</span></span>
-<span><span class="co">#&gt; x2          0.2686 0.0315 0.2064 0.2683 0.3312 14109</span></span>
-<span><span class="co">#&gt; sigma_v     0.1975 0.0068 0.1845 0.1973 0.2114 13302</span></span>
-<span><span class="co">#&gt; lambda      6.4987 0.9068 4.8810 6.4407 8.4362  3448</span></span></code></pre></div>
+<span><span class="co">#&gt; (Intercept) 0.9892 0.0290 0.9328 0.9892 1.0465  5091</span></span>
+<span><span class="co">#&gt; x1          0.7231 0.0329 0.6589 0.7228 0.7882 15062</span></span>
+<span><span class="co">#&gt; x2          0.2683 0.0314 0.2063 0.2685 0.3302 14691</span></span>
+<span><span class="co">#&gt; sigma_v     0.1976 0.0069 0.1846 0.1974 0.2116 13008</span></span>
+<span><span class="co">#&gt; lambda      6.4828 0.8924 4.9064 6.4275 8.4132  3736</span></span></code></pre></div>
 <p>Comparing the two against the values used to simulate the data:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">theta</span>, <span class="va">sigma</span>, <span class="fl">1</span> <span class="op">/</span> <span class="va">mu_z</span><span class="op">)</span></span>
@@ -273,11 +273,11 @@ a longer chain the picture firms up:</p>
 <span>      short <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>, <span class="st">"mean"</span><span class="op">]</span>,</span>
 <span>      long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>, <span class="st">"mean"</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                truth     short      long</span></span>
-<span><span class="co">#&gt; (Intercept) 1.000000 0.9895286 0.9884992</span></span>
-<span><span class="co">#&gt; x1          0.750000 0.7247306 0.7234722</span></span>
-<span><span class="co">#&gt; x2          0.250000 0.2696541 0.2685548</span></span>
-<span><span class="co">#&gt; sigma_v     0.200000 0.1970169 0.1974779</span></span>
-<span><span class="co">#&gt; lambda      6.153129 6.3943224 6.4987479</span></span></code></pre></div>
+<span><span class="co">#&gt; (Intercept) 1.000000 0.9916386 0.9892425</span></span>
+<span><span class="co">#&gt; x1          0.750000 0.7232788 0.7231489</span></span>
+<span><span class="co">#&gt; x2          0.250000 0.2695517 0.2683340</span></span>
+<span><span class="co">#&gt; sigma_v     0.200000 0.1976278 0.1975844</span></span>
+<span><span class="co">#&gt; lambda      6.153129 6.4162489 6.4827670</span></span></code></pre></div>
 <p>The last row is the rate
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
 of the exponential, whose true value is
@@ -304,12 +304,12 @@ is determined:</p>
 <code class="sourceCode R"><span><span class="va">eff</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">long</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">eff</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   unit      mean         sd        5%       50%       95%</span></span>
-<span><span class="co">#&gt; 1    1 0.9049552 0.05991702 0.7969770 0.9125785 0.9889849</span></span>
-<span><span class="co">#&gt; 2    2 0.7852586 0.07093016 0.6726915 0.7823501 0.9087934</span></span>
-<span><span class="co">#&gt; 3    3 0.8413685 0.07032135 0.7261940 0.8411501 0.9589144</span></span>
-<span><span class="co">#&gt; 4    4 0.7591011 0.06945479 0.6500728 0.7558680 0.8785455</span></span>
-<span><span class="co">#&gt; 5    5 0.7999923 0.07111500 0.6872058 0.7976954 0.9234974</span></span>
-<span><span class="co">#&gt; 6    6 0.8464832 0.07037356 0.7299317 0.8463871 0.9637820</span></span></code></pre></div>
+<span><span class="co">#&gt; 1    1 0.9048115 0.05986282 0.7961333 0.9110199 0.9891611</span></span>
+<span><span class="co">#&gt; 2    2 0.7842108 0.07067832 0.6736594 0.7806643 0.9082414</span></span>
+<span><span class="co">#&gt; 3    3 0.8398531 0.07072492 0.7231910 0.8402343 0.9589344</span></span>
+<span><span class="co">#&gt; 4    4 0.7594803 0.06934052 0.6495979 0.7566128 0.8795258</span></span>
+<span><span class="co">#&gt; 5    5 0.7982657 0.07101425 0.6864374 0.7956790 0.9216059</span></span>
+<span><span class="co">#&gt; 6    6 0.8448553 0.07013706 0.7287951 0.8443302 0.9625896</span></span></code></pre></div>
 <p>Each interval is wide even with five observations per individual.
 That is not a shortcoming of the sampler but the shape of the problem: a
 single
