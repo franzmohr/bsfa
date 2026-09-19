@@ -148,20 +148,33 @@ units of the response. This is only meaningful if the response is on a
 logarithmic scale, where \(u\) is a proportional shortfall. A model fitted
 to output in levels will return efficiency scores that depend on the units
 the output happens to be measured in.</p>
-<p>For the exponential model the mapping is exact. Placing a gamma prior of
-shape 1 and rate \(c = -\log(r^*)\) on the rate parameter \(\lambda\)
-implies the marginal prior density
-$$p(u) = \int_0^\infty \lambda e^{-\lambda u} c e^{-c\lambda} d\lambda
-           = c / (u + c)^2,$$
-whose median is exactly \(c\), so that the prior median of \(\exp(-u)\)
-is \(r^*\). This is the elicitation of van den Broeck, Koop, Osiewalski and
-Steel (1994), and the default shape of 1 corresponds to the two degrees of
-freedom they use.</p>
-<p>For the half-normal model no such exact result is available, and the anchor
-is matched only in expectation: the prior mean of \(\sigma_u^2\) is set to
-the value that would place the median of \(u\) at \(-\log(r^*)\), namely
-\((-\log(r^*) / \Phi^{-1}(0.75))^2\). The shape must exceed one for that
-mean to exist, hence the higher default.</p>
+<p>In both models the anchor is matched on the marginal prior of \(u\),
+that is after the parameter of the inefficiency distribution has been
+integrated out, so that the prior median of \(\exp(-u)\) is \(r^*\)
+exactly, whatever shape is used.</p>
+<p>For the exponential model, a gamma prior of shape \(a\) and rate \(b\)
+on \(\lambda\) implies the marginal prior density
+$$p(u) = \int_0^\infty \lambda e^{-\lambda u}
+             \frac{b^a}{\Gamma(a)} \lambda^{a - 1} e^{-b\lambda} d\lambda
+           = \frac{a b^a}{(u + b)^{a + 1}},$$
+a Lomax density whose median is \(b (2^{1/a} - 1)\), so the rate is set to
+\(-\log(r^*) / (2^{1/a} - 1)\). At the default shape of 1 this is simply
+\(-\log(r^*)\) and the density is \(c / (u + c)^2\), which is the
+elicitation of van den Broeck, Koop, Osiewalski and Steel (1994); their two
+degrees of freedom are that default.</p>
+<p>For the half-normal model the prior sits on \(\sigma_u^2\) and is inverse
+gamma, so \(u\) is marginally half t on \(2a\) degrees of freedom with
+scale \(\sqrt{b / a}\), and the rate is set to
+\(a \left( -\log(r^*) / t_{2a}^{-1}(0.75) \right)^2\). The shape must
+still exceed one, because the starting values that <code>method = "ols"</code>
+derives use the prior mean of \(\sigma_u^2\), hence the higher default.</p>
+<p>Earlier versions matched the half-normal anchor through the prior mean of
+\(\sigma_u^2\) rather than through this median, which left it optimistic
+by a factor that depended only on the shape: at the default of 2.5 the
+implied prior median efficiency was \((r^*)^{0.834}\), so that asking for
+0.75 gave 0.787 and asking for 0.5 gave 0.561. The exponential model was
+matched exactly at shape 1 but not at any other, where the error was larger
+still: at shape 2, \(r^* = 0.75\) implied 0.888.</p>
     </div>
     <div id="references">
     <h2>References</h2>

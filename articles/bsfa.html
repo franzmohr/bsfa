@@ -212,18 +212,21 @@ A quick check:</p>
 <span><span class="va">lambda</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/GammaDist.html" class="external-link">rgamma</a></span><span class="op">(</span><span class="fl">1e5</span>, shape <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">priors</span><span class="op">$</span><span class="va">shape_u</span>, rate <span class="op">=</span> <span class="va">m</span><span class="op">$</span><span class="va">priors</span><span class="op">$</span><span class="va">rate_u</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/median.html" class="external-link">median</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/stats/Exponential.html" class="external-link">rexp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span>, rate <span class="op">=</span> <span class="va">lambda</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.751849</span></span></code></pre></div>
-<p>No such closed form is available for the half-normal model, where the
-anchor is matched only in expectation: the prior mean of
+<p>The half-normal model reaches the same place by a different route.
+Its prior sits on
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>u</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_u^2</annotation></semantics></math>
-is set to the value that would place the median of
+and is inverse gamma, so
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
-at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>r</mi><mo>*</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-\log(r^*)</annotation></semantics></math>.
-The two models therefore need different elicitations of the same
-quantity, which is exactly what the separate <code><a href="../reference/add_priors.html">add_priors()</a></code>
-methods provide — and why the argument is named after the parameter it
-governs, <code>lambda</code> for one model and <code>sigma_u</code> for
-the other.</p>
+is marginally half
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>a</mi></mrow><annotation encoding="application/x-tex">2a</annotation></semantics></math>
+degrees of freedom, and the rate is set from the median of that. The
+anchor is exact there too, and at any shape. The two models therefore
+need different elicitations of the same quantity, which is exactly what
+the separate <code><a href="../reference/add_priors.html">add_priors()</a></code> methods provide — and why the
+argument is named after the parameter it governs, <code>lambda</code>
+for one model and <code>sigma_u</code> for the other.</p>
 </div>
 <div class="section level2">
 <h2 id="drawing-from-the-posterior">Drawing from the posterior<a class="anchor" aria-label="anchor" href="#drawing-from-the-posterior"></a>
@@ -409,11 +412,11 @@ criteria.</p>
 <span><span class="co">#&gt; Inefficiency: halfnormal</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;           mean    median    qlower    qupper</span></span>
-<span><span class="co">#&gt; LL   -149.5492 -149.2037 -153.5593 -147.4063</span></span>
-<span><span class="co">#&gt; AIC   304.0618        NA        NA        NA</span></span>
-<span><span class="co">#&gt; BIC   325.1348        NA        NA        NA</span></span>
-<span><span class="co">#&gt; HQ    312.3308        NA        NA        NA</span></span>
-<span><span class="co">#&gt; WAIC  304.9671        NA  229.5992  380.3351</span></span></code></pre></div>
+<span><span class="co">#&gt; LL   -149.4532 -149.1064 -153.3039 -147.4025</span></span>
+<span><span class="co">#&gt; AIC   304.0352        NA        NA        NA</span></span>
+<span><span class="co">#&gt; BIC   325.1082        NA        NA        NA</span></span>
+<span><span class="co">#&gt; HQ    312.3042        NA        NA        NA</span></span>
+<span><span class="co">#&gt; WAIC  304.6642        NA  229.2015  380.1270</span></span></code></pre></div>
 <p>The data were generated with exponential inefficiency, and the
 criteria prefer that specification. They are not always so decisive: the
 two distributions are hard to tell apart when inefficiency is small
