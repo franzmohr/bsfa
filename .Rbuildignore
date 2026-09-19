@@ -9,3 +9,6 @@
 ^\.zenodo\.json$
 ^CITATION\.cff$
 ^README\.html$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
