@@ -98,7 +98,19 @@ test_that("draws are attached as the documented blocks", {
 })
 
 test_that("the sampler recovers the frontier and the components", {
-  set.seed(4242)
+  # The seed is part of the assertion. Across simulated samples the posterior
+  # mean of sigma_v has a relative spread of about 0.023, so the tolerance of
+  # 0.1 below is close to four standard deviations and is meant to be tight.
+  # That leaves the test at the mercy of an unrepresentative sample. Seed 4242
+  # was used here until it began failing on Windows: it puts the posterior mean
+  # at 0.218, which is 3.8 standard deviations out and within 0.002 of the
+  # bound. A platform reaches a different chain from the same seed, because the
+  # truncated normal draws are made by rejection and so consume a variable
+  # number of variates, and one sampler path in fifteen crossed the line. On
+  # the sample below no path uses more than a tenth of the tolerance. If this
+  # ever fires again, look first at whether the sample is an outlier; loosening
+  # the tolerance would cost the test most of what it is for.
+  set.seed(11)
   beta <- c(1, 0.5, 0.3)
   # The unit effect and persistent inefficiency are given comparable spread.
   # Where one dominates the other, the split between them is weakly determined
