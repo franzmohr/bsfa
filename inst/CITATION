@@ -1,8 +1,7 @@
 citHeader("To cite bsfa in publications, please use:")
 
-# A concept DOI is minted by Zenodo on the first deposit and resolves to the
-# most recent version. Add it here, and to the doi field of CITATION.cff, once
-# the first release has been archived.
+# The DOI below is the concept DOI, which Zenodo resolves to the most recent
+# release. The DOI of one particular version is on that version's record.
 
 bibentry(
   bibtype  = "Manual",
@@ -10,6 +9,7 @@ bibentry(
   author   = person(given = c("Franz", "X."), family = "Mohr"),
   year     = "2026",
   note     = "R package version 0.1.0",
+  doi      = "10.5281/zenodo.22843208",
   url      = "https://github.com/franzmohr/bsfa"
 )
 

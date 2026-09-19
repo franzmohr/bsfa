@@ -17,6 +17,16 @@ abstract: >-
   predictors.
 version: 0.1.0
 date-released: "2026-09-19"
+doi: "10.5281/zenodo.22843208"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22843208"
+    description: >-
+      The concept DOI, which resolves to the most recent release.
+  - type: doi
+    value: "10.5281/zenodo.22843209"
+    description: >-
+      The DOI of version 0.1.0.
 license: GPL-2.0-or-later
 repository-code: "https://github.com/franzmohr/bsfa"
 url: "https://franzmohr.github.io/bsfa/"
@@ -43,6 +53,7 @@ preferred-citation:
       orcid: "https://orcid.org/0009-0003-8890-7781"
   year: 2026
   notes: "R package version 0.1.0"
+  doi: "10.5281/zenodo.22843208"
   url: "https://github.com/franzmohr/bsfa"
 references:
   - type: article

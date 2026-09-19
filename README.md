@@ -12,6 +12,7 @@ coverage](https://codecov.io/gh/franzmohr/bsfa/graph/badge.svg)](https://app.cod
 2)](https://img.shields.io/badge/license-GPL%20%28%3E%3D%202%29-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22843208.svg)](https://doi.org/10.5281/zenodo.22843208)
 
 [![GitHub
 Sponsors](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/franzmohr)
@@ -323,10 +324,14 @@ Econometrics*, 61(2), 273–303.
 citation("bsfa")
 ```
 
-Released versions are archived on Zenodo, which mints a DOI for each
-release and a concept DOI that always resolves to the latest one. Please
-cite the software alongside van den Broeck, Koop, Osiewalski and Steel
-(1994), whose sampler it follows.
+Released versions are archived on Zenodo. The concept DOI,
+[10.5281/zenodo.22843208](https://doi.org/10.5281/zenodo.22843208),
+always resolves to the most recent release and is the one to cite unless
+a particular version matters; each release also has its own DOI, on its
+own record.
+
+Please cite the software alongside van den Broeck, Koop, Osiewalski and
+Steel (1994), whose sampler it follows.
 
 ## License
 
