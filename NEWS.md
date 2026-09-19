@@ -1,4 +1,4 @@
-# bsfa (development version)
+# bsfa 0.2.0
 
 ## Priors
 

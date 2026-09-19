@@ -3,7 +3,7 @@
   "description": "<p>An R package providing Bayesian inference for stochastic frontier models by Markov chain Monte Carlo.</p><p>Gibbs samplers with data augmentation are provided for composed-error frontier models in the tradition of van den Broeck, Koop, Osiewalski and Steel (1994), covering exponential and half-normal inefficiency, production and cost frontiers, and cross-sectional, time-invariant panel and four-component panel specifications. A model is built up step by step, by creating a model object and then adding priors, initial values and a seed to it before the posterior is drawn.</p><p>Because the one-sided inefficiency term is sampled as a latent variable rather than integrated out, posterior distributions of unit-specific efficiency scores are obtained directly from the augmented draws rather than from point predictors such as the Jondrow et al. (1982) conditional mean.</p>",
   "upload_type": "software",
   "license": "GPL-2.0-or-later",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "language": "eng",
   "creators": [
     {
