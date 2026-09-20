@@ -1,4 +1,4 @@
-# bsfa 0.2.0
+# bsfa (development version)
 
 ## Variable selection
 
@@ -54,6 +54,8 @@
   result can change how many random deviates a sweep consumes and shift every
   draw after it. The chains remain draws from the same posterior. Pin the
   thread count alongside the seed where bit-identical output is needed.
+
+# bsfa 0.2.0
 
 ## Priors
 
