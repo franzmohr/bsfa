@@ -101,6 +101,10 @@
   result can change how many random deviates a sweep consumes and shift every
   draw after it. The chains remain draws from the same posterior. Pin the
   thread count alongside the seed where bit-identical output is needed.
+* `citation("bsfa")` now reports the version that is installed rather than a
+  version written into the file by hand, which between releases was the last
+  released one and so attributed results to a package the reader could
+  install and not reproduce.
 
 # bsfa 0.2.0
 

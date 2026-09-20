@@ -3,12 +3,23 @@ citHeader("To cite bsfa in publications, please use:")
 # The DOI below is the concept DOI, which Zenodo resolves to the most recent
 # release. The DOI of one particular version is on that version's record.
 
+# The version is read from the installed package rather than written out
+# here, so that what is cited is the version that produced the results. It is
+# the one field that has to follow the installation rather than the release:
+# between releases DESCRIPTION carries a development version, and a citation
+# naming the last release would attribute results to a package the reader
+# could install and not reproduce. CITATION.cff and .zenodo.json stay at the
+# released version on purpose, since they describe the archived snapshot
+# rather than whatever is loaded.
+version <- if (is.null(meta$Version)) "unknown version" else
+  paste("R package version", meta$Version)
+
 bibentry(
   bibtype  = "Manual",
   title    = "{bsfa}: Bayesian Stochastic Frontier Analysis",
   author   = person(given = c("Franz", "X."), family = "Mohr"),
   year     = "2026",
-  note     = "R package version 0.2.0",
+  note     = version,
   doi      = "10.5281/zenodo.22843208",
   url      = "https://github.com/franzmohr/bsfa"
 )
