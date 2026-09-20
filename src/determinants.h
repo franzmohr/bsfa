@@ -294,20 +294,34 @@ struct bsfa_oneside {
   // The baseline scale. Conjugate for the half-normal and the exponential
   // once each term is divided by its own multiplier; a Metropolis step on
   // the log scale for the truncated normal, whose normaliser carries it.
+  // The sufficient statistic of the baseline scale. Without scale
+  // determinants every multiplier is one and the weighted sum is the plain
+  // one, but only mathematically: a sequential loop and Armadillo's blocked
+  // reduction associate the additions differently and so round differently.
+  // That matters more here than the last bits suggest, because the one-sided
+  // terms are drawn by rejection, so a last-bit difference changes how many
+  // deviates a sweep consumes and sends the chain down an entirely different
+  // path. Forming the sum exactly as the sampler formed it before
+  // determinants existed is what lets a model without them reproduce its
+  // earlier draws from the same seed.
+  double weighted(const arma::vec& u, const bool square) const {
+    if (Zs.n_cols == 0) {
+      return square ? arma::dot(u, u) : arma::accu(u);
+    }
+    double out = 0.0;
+    for (arma::uword j = 0; j < n; j++) {
+      out += (square ? u(j) * u(j) : u(j)) / fac(j);
+    }
+    return out;
+  }
+
   void draw_base(const arma::vec& u) {
     if (ineff == 0) {
-      double ss = 0.0;
-      for (arma::uword j = 0; j < n; j++) {
-        ss += u(j) * u(j) / fac(j);
-      }
       base = 1.0 / ::Rf_rgamma(a + 0.5 * static_cast<double>(n),
-                               1.0 / (b + 0.5 * ss));
+                               1.0 / (b + 0.5 * weighted(u, true)));
     } else if (ineff == 1) {
-      double su = 0.0;
-      for (arma::uword j = 0; j < n; j++) {
-        su += u(j) / fac(j);
-      }
-      base = ::Rf_rgamma(a + static_cast<double>(n), 1.0 / (b + su));
+      base = ::Rf_rgamma(a + static_cast<double>(n),
+                         1.0 / (b + weighted(u, false)));
     } else {
       const arma::vec cand = mh_scale.propose();
       const double cand_base = std::exp(cand(0));

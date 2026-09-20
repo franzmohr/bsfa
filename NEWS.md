@@ -10,7 +10,9 @@
   parameter already plays the part of one. This is the heteroskedastic
   specification of Caudill, Ford and Gropper (1995), and it is what the
   applied four-component literature uses to let covariates explain
-  inefficiency.
+  inefficiency. A model created without determinants draws exactly what it
+  drew before they existed, down to the last bit, so a script pinned to a
+  seed under 0.2.0 reproduces its results.
 * `create_sfmodel4_exp()` and `create_sfmodel4_hn()` take `scale_eta` in
   addition, for the persistent term. The two sets sit at different levels:
   the persistent term is one per unit, so its determinants have to be
