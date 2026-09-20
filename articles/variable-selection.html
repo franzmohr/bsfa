@@ -189,17 +189,17 @@ scale of each coefficient instead of being the same for all of them.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
 <span><span class="co">#&gt;                mean     sd    2.5%  median  97.5%    PIP  ESS</span></span>
-<span><span class="co">#&gt; (Intercept)  0.9743 0.0265  0.9190  0.9760 1.0229     NA  172</span></span>
-<span><span class="co">#&gt; x1           0.5026 0.0140  0.4754  0.5027 0.5300 1.0000 1862</span></span>
-<span><span class="co">#&gt; x2           0.3060 0.0144  0.2778  0.3062 0.3340 1.0000 1886</span></span>
-<span><span class="co">#&gt; z1           0.0013 0.0060 -0.0033  0.0002 0.0209 0.0948  568</span></span>
-<span><span class="co">#&gt; z2          -0.0040 0.0103 -0.0367 -0.0005 0.0034 0.1948  334</span></span>
-<span><span class="co">#&gt; sigma_v      0.2269 0.0161  0.1987  0.2260 0.2594     NA  288</span></span>
-<span><span class="co">#&gt; lambda       4.8477 0.6441  3.8752  4.7337 6.3741     NA  178</span></span>
+<span><span class="co">#&gt; (Intercept)  0.9711 0.0262  0.9163  0.9718 1.0224     NA  188</span></span>
+<span><span class="co">#&gt; x1           0.5023 0.0141  0.4738  0.5023 0.5300 1.0000 1958</span></span>
+<span><span class="co">#&gt; x2           0.3058 0.0144  0.2781  0.3060 0.3344 1.0000 1954</span></span>
+<span><span class="co">#&gt; z1           0.0014 0.0064 -0.0040  0.0002 0.0215 0.1215  733</span></span>
+<span><span class="co">#&gt; z2          -0.0035 0.0097 -0.0358 -0.0004 0.0033 0.1820  268</span></span>
+<span><span class="co">#&gt; sigma_v      0.2287 0.0160  0.1989  0.2278 0.2616     NA  217</span></span>
+<span><span class="co">#&gt; lambda       4.9250 0.6631  3.8579  4.8291 6.4961     NA  168</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior mean efficiency, per observation:</span></span>
 <span><span class="co">#&gt;   mean    min median    max </span></span>
-<span><span class="co">#&gt; 0.8274 0.3246 0.8564 0.9484</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.8295 0.3283 0.8573 0.9489</span></span></code></pre></div>
 <p>The <code>PIP</code> column is the share of draws in which the
 regressor was in the frontier. The two that generated the data are kept
 throughout; the two that did not are excluded in most sweeps.</p>
@@ -246,18 +246,18 @@ elicit. The coefficient keeps the ordinary normal prior of
 <span><span class="co">#&gt; Draws:              4000 after 1000 burn-in, thinning 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
-<span><span class="co">#&gt;                mean     sd    2.5% median  97.5%    PIP  ESS</span></span>
-<span><span class="co">#&gt; (Intercept)  0.9720 0.0259  0.9190 0.9728 1.0214     NA  215</span></span>
-<span><span class="co">#&gt; x1           0.5071 0.0143  0.4787 0.5075 0.5344 1.0000 1909</span></span>
-<span><span class="co">#&gt; x2           0.3082 0.0143  0.2800 0.3082 0.3366 1.0000 1958</span></span>
-<span><span class="co">#&gt; z1           0.0003 0.0028  0.0000 0.0000 0.0000 0.0235 1354</span></span>
-<span><span class="co">#&gt; z2          -0.0008 0.0047 -0.0134 0.0000 0.0000 0.0357  559</span></span>
-<span><span class="co">#&gt; sigma_v      0.2284 0.0164  0.1969 0.2282 0.2613     NA  301</span></span>
-<span><span class="co">#&gt; lambda       4.8959 0.6262  3.8481 4.8158 6.3528     NA  209</span></span>
+<span><span class="co">#&gt;                mean     sd    2.5% median  97.5%   PIP  ESS</span></span>
+<span><span class="co">#&gt; (Intercept)  0.9728 0.0262  0.9191 0.9734 1.0235    NA  216</span></span>
+<span><span class="co">#&gt; x1           0.5068 0.0142  0.4799 0.5067 0.5346 1.000 1883</span></span>
+<span><span class="co">#&gt; x2           0.3084 0.0142  0.2811 0.3084 0.3367 1.000 1979</span></span>
+<span><span class="co">#&gt; z1           0.0002 0.0026  0.0000 0.0000 0.0000 0.016 1201</span></span>
+<span><span class="co">#&gt; z2          -0.0010 0.0053 -0.0201 0.0000 0.0000 0.053  376</span></span>
+<span><span class="co">#&gt; sigma_v      0.2281 0.0159  0.1986 0.2275 0.2600    NA  318</span></span>
+<span><span class="co">#&gt; lambda       4.8773 0.6297  3.8691 4.8024 6.3269    NA  190</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior mean efficiency, per observation:</span></span>
 <span><span class="co">#&gt;   mean    min median    max </span></span>
-<span><span class="co">#&gt; 0.8288 0.3268 0.8578 0.9484</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.8283 0.3233 0.8573 0.9485</span></span></code></pre></div>
 <p>The zeros are literal, and they line up with the indicators
 exactly:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -266,10 +266,10 @@ exactly:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">beta</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; (Intercept)          x1          x2          z1          z2 </span></span>
-<span><span class="co">#&gt;       0.000       0.000       0.000       0.977       0.964</span></span>
+<span><span class="co">#&gt;       0.000       0.000       0.000       0.984       0.947</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">inclusion</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    x1    x2    z1    z2 </span></span>
-<span><span class="co">#&gt; 0.000 0.000 0.977 0.964</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.000 0.000 0.984 0.947</span></span></code></pre></div>
 <p>This is what <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> and <code><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted()</a></code> then work
 from: the coefficient a sweep built its frontier with, zero included, so
 the posterior mean of a coefficient is its effect averaged over the
@@ -288,7 +288,7 @@ squares value:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">ssvs</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">beta</span><span class="op">$</span><span class="va">coeffs</span><span class="op">)</span><span class="op">[</span>, <span class="st">"z1"</span><span class="op">]</span>,</span>
 <span>               <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.5</span>, <span class="fl">0.95</span><span class="op">)</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      5%     50%     95% </span></span>
-<span><span class="co">#&gt; -0.0026  0.0002  0.0104</span></span>
+<span><span class="co">#&gt; -0.0029  0.0002  0.0138</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">z1</span> <span class="op">+</span> <span class="va">z2</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"z1"</span><span class="op">]</span><span class="op">]</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.0134</span></span></code></pre></div>
 <p>This is model averaging rather than model choice. Nothing has been
@@ -333,10 +333,10 @@ multiple of the least squares standard error, which is the scale
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">10</span>, <span class="fl">1</span>, <span class="fl">0.1</span>, <span class="fl">0.01</span><span class="op">)</span>, <span class="va">run</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   prior_sd multiple_of_se switches pip_z1</span></span>
-<span><span class="co">#&gt; 1    0.100              6      376 0.1805</span></span>
-<span><span class="co">#&gt; 2    0.316             20       94 0.0555</span></span>
-<span><span class="co">#&gt; 3    1.000             64       27 0.0195</span></span>
-<span><span class="co">#&gt; 4    3.162            201       10 0.0030</span></span>
+<span><span class="co">#&gt; 1    0.100              6      320 0.1525</span></span>
+<span><span class="co">#&gt; 2    0.316             20      128 0.0790</span></span>
+<span><span class="co">#&gt; 3    1.000             64       29 0.0180</span></span>
+<span><span class="co">#&gt; 4    3.162            201        4 0.0025</span></span>
 <span><span class="co">#&gt; 5   10.000            636        2 0.0015</span></span></code></pre></div>
 <p>Past a couple of hundred times the standard error the indicator never
 changes state for the whole run. The posterior inclusion probability of
@@ -427,8 +427,8 @@ a regressor, and an indicator that needs no threshold to interpret.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>ssvs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">ssvs</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">inclusion</span><span class="op">$</span><span class="va">coeffs</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>,</span>
 <span>      bvs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">bvs</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">inclusion</span><span class="op">$</span><span class="va">coeffs</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      x1 x2    z1    z2</span></span>
-<span><span class="co">#&gt; ssvs  1  1 0.095 0.195</span></span>
-<span><span class="co">#&gt; bvs   1  1 0.024 0.036</span></span></code></pre></div>
+<span><span class="co">#&gt; ssvs  1  1 0.122 0.182</span></span>
+<span><span class="co">#&gt; bvs   1  1 0.016 0.053</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="choosing-the-candidates">Choosing the candidates<a class="anchor" aria-label="anchor" href="#choosing-the-candidates"></a>
@@ -470,7 +470,7 @@ frontiers the selection admits rather than conditioned on one:</p>
 <span>        ssvs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="../reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">ssvs</span><span class="op">)</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span>,</span>
 <span>        bvs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="../reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">bvs</span><span class="op">)</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   none   ssvs    bvs </span></span>
-<span><span class="co">#&gt; 0.8305 0.8274 0.8288</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.8313 0.8295 0.8283</span></span></code></pre></div>
 <p>The scores barely move, which is what to expect when the regressors
 being dropped were noise: they were contributing nothing to the
 frontier, so removing them takes nothing away from it. The gain is in
@@ -494,8 +494,8 @@ terms are untouched by it.</p>
 <span><span class="va">m4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="../reference/add_seed.html">add_seed</a></span><span class="op">(</span><span class="va">m4</span>, <span class="fl">1234</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">m4</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">inclusion</span><span class="op">$</span><span class="va">coeffs</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    x1    x2    z1 </span></span>
-<span><span class="co">#&gt; 1.000 1.000 0.088</span></span></code></pre></div>
+<span><span class="co">#&gt;   x1   x2   z1 </span></span>
+<span><span class="co">#&gt; 1.00 1.00 0.07</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="information-criteria">Information criteria<a class="anchor" aria-label="anchor" href="#information-criteria"></a>
@@ -512,7 +512,7 @@ compare a selected model with an unselected one on.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>none <span class="op">=</span> <span class="fu">crit</span><span class="op">(</span><span class="va">plain</span><span class="op">)</span><span class="op">$</span><span class="va">WAIC</span><span class="op">$</span><span class="va">mean</span>, ssvs <span class="op">=</span> <span class="fu">crit</span><span class="op">(</span><span class="va">ssvs</span><span class="op">)</span><span class="op">$</span><span class="va">WAIC</span><span class="op">$</span><span class="va">mean</span>,</span>
 <span>        bvs <span class="op">=</span> <span class="fu">crit</span><span class="op">(</span><span class="va">bvs</span><span class="op">)</span><span class="op">$</span><span class="va">WAIC</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   none   ssvs    bvs </span></span>
-<span><span class="co">#&gt; 180.52 178.86 178.33</span></span></code></pre></div>
+<span><span class="co">#&gt; 180.43 179.02 178.28</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
