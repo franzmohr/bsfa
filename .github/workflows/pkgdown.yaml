@@ -4,10 +4,15 @@
 # Deploying needs GitHub Pages switched on for the repository, serving from the
 # gh-pages branch. Until that is done the build still runs and simply has
 # nowhere to publish to.
+#
+# The site is built and published for releases only. main carries the
+# development version, so publishing from every push would leave the
+# documented package permanently ahead of the one anyone can install, and a
+# reader arriving at the site would find arguments that are not in the
+# release they have. workflow_dispatch stays as the manual escape hatch, for
+# republishing a site whose deployment failed rather than for previewing
+# unreleased work.
 on:
-  push:
-    branches: [main, master]
-  pull_request:
   release:
     types: [published]
   workflow_dispatch:
@@ -19,9 +24,11 @@ permissions: read-all
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-    # Only restrict concurrency for non-PR jobs
+    # One deployment at a time. The pull request case the upstream template
+    # guards against cannot arise here, since a pull request no longer
+    # triggers this workflow.
     concurrency:
-      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+      group: pkgdown
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     permissions:
@@ -48,7 +55,6 @@ jobs:
         shell: Rscript {0}
 
       - name: Deploy to GitHub pages
-        if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           clean: false
