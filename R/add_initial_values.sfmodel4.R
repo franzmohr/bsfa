@@ -48,6 +48,15 @@ add_initial_values.sfmodel4_hn <- function(object, method = "ols", ...) {
   attach_initial(object, initial_four(object, method, "halfnormal"))
 }
 
+#' @rdname add_initial_values.sfmodel4_exp
+#' @export
+add_initial_values.sfmodel4_tn <- function(object, method = "ols", ...) {
+  # As in the two-component model, the truncated normal starts where the
+  # half-normal does, the two being the same distribution at the zero
+  # pre-truncation mean the determinant coefficients start from.
+  attach_initial(object, initial_four(object, method, "halfnormal"))
+}
+
 #' Starting values for a four-component model
 #'
 #' @param object a model object with priors attached.

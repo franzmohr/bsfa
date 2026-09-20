@@ -20,8 +20,15 @@
 // variable selection (George, Sun and Ni, 2008) or under the Bayesian variable
 // selection of Korobilis (2013).
 
+// Each of the two one-sided terms may carry determinants of its scale and,
+// under the truncated normal family, of its pre-truncation mean. The
+// persistent term is one per unit and the transient one is one per
+// observation, so their determinants sit at different levels and are given
+// separately. Both are handled by the shared machinery in determinants.h.
+
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+#include "determinants.h"
 
 using namespace Rcpp;
 
@@ -156,7 +163,16 @@ static double rtnorm_pos4(const double mu, const double sd) {
 //' @param mu_init starting values of the unit effects.
 //' @param eta_init starting values of the persistent inefficiency terms.
 //' @param u_init starting values of the transient inefficiency terms.
-//' @param ineff 0 for half-normal, 1 for exponential inefficiency.
+//' @param Zs_eta,Zm_eta determinants of the scale and of the pre-truncation
+//'   mean of the persistent term, one row per unit; zero columns for none.
+//' @param Zs_u,Zm_u the same for the transient term, one row per observation.
+//' @param g0_eta,G0i_eta,d0_eta,D0i_eta prior mean and precision of the
+//'   persistent term's scale and mean determinant coefficients.
+//' @param g0_u,G0i_u,d0_u,D0i_u the same for the transient term.
+//' @param gamma_eta_init,delta_eta_init,gamma_u_init,delta_u_init starting
+//'   values of those coefficients.
+//' @param ineff 0 for half-normal, 1 for exponential, 2 for truncated normal
+//'   inefficiency.
 //' @param s -1 for a production frontier, 1 for a cost frontier.
 //' @param draws number of retained iterations before thinning.
 //' @param burnin number of discarded iterations.
@@ -192,6 +208,22 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
                      const arma::vec& mu_init,
                      const arma::vec& eta_init,
                      const arma::vec& u_init,
+                     const arma::mat& Zs_eta,
+                     const arma::mat& Zm_eta,
+                     const arma::mat& Zs_u,
+                     const arma::mat& Zm_u,
+                     const arma::vec& g0_eta,
+                     const arma::mat& G0i_eta,
+                     const arma::vec& d0_eta,
+                     const arma::mat& D0i_eta,
+                     const arma::vec& g0_u,
+                     const arma::mat& G0i_u,
+                     const arma::vec& d0_u,
+                     const arma::mat& D0i_u,
+                     const arma::vec& gamma_eta_init,
+                     const arma::vec& delta_eta_init,
+                     const arma::vec& gamma_u_init,
+                     const arma::vec& delta_u_init,
                      const int ineff,
                      const double s,
                      const int draws, const int burnin, const int thin,
@@ -230,13 +262,23 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
   arma::vec beta = beta_init;
   double sigma_v2 = sigma_v2_init;
   double sigma_mu2 = sigma_mu2_init;
-  double sigma_eta2 = par_eta_init * par_eta_init;  // half-normal scales
-  double sigma_u2 = par_u_init * par_u_init;
-  double lambda_eta = par_eta_init;                 // exponential rates
-  double lambda_u = par_u_init;
   arma::vec mu = mu_init;
   arma::vec eta = eta_init;
   arma::vec u = u_init;
+
+  // The two one-sided terms. They differ in how many there are of them and
+  // in the level their determinants sit at, and in nothing else.
+  const arma::uword n_u = static_cast<arma::uword>(n_units);
+  bsfa_oneside term_eta;
+  bsfa_oneside term_u;
+  term_eta.setup(ineff, Zs_eta, Zm_eta, g0_eta, G0i_eta, d0_eta, D0i_eta,
+                 gamma_eta_init, delta_eta_init,
+                 (ineff == 1) ? par_eta_init : par_eta_init * par_eta_init,
+                 a_eta, b_eta, n_u);
+  term_u.setup(ineff, Zs_u, Zm_u, g0_u, G0i_u, d0_u, D0i_u,
+               gamma_u_init, delta_u_init,
+               (ineff == 1) ? par_u_init : par_u_init * par_u_init,
+               a_u, b_u, n);
 
   arma::mat beta_store(k, n_keep, arma::fill::zeros);
   arma::vec sigma_v_store(n_keep, arma::fill::zeros);
@@ -247,6 +289,10 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
   arma::mat eta_store(n_keep_u > 0 ? n_units : 0, n_keep_u, arma::fill::zeros);
   arma::mat u_store(n_keep_u > 0 ? n : 0, n_keep_u, arma::fill::zeros);
   arma::mat inc_store(n_sel, n_keep, arma::fill::zeros);
+  arma::mat gamma_eta_store(term_eta.q_s(), n_keep, arma::fill::zeros);
+  arma::mat delta_eta_store(term_eta.q_m(), n_keep, arma::fill::zeros);
+  arma::mat gamma_u_store(term_u.q_s(), n_keep, arma::fill::zeros);
+  arma::mat delta_u_store(term_u.q_m(), n_keep, arma::fill::zeros);
 
   const int n_iter = burnin + draws;
   int store = 0;
@@ -264,11 +310,7 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
       const double r = y(i) - xb(i) - mu(g(i)) - s * eta(g(i));
       double prec = 1.0 / sigma_v2;
       double mean = s * r / sigma_v2;
-      if (ineff == 0) {
-        prec += 1.0 / sigma_u2;
-      } else {
-        mean -= lambda_u;
-      }
+      term_u.contribute(i, prec, mean);
       u(i) = rtnorm_pos4(mean / prec, std::sqrt(1.0 / prec));
     }
 
@@ -280,11 +322,7 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
     for (int j = 0; j < n_units; j++) {
       double prec = unit_size(j) / sigma_v2;
       double mean = s * unit_sum(j) / sigma_v2;
-      if (ineff == 0) {
-        prec += 1.0 / sigma_eta2;
-      } else {
-        mean -= lambda_eta;
-      }
+      term_eta.contribute(static_cast<arma::uword>(j), prec, mean);
       eta(j) = rtnorm_pos4(mean / prec, std::sqrt(1.0 / prec));
     }
 
@@ -348,18 +386,13 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
     sigma_mu2 = 1.0 / ::Rf_rgamma(a_mu + 0.5 * static_cast<double>(n_units),
                                   1.0 / (b_mu + 0.5 * arma::dot(mu, mu)));
 
-    if (ineff == 0) {
-      sigma_eta2 = 1.0 / ::Rf_rgamma(
-        a_eta + 0.5 * static_cast<double>(n_units),
-        1.0 / (b_eta + 0.5 * arma::dot(eta, eta)));
-      sigma_u2 = 1.0 / ::Rf_rgamma(a_u + 0.5 * static_cast<double>(n),
-                                   1.0 / (b_u + 0.5 * arma::dot(u, u)));
-    } else {
-      lambda_eta = ::Rf_rgamma(a_eta + static_cast<double>(n_units),
-                               1.0 / (b_eta + arma::accu(eta)));
-      lambda_u = ::Rf_rgamma(a_u + static_cast<double>(n),
-                             1.0 / (b_u + arma::accu(u)));
-    }
+    term_eta.draw_base(eta);
+    term_eta.draw_determinants(eta);
+    term_eta.adapt(iter, burnin);
+
+    term_u.draw_base(u);
+    term_u.draw_determinants(u);
+    term_u.adapt(iter, burnin);
 
     // --- Store ---------------------------------------------------------------
     // The draw kept is the last sweep of each thinning block, so that the
@@ -375,8 +408,20 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
       }
       sigma_v_store(store) = std::sqrt(sigma_v2);
       sigma_mu_store(store) = std::sqrt(sigma_mu2);
-      par_eta_store(store) = (ineff == 0) ? std::sqrt(sigma_eta2) : lambda_eta;
-      par_u_store(store) = (ineff == 0) ? std::sqrt(sigma_u2) : lambda_u;
+      par_eta_store(store) = term_eta.reported();
+      par_u_store(store) = term_u.reported();
+      if (term_eta.q_s() > 0) {
+        gamma_eta_store.col(store) = term_eta.mh_gamma.value;
+      }
+      if (term_eta.q_m() > 0) {
+        delta_eta_store.col(store) = term_eta.mh_delta.value;
+      }
+      if (term_u.q_s() > 0) {
+        gamma_u_store.col(store) = term_u.mh_gamma.value;
+      }
+      if (term_u.q_m() > 0) {
+        delta_u_store.col(store) = term_u.mh_delta.value;
+      }
       if (n_keep_u > 0 && ((store + 1) % u_thin == 0) && store_u < n_keep_u) {
         mu_store.col(store_u) = mu;
         eta_store.col(store_u) = eta;
@@ -394,6 +439,36 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
     }
   }
 
+  // Acceptance rates of every Metropolis block that was active, named so
+  // that a block which barely moves can be found without counting.
+  Rcpp::NumericVector acc;
+  Rcpp::CharacterVector acc_names;
+  if (term_eta.q_s() > 0) {
+    acc.push_back(term_eta.mh_gamma.acceptance());
+    acc_names.push_back("scale_eta");
+  }
+  if (term_eta.q_m() > 0) {
+    acc.push_back(term_eta.mh_delta.acceptance());
+    acc_names.push_back("mean_eta");
+  }
+  if (term_u.q_s() > 0) {
+    acc.push_back(term_u.mh_gamma.acceptance());
+    acc_names.push_back("scale_u");
+  }
+  if (term_u.q_m() > 0) {
+    acc.push_back(term_u.mh_delta.acceptance());
+    acc_names.push_back("mean_u");
+  }
+  if (ineff == 2) {
+    acc.push_back(term_eta.mh_scale.acceptance());
+    acc_names.push_back("par_eta");
+    acc.push_back(term_u.mh_scale.acceptance());
+    acc_names.push_back("par_u");
+  }
+  if (acc.size() > 0) {
+    acc.names() = acc_names;
+  }
+
   return Rcpp::List::create(
     Rcpp::Named("beta") = beta_store.t(),
     Rcpp::Named("sigma_v") = sigma_v_store,
@@ -404,5 +479,14 @@ Rcpp::List gibbs_sf4(const arma::vec& y,
     Rcpp::Named("eta") = n_keep_u > 0 ? Rcpp::wrap(eta_store.t()) : R_NilValue,
     Rcpp::Named("u") = n_keep_u > 0 ? Rcpp::wrap(u_store.t()) : R_NilValue,
     Rcpp::Named("inclusion") = n_sel > 0 ? Rcpp::wrap(inc_store.t()) :
-                                           R_NilValue);
+                                           R_NilValue,
+    Rcpp::Named("scale_eta") = term_eta.q_s() > 0 ?
+      Rcpp::wrap(gamma_eta_store.t()) : R_NilValue,
+    Rcpp::Named("mean_eta") = term_eta.q_m() > 0 ?
+      Rcpp::wrap(delta_eta_store.t()) : R_NilValue,
+    Rcpp::Named("scale_u") = term_u.q_s() > 0 ?
+      Rcpp::wrap(gamma_u_store.t()) : R_NilValue,
+    Rcpp::Named("mean_u") = term_u.q_m() > 0 ?
+      Rcpp::wrap(delta_u_store.t()) : R_NilValue,
+    Rcpp::Named("acceptance") = acc.size() > 0 ? Rcpp::wrap(acc) : R_NilValue);
 }

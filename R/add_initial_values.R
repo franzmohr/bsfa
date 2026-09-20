@@ -73,6 +73,15 @@ add_initial_values.sfmodel_exp <- function(object, method = "ols", ...) {
 
 #' @rdname add_initial_values
 #' @export
+add_initial_values.sfmodel_tn <- function(object, method = "ols", ...) {
+  # The truncated normal's scale takes the same starting value as the
+  # half-normal's: at a pre-truncation mean of zero, which is where the
+  # determinant coefficients start, the two distributions coincide.
+  add_initial_values.sfmodel_hn(object, method = method, ...)
+}
+
+#' @rdname add_initial_values
+#' @export
 add_initial_values.sfmodel_hn <- function(object, method = "ols", ...) {
 
   init <- initial_common(object, method)
@@ -156,6 +165,22 @@ initial_common <- function(object, method) {
 #'
 #' @keywords internal
 attach_initial <- function(object, init) {
+
+  # Determinant coefficients start at their prior mean, or at a draw from the
+  # prior under method = "prior". A start of zero, which is the default prior
+  # mean, is the model without determinants, so the Metropolis blocks begin
+  # where the conjugate part of the sampler is already in agreement with them.
+  d <- object$priors$determinants
+  if (!is.null(d)) {
+    init$determinants <- lapply(d, function(pr) {
+      if (identical(init$method, "prior")) {
+        U <- chol(pr$v_i)
+        as.numeric(pr$mu + backsolve(U, stats::rnorm(length(pr$mu))))
+      } else {
+        as.numeric(pr$mu)
+      }
+    })
+  }
 
   object$initial <- init
 

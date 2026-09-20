@@ -33,7 +33,18 @@
 #' @param par_u_init starting value of the inefficiency parameter, the scale
 #'   for \code{ineff = 0} and the rate for \code{ineff = 1}.
 #' @param u_init starting values of the inefficiency terms.
-#' @param ineff 0 for half-normal, 1 for exponential inefficiency.
+#' @param Zs matrix of determinants of the scale of the inefficiency term,
+#'   one row per unit; zero columns for none.
+#' @param Zm matrix of determinants of its pre-truncation mean, one row per
+#'   unit; zero columns for a family that has no such mean.
+#' @param g0 prior mean of the scale determinant coefficients.
+#' @param G0i prior precision of the scale determinant coefficients.
+#' @param d0 prior mean of the mean determinant coefficients.
+#' @param D0i prior precision of the mean determinant coefficients.
+#' @param gamma_init starting values of the scale determinant coefficients.
+#' @param delta_init starting values of the mean determinant coefficients.
+#' @param ineff 0 for half-normal, 1 for exponential, 2 for truncated normal
+#'   inefficiency.
 #' @param s -1 for a production frontier, 1 for a cost frontier.
 #' @param draws number of retained iterations before thinning.
 #' @param burnin number of discarded iterations.
@@ -45,8 +56,8 @@
 #' @return A named list of draw matrices.
 #'
 #' @keywords internal
-gibbs_sf <- function(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
-    .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
+gibbs_sf <- function(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, Zs, Zm, g0, G0i, d0, D0i, gamma_init, delta_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
+    .Call(`_bsfa_gibbs_sf`, y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_u, b_u, beta_init, sigma_v2_init, par_u_init, u_init, Zs, Zm, g0, G0i, d0, D0i, gamma_init, delta_init, ineff, s, draws, burnin, thin, u_thin, verbose)
 }
 
 #' Gibbs sampler for the four-component stochastic frontier model
@@ -90,7 +101,16 @@ gibbs_sf <- function(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior
 #' @param mu_init starting values of the unit effects.
 #' @param eta_init starting values of the persistent inefficiency terms.
 #' @param u_init starting values of the transient inefficiency terms.
-#' @param ineff 0 for half-normal, 1 for exponential inefficiency.
+#' @param Zs_eta,Zm_eta determinants of the scale and of the pre-truncation
+#'   mean of the persistent term, one row per unit; zero columns for none.
+#' @param Zs_u,Zm_u the same for the transient term, one row per observation.
+#' @param g0_eta,G0i_eta,d0_eta,D0i_eta prior mean and precision of the
+#'   persistent term's scale and mean determinant coefficients.
+#' @param g0_u,G0i_u,d0_u,D0i_u the same for the transient term.
+#' @param gamma_eta_init,delta_eta_init,gamma_u_init,delta_u_init starting
+#'   values of those coefficients.
+#' @param ineff 0 for half-normal, 1 for exponential, 2 for truncated normal
+#'   inefficiency.
 #' @param s -1 for a production frontier, 1 for a cost frontier.
 #' @param draws number of retained iterations before thinning.
 #' @param burnin number of discarded iterations.
@@ -102,7 +122,7 @@ gibbs_sf <- function(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior
 #' @return A named list of draw matrices.
 #'
 #' @keywords internal
-gibbs_sf4 <- function(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
-    .Call(`_bsfa_gibbs_sf4`, y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
+gibbs_sf4 <- function(y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, Zs_eta, Zm_eta, Zs_u, Zm_u, g0_eta, G0i_eta, d0_eta, D0i_eta, g0_u, G0i_u, d0_u, D0i_u, gamma_eta_init, delta_eta_init, gamma_u_init, delta_u_init, ineff, s, draws, burnin, thin, u_thin, verbose) {
+    .Call(`_bsfa_gibbs_sf4`, y, X, g, n_units, b0, B0i, ssvs_idx, tau0, tau1, prob_prior, varsel, a_v, b_v, a_mu, b_mu, a_eta, b_eta, a_u, b_u, beta_init, sigma_v2_init, sigma_mu2_init, par_eta_init, par_u_init, mu_init, eta_init, u_init, Zs_eta, Zm_eta, Zs_u, Zm_u, g0_eta, G0i_eta, d0_eta, D0i_eta, g0_u, G0i_u, d0_u, D0i_u, gamma_eta_init, delta_eta_init, gamma_u_init, delta_u_init, ineff, s, draws, burnin, thin, u_thin, verbose)
 }
 

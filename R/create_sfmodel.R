@@ -87,8 +87,24 @@
 #'   thinning.
 #' @param burnin number of discarded iterations.
 #' @param thin thinning interval. \code{iterations} must be a multiple of it.
+#' @param scale_u a one-sided formula naming determinants of the scale of the
+#'   inefficiency term, or \code{NULL}. The scale is multiplied by
+#'   \eqn{\exp(z'\gamma)}, so that \eqn{\gamma = 0} is the model without
+#'   determinants and the parameter the scale is measured against keeps the
+#'   prior \code{\link{add_priors}} gives it. The set carries no intercept,
+#'   since that parameter already plays the part of one. In a panel the
+#'   inefficiency term belongs to the unit, so its determinants have to be
+#'   constant within a unit.
+#' @param mean_u a one-sided formula naming determinants of the
+#'   pre-truncation mean of the inefficiency term, or \code{NULL}. Available
+#'   only for \code{create_sfmodel_tn}, whose one-sided term is a truncated
+#'   normal and therefore has such a mean; the half-normal and the exponential
+#'   are anchored at zero and refuse the argument. Defaults to \code{~ 1},
+#'   the constant mean of Stevenson (1980); with covariates it is the
+#'   specification of Battese and Coelli (1995).
 #'
-#' @return An object of class \code{"sfmodel_exp"} or \code{"sfmodel_hn"}, both
+#' @return An object of class \code{"sfmodel_exp"}, \code{"sfmodel_hn"} or
+#'   \code{"sfmodel_tn"}, all
 #'   inheriting from \code{"sfmodel"}. Rows with a missing value in the model
 #'   frame, or with an unknown unit, are dropped with a message and recorded in
 #'   the element \code{na.action}. An \code{\link[stats]{offset}} in the
@@ -111,6 +127,22 @@
 #' inefficiency in the Indonesian weaving industry. \emph{Journal of
 #' Development Economics}, 9(1), 43--64.
 #'
+#' Battese, G. E., & Coelli, T. J. (1995). A model for technical inefficiency
+#' effects in a stochastic frontier production function for panel data.
+#' \emph{Empirical Economics}, 20(2), 325--332.
+#'
+#' Caudill, S. B., Ford, J. M., & Gropper, D. M. (1995). Frontier estimation
+#' and firm-specific inefficiency measures in the presence of
+#' heteroscedasticity. \emph{Journal of Business & Economic Statistics},
+#' 13(1), 105--111.
+#'
+#' Stevenson, R. E. (1980). Likelihood functions for generalized stochastic
+#' frontier estimation. \emph{Journal of Econometrics}, 13(1), 57--66.
+#'
+#' Wang, H.-J. (2002). Heteroscedasticity and non-monotonic efficiency effects
+#' of a stochastic frontier model. \emph{Journal of Productivity Analysis},
+#' 18(3), 241--253.
+#'
 #' @examples
 #' set.seed(1234)
 #' d <- sim_sf(n = 200, beta = c(1, 0.5, 0.3), sigma_v = 0.2, par_u = 4)
@@ -127,13 +159,17 @@ create_sfmodel_exp <- function(formula,
                                varsel = NULL,
                                iterations = 20000,
                                burnin = 2000,
-                               thin = 1) {
+                               thin = 1,
+                               scale_u = NULL,
+                               mean_u = NULL) {
 
   object <- sfmodel_skeleton(formula = formula, data = data, id = id,
                              type = match.arg(type), varsel = varsel,
                              iterations = iterations,
                              burnin = burnin, thin = thin,
-                             ineff = "exponential", cl = match.call())
+                             ineff = "exponential",
+                             scale_u = scale_u, mean_u = mean_u,
+                             data_raw = data, cl = match.call())
   class(object) <- c("sfmodel_exp", "sfmodel")
   object
 }
@@ -147,14 +183,42 @@ create_sfmodel_hn <- function(formula,
                               varsel = NULL,
                               iterations = 20000,
                               burnin = 2000,
-                              thin = 1) {
+                              thin = 1,
+                              scale_u = NULL,
+                              mean_u = NULL) {
 
   object <- sfmodel_skeleton(formula = formula, data = data, id = id,
                              type = match.arg(type), varsel = varsel,
                              iterations = iterations,
                              burnin = burnin, thin = thin,
-                             ineff = "halfnormal", cl = match.call())
+                             ineff = "halfnormal",
+                             scale_u = scale_u, mean_u = mean_u,
+                             data_raw = data, cl = match.call())
   class(object) <- c("sfmodel_hn", "sfmodel")
+  object
+}
+
+#' @rdname create_sfmodel_exp
+#' @export
+create_sfmodel_tn <- function(formula,
+                              data,
+                              id = NULL,
+                              type = c("production", "cost"),
+                              varsel = NULL,
+                              iterations = 20000,
+                              burnin = 2000,
+                              thin = 1,
+                              scale_u = NULL,
+                              mean_u = NULL) {
+
+  object <- sfmodel_skeleton(formula = formula, data = data, id = id,
+                             type = match.arg(type), varsel = varsel,
+                             iterations = iterations,
+                             burnin = burnin, thin = thin,
+                             ineff = "truncnormal",
+                             scale_u = scale_u, mean_u = mean_u,
+                             data_raw = data, cl = match.call())
+  class(object) <- c("sfmodel_tn", "sfmodel")
   object
 }
 
@@ -174,7 +238,8 @@ create_sfmodel_hn <- function(formula,
 #'
 #' @keywords internal
 sfmodel_skeleton <- function(formula, data, id, type, varsel, iterations,
-                             burnin, thin, ineff, cl) {
+                             burnin, thin, ineff, scale_u, mean_u,
+                             data_raw, cl) {
 
   varsel <- check_varsel(varsel)
 
@@ -318,10 +383,24 @@ sfmodel_skeleton <- function(formula, data, id, type, varsel, iterations,
     panel <- TRUE
   }
 
+  n_units <- length(unique(g))
+
+  # The determinants are built last, against the rows the frontier kept, so
+  # that the two designs describe the same observations.
+  determinants <- build_determinants(
+    specs = list(scale_u = scale_u, mean_u = mean_u),
+    data = data_raw, keep = keep, g = g, n_units = n_units,
+    levels = determinant_levels(2L), ineff = ineff)
+
   list(data = list(y = y, X = X, offset = offs, g = g,
-                   n_units = length(unique(g)), unit_labels = unit_labels),
+                   n_units = n_units, unit_labels = unit_labels,
+                   # Which rows of 'data' survived, so that the four-component
+                   # skeleton can build its own determinants against the same
+                   # observations without repeating the work above.
+                   rows_kept = keep),
        model = list(ineff = ineff, type = type, panel = panel,
                     varsel = varsel,
+                    determinants = determinants,
                     components = 2L,
                     par_u_name = if (ineff == "exponential") "lambda" else
                       "sigma_u"),

@@ -3,11 +3,14 @@
 \name{add_initial_values.sfmodel4_exp}
 \alias{add_initial_values.sfmodel4_exp}
 \alias{add_initial_values.sfmodel4_hn}
+\alias{add_initial_values.sfmodel4_tn}
 \title{Add initial values to a four-component stochastic frontier model}
 \usage{
 \method{add_initial_values}{sfmodel4_exp}(object, method = "ols", ...)
 
 \method{add_initial_values}{sfmodel4_hn}(object, method = "ols", ...)
+
+\method{add_initial_values}{sfmodel4_tn}(object, method = "ols", ...)
 }
 \arguments{
 \item{object}{an object of class \code{"sfmodel4_exp"} or

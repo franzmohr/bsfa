@@ -14,6 +14,10 @@ sfmodel4_skeleton(
   burnin,
   thin,
   ineff,
+  scale_eta,
+  mean_eta,
+  scale_u,
+  mean_u,
   cl
 )
 }

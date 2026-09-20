@@ -116,6 +116,15 @@ add_posterior_coefficients.sfmodel_exp <- function(object,
 
 #' @rdname add_posterior_coefficients
 #' @export
+add_posterior_coefficients.sfmodel_tn <- function(object,
+                                                  posterior_function = NULL,
+                                                  keep_u = TRUE,
+                                                  verbose = FALSE, ...) {
+  posterior_coefficients_sf(object, posterior_function, keep_u, verbose)
+}
+
+#' @rdname add_posterior_coefficients
+#' @export
 add_posterior_coefficients.sfmodel_hn <- function(object,
                                                   posterior_function = NULL,
                                                   keep_u = TRUE,
@@ -161,6 +170,8 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
   warn_augmented_size(object$data$n_units, n_keep_u)
 
   sel <- varsel_args(object)
+  ds <- determinant_args(object, "scale_u")
+  dm <- determinant_args(object, "mean_u")
 
   out <- .with_model_seed(
     object$model$seed,
@@ -183,7 +194,15 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
              sigma_v2_init = object$initial$sigma_v2,
              par_u_init = object$initial$par_u,
              u_init = object$initial$u,
-             ineff = if (object$model$ineff == "halfnormal") 0L else 1L,
+             Zs = ds$Z,
+             Zm = dm$Z,
+             g0 = ds$mu,
+             G0i = ds$v_i,
+             d0 = dm$mu,
+             D0i = dm$v_i,
+             gamma_init = ds$init,
+             delta_init = dm$init,
+             ineff = ineff_code(object),
              s = if (object$model$type == "production") -1 else 1,
              draws = as.integer(object$iterations),
              burnin = as.integer(object$burnin),
@@ -205,12 +224,17 @@ posterior_coefficients_sf <- function(object, posterior_function, keep_u,
     coeffs = .mcmc_draws(object, par_u))
 
   posterior <- add_inclusion_draws(object, posterior, out$inclusion)
+  posterior <- add_determinant_draws(object, posterior, out)
 
   if (!is.null(out$u)) {
     colnames(out$u) <- object$data$unit_labels
     posterior$u <- list(coeffs = mcmc_augmented(object, out$u, u_thin))
   }
 
+  # The acceptance rates of the Metropolis blocks are a property of the run
+  # rather than of any parameter, so they sit beside the posterior and not
+  # inside it, where the code that walks the blocks would trip over them.
+  object$acceptance <- out$acceptance
   object$posterior <- posterior
   class(object) <- class_of_object
   object

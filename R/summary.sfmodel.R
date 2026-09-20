@@ -95,6 +95,11 @@ summary.sfmodel <- function(object, ci = 0.95, ...) {
                                k = object$k,
                                n_units = object$data$n_units,
                                varsel = varsel,
+                               determinants = lapply(
+                                 object$model$determinants,
+                                 function(z) if (is.null(z)) NULL else
+                                   z$names),
+                               acceptance = object$acceptance,
                                iterations = object$iterations,
                                burnin = object$burnin,
                                thin = object$thin,
@@ -125,6 +130,18 @@ print.summary.sfmodel <- function(x, digits = 4, ...) {
       "\nDraws:              ", spec$iterations, " after ", spec$burnin,
       " burn-in, thinning ", spec$thin, "\n", sep = "")
 
+  # The determinants are named beside the specification they belong to, so
+  # that a row called 'z1' in the table below says which term it is
+  # explaining rather than leaving that to be inferred from the formula.
+  det <- spec$determinants
+  det <- det[!vapply(det, is.null, logical(1))]
+  if (length(det) > 0) {
+    cat("Determinants:       ",
+        paste(paste0(names(det), ": ",
+                     vapply(det, paste, character(1), collapse = ", ")),
+              collapse = "\n                     "), "\n", sep = "")
+  }
+
   cat("\nPosterior summary, ", format(100 * spec$ci), "% credible bands:\n",
       sep = "")
   # Printed as a data frame so that the effective sample size, which is a count
@@ -133,6 +150,24 @@ print.summary.sfmodel <- function(x, digits = 4, ...) {
   tab <- as.data.frame(round(x$coefficients[, stat, drop = FALSE], digits))
   tab$ESS <- round(x$coefficients[, "ESS"])
   print(tab)
+
+  # A Metropolis block that rarely moves has an effective sample size near
+  # zero, and the table above would show that as a narrow band rather than as
+  # a chain that never went anywhere. The rate is reported so that the two
+  # cannot be confused.
+  if (!is.null(spec$acceptance)) {
+    cat("
+Metropolis acceptance: ",
+        paste(paste0(names(spec$acceptance), " ",
+                     format(round(spec$acceptance, 3))), collapse = ", "),
+        "
+", sep = "")
+    if (any(spec$acceptance < 0.05)) {
+      cat("  A rate this low means the block barely moved; read its draws ",
+          "with care.
+", sep = "")
+    }
+  }
 
   if (!is.null(x$efficiency)) {
     cat("\nPosterior mean ", if (four) "overall " else "",

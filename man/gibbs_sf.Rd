@@ -24,6 +24,14 @@ gibbs_sf(
   sigma_v2_init,
   par_u_init,
   u_init,
+  Zs,
+  Zm,
+  g0,
+  G0i,
+  d0,
+  D0i,
+  gamma_init,
+  delta_init,
   ineff,
   s,
   draws,
@@ -80,7 +88,26 @@ for \code{ineff = 0} and the rate for \code{ineff = 1}.}
 
 \item{u_init}{starting values of the inefficiency terms.}
 
-\item{ineff}{0 for half-normal, 1 for exponential inefficiency.}
+\item{Zs}{matrix of determinants of the scale of the inefficiency term,
+one row per unit; zero columns for none.}
+
+\item{Zm}{matrix of determinants of its pre-truncation mean, one row per
+unit; zero columns for a family that has no such mean.}
+
+\item{g0}{prior mean of the scale determinant coefficients.}
+
+\item{G0i}{prior precision of the scale determinant coefficients.}
+
+\item{d0}{prior mean of the mean determinant coefficients.}
+
+\item{D0i}{prior precision of the mean determinant coefficients.}
+
+\item{gamma_init}{starting values of the scale determinant coefficients.}
+
+\item{delta_init}{starting values of the mean determinant coefficients.}
+
+\item{ineff}{0 for half-normal, 1 for exponential, 2 for truncated normal
+inefficiency.}
 
 \item{s}{-1 for a production frontier, 1 for a cost frontier.}
 

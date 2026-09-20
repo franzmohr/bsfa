@@ -49,8 +49,16 @@
 #' combination itself, and therefore the fitted frontier, is reliable either
 #' way.
 #'
-#' Both one-sided terms follow the same family, half-normal or exponential,
-#' with separate parameters.
+#' Both one-sided terms follow the same family, half-normal, exponential or
+#' truncated normal, with separate parameters.
+#'
+#' Either term may carry determinants. The persistent term is one per unit,
+#' so \code{scale_eta} and \code{mean_eta} have to be properties of the
+#' unit; the transient term is one per observation, so \code{scale_u} and
+#' \code{mean_u} may vary within one. That is the same division of labour
+#' the two terms themselves embody, and it is what lets a business model
+#' index explain short-run inefficiency while its variability over time
+#' explains the long-run part.
 #'
 #' @param formula a model formula describing the frontier.
 #' @param data a data frame containing the variables in \code{formula}.
@@ -65,6 +73,17 @@
 #'   thinning.
 #' @param burnin number of discarded iterations.
 #' @param thin thinning interval. \code{iterations} must be a multiple of it.
+#' @param scale_eta,scale_u one-sided formulas naming determinants of the
+#'   scale of the persistent and of the transient inefficiency term, or
+#'   \code{NULL}. The scale is multiplied by \eqn{\exp(z'\gamma)}, so a
+#'   coefficient of zero is the model without determinants. The persistent
+#'   term is one per unit, so \code{scale_eta} has to be constant within a
+#'   unit; the transient term is one per observation, so \code{scale_u} need
+#'   not be. Neither set carries an intercept.
+#' @param mean_eta,mean_u one-sided formulas naming determinants of the
+#'   pre-truncation mean of the two terms, or \code{NULL}. Available only for
+#'   \code{create_sfmodel4_tn}; the other two families are anchored at zero
+#'   and refuse them. Each defaults to \code{~ 1}, a constant mean.
 #'
 #' @return An object of class \code{"sfmodel4_exp"} or \code{"sfmodel4_hn"},
 #'   both inheriting from \code{"sfmodel4"} and \code{"sfmodel"}.
@@ -102,13 +121,21 @@ create_sfmodel4_exp <- function(formula,
                                 varsel = NULL,
                                 iterations = 20000,
                                 burnin = 2000,
-                                thin = 1) {
+                                thin = 1,
+                                scale_eta = NULL,
+                                mean_eta = NULL,
+                                scale_u = NULL,
+                                mean_u = NULL) {
 
   object <- sfmodel4_skeleton(formula = formula, data = data, id = id,
                               type = match.arg(type), varsel = varsel,
                               iterations = iterations,
                               burnin = burnin, thin = thin,
-                              ineff = "exponential", cl = match.call())
+                              ineff = "exponential",
+                              scale_eta = scale_eta,
+                              mean_eta = mean_eta,
+                              scale_u = scale_u, mean_u = mean_u,
+                              cl = match.call())
   class(object) <- c("sfmodel4_exp", "sfmodel4", "sfmodel")
   object
 }
@@ -122,14 +149,50 @@ create_sfmodel4_hn <- function(formula,
                                varsel = NULL,
                                iterations = 20000,
                                burnin = 2000,
-                               thin = 1) {
+                               thin = 1,
+                               scale_eta = NULL,
+                               mean_eta = NULL,
+                               scale_u = NULL,
+                               mean_u = NULL) {
 
   object <- sfmodel4_skeleton(formula = formula, data = data, id = id,
                               type = match.arg(type), varsel = varsel,
                               iterations = iterations,
                               burnin = burnin, thin = thin,
-                              ineff = "halfnormal", cl = match.call())
+                              ineff = "halfnormal",
+                              scale_eta = scale_eta,
+                              mean_eta = mean_eta,
+                              scale_u = scale_u, mean_u = mean_u,
+                              cl = match.call())
   class(object) <- c("sfmodel4_hn", "sfmodel4", "sfmodel")
+  object
+}
+
+#' @rdname create_sfmodel4_exp
+#' @export
+create_sfmodel4_tn <- function(formula,
+                               data,
+                               id,
+                               type = c("production", "cost"),
+                               varsel = NULL,
+                               iterations = 20000,
+                               burnin = 2000,
+                               thin = 1,
+                               scale_eta = NULL,
+                               mean_eta = NULL,
+                               scale_u = NULL,
+                               mean_u = NULL) {
+
+  object <- sfmodel4_skeleton(formula = formula, data = data, id = id,
+                              type = match.arg(type), varsel = varsel,
+                              iterations = iterations,
+                              burnin = burnin, thin = thin,
+                              ineff = "truncnormal",
+                              scale_eta = scale_eta,
+                              mean_eta = mean_eta,
+                              scale_u = scale_u, mean_u = mean_u,
+                              cl = match.call())
+  class(object) <- c("sfmodel4_tn", "sfmodel4", "sfmodel")
   object
 }
 
@@ -148,7 +211,8 @@ create_sfmodel4_hn <- function(formula,
 #'
 #' @keywords internal
 sfmodel4_skeleton <- function(formula, data, id, type, varsel, iterations,
-                              burnin, thin, ineff, cl) {
+                              burnin, thin, ineff, scale_eta, mean_eta,
+                              scale_u, mean_u, cl) {
 
   if (missing(id) || is.null(id)) {
     stop("The four-component model needs an 'id': without repeated ",
@@ -159,7 +223,11 @@ sfmodel4_skeleton <- function(formula, data, id, type, varsel, iterations,
                              type = type, varsel = varsel,
                              iterations = iterations,
                              burnin = burnin, thin = thin, ineff = ineff,
-                             cl = cl)
+                             # The determinants of a four-component model sit
+                             # at two levels and are built below, once the
+                             # units are known to be usable.
+                             scale_u = NULL, mean_u = NULL,
+                             data_raw = data, cl = cl)
 
   sizes <- tabulate(object$data$g, nbins = object$data$n_units)
   if (min(sizes) < 2) {
@@ -174,6 +242,13 @@ sfmodel4_skeleton <- function(formula, data, id, type, varsel, iterations,
            paste0(" (", length(object$na.action),
                   " rows were dropped for missing values first)"), ".")
   }
+
+  object$model$determinants <- build_determinants(
+    specs = list(scale_eta = scale_eta, mean_eta = mean_eta,
+                 scale_u = scale_u, mean_u = mean_u),
+    data = data, keep = object$data$rows_kept, g = object$data$g,
+    n_units = object$data$n_units, levels = determinant_levels(4L),
+    ineff = ineff)
 
   object$model$components <- 4L
   object$model$par_eta_name <- if (ineff == "exponential") "lambda_eta" else

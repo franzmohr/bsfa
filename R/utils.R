@@ -79,12 +79,16 @@ drop_stale_posterior <- function(object) {
 #'
 #' @keywords internal
 sf_scalar_blocks <- function(object) {
-  if (identical(object$model$components, 4L)) {
+  base <- if (identical(object$model$components, 4L)) {
     c("sigma_v", "sigma_mu", object$model$par_eta_name,
       object$model$par_u_name)
   } else {
     c("sigma_v", object$model$par_u_name)
   }
+  # The determinant coefficients are parameters of the same posterior and are
+  # reported beside the rest. They are not scalars, but every caller of this
+  # treats a block as a set of columns, so nothing else has to change.
+  c(base, determinant_blocks(object))
 }
 
 #' Summarise a matrix of efficiency draws

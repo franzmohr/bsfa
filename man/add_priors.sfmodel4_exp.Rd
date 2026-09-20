@@ -3,6 +3,7 @@
 \name{add_priors.sfmodel4_exp}
 \alias{add_priors.sfmodel4_exp}
 \alias{add_priors.sfmodel4_hn}
+\alias{add_priors.sfmodel4_tn}
 \title{Add priors to a four-component stochastic frontier model}
 \usage{
 \method{add_priors}{sfmodel4_exp}(
@@ -13,6 +14,8 @@
   lambda_eta = list(r_star = 0.9, shape = 1),
   lambda_u = list(r_star = 0.9, shape = 1),
   varsel = NULL,
+  scale_eta = NULL,
+  scale_u = NULL,
   ...
 )
 
@@ -24,6 +27,23 @@
   sigma_eta = list(r_star = 0.9, shape = 2.5),
   sigma_u = list(r_star = 0.9, shape = 2.5),
   varsel = NULL,
+  scale_eta = NULL,
+  scale_u = NULL,
+  ...
+)
+
+\method{add_priors}{sfmodel4_tn}(
+  object,
+  coef = list(mu = 0, v_i = 0.01),
+  sigma = list(shape = 0.01, rate = 0.01),
+  sigma_mu = list(shape = 0.01, rate = 0.01),
+  sigma_eta = list(r_star = 0.9, shape = 2.5),
+  sigma_u = list(r_star = 0.9, shape = 2.5),
+  varsel = NULL,
+  scale_eta = NULL,
+  mean_eta = NULL,
+  scale_u = NULL,
+  mean_u = NULL,
   ...
 )
 }
@@ -52,6 +72,11 @@ selection algorithm. Required if the model was created with a
 \code{varsel} algorithm, and not allowed otherwise. It takes the same
 elements as in \code{\link{add_priors}} for the two-component models, and
 applies to the frontier coefficients only.}
+
+\item{scale_eta, mean_eta, scale_u, mean_u}{named lists giving the normal
+prior on the determinant coefficients of the persistent and the
+transient term, taking the same elements as in \code{\link{add_priors}}.
+The \code{mean_} arguments exist only for the truncated normal family.}
 
 \item{...}{unused, for compatibility with the generic.}
 

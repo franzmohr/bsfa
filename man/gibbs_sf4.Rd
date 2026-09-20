@@ -32,6 +32,22 @@ gibbs_sf4(
   mu_init,
   eta_init,
   u_init,
+  Zs_eta,
+  Zm_eta,
+  Zs_u,
+  Zm_u,
+  g0_eta,
+  G0i_eta,
+  d0_eta,
+  D0i_eta,
+  g0_u,
+  G0i_u,
+  d0_u,
+  D0i_u,
+  gamma_eta_init,
+  delta_eta_init,
+  gamma_u_init,
+  delta_u_init,
   ineff,
   s,
   draws,
@@ -104,7 +120,21 @@ parameter.}
 
 \item{u_init}{starting values of the transient inefficiency terms.}
 
-\item{ineff}{0 for half-normal, 1 for exponential inefficiency.}
+\item{Zs_eta, Zm_eta}{determinants of the scale and of the pre-truncation
+mean of the persistent term, one row per unit; zero columns for none.}
+
+\item{Zs_u, Zm_u}{the same for the transient term, one row per observation.}
+
+\item{g0_eta, G0i_eta, d0_eta, D0i_eta}{prior mean and precision of the
+persistent term's scale and mean determinant coefficients.}
+
+\item{g0_u, G0i_u, d0_u, D0i_u}{the same for the transient term.}
+
+\item{gamma_eta_init, delta_eta_init, gamma_u_init, delta_u_init}{starting
+values of those coefficients.}
+
+\item{ineff}{0 for half-normal, 1 for exponential, 2 for truncated normal
+inefficiency.}
 
 \item{s}{-1 for a production frontier, 1 for a cost frontier.}
 

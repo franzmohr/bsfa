@@ -114,6 +114,15 @@
 #' @param varsel a named list of prior specifications for the variable
 #'   selection algorithm. Required if the model was created with a
 #'   \code{varsel} algorithm, and not allowed otherwise. See details.
+#' @param scale_u,mean_u named lists giving the normal prior on the
+#'   coefficients of the determinants of the inefficiency term's scale and,
+#'   for the truncated normal family, of its pre-truncation mean. Each takes
+#'   \code{mu}, one number or one per determinant, and \code{v_i}, a
+#'   precision given as one number, one per determinant or a full matrix.
+#'   The default is a mean of zero and a precision of 0.01. The prior has to
+#'   be proper: the coefficients act through an exponential, so a flat prior
+#'   leaves the scale of the inefficiency term unbounded. Allowed only for a
+#'   model created with the corresponding determinants.
 #' @param ... unused, for compatibility with the generic.
 #'
 #' @return The model object with the element \code{priors} attached. With
@@ -168,6 +177,7 @@ add_priors.sfmodel_exp <- function(object,
                                    sigma = list(shape = 0.01, rate = 0.01),
                                    lambda = list(r_star = 0.75, shape = 1),
                                    varsel = NULL,
+                                   scale_u = NULL,
                                    ...) {
 
   lambda <- merge_prior_list(lambda, list(r_star = 0.75, shape = 1), "lambda")
@@ -175,7 +185,9 @@ add_priors.sfmodel_exp <- function(object,
 
   object$priors <- c(prior_coef_sigma(object, coef, sigma, varsel),
                      list(shape_u = el$shape, rate_u = el$rate,
-                          r_star = lambda$r_star))
+                          r_star = lambda$r_star),
+                     prior_determinant_list(object,
+                                            list(scale_u = scale_u)))
   drop_stale_posterior(object)
 }
 
@@ -186,6 +198,7 @@ add_priors.sfmodel_hn <- function(object,
                                   sigma = list(shape = 0.01, rate = 0.01),
                                   sigma_u = list(r_star = 0.75, shape = 2.5),
                                   varsel = NULL,
+                                  scale_u = NULL,
                                   ...) {
 
   sigma_u <- merge_prior_list(sigma_u, list(r_star = 0.75, shape = 2.5),
@@ -194,7 +207,33 @@ add_priors.sfmodel_hn <- function(object,
 
   object$priors <- c(prior_coef_sigma(object, coef, sigma, varsel),
                      list(shape_u = el$shape, rate_u = el$rate,
-                          r_star = sigma_u$r_star))
+                          r_star = sigma_u$r_star),
+                     prior_determinant_list(object,
+                                            list(scale_u = scale_u)))
+  drop_stale_posterior(object)
+}
+
+#' @rdname add_priors
+#' @export
+add_priors.sfmodel_tn <- function(object,
+                                  coef = list(mu = 0, v_i = 0.01),
+                                  sigma = list(shape = 0.01, rate = 0.01),
+                                  sigma_u = list(r_star = 0.75, shape = 2.5),
+                                  varsel = NULL,
+                                  scale_u = NULL,
+                                  mean_u = NULL,
+                                  ...) {
+
+  sigma_u <- merge_prior_list(sigma_u, list(r_star = 0.75, shape = 2.5),
+                              "sigma_u")
+  el <- elicit_hn(sigma_u, "sigma_u")
+
+  object$priors <- c(prior_coef_sigma(object, coef, sigma, varsel),
+                     list(shape_u = el$shape, rate_u = el$rate,
+                          r_star = sigma_u$r_star),
+                     prior_determinant_list(object,
+                                            list(scale_u = scale_u,
+                                                 mean_u = mean_u)))
   drop_stale_posterior(object)
 }
 

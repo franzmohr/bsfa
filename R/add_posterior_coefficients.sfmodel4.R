@@ -73,6 +73,15 @@ add_posterior_coefficients.sfmodel4_hn <- function(object,
   posterior_coefficients_sf4(object, posterior_function, keep_u, verbose)
 }
 
+#' @rdname add_posterior_coefficients.sfmodel4_exp
+#' @export
+add_posterior_coefficients.sfmodel4_tn <- function(object,
+                                                   posterior_function = NULL,
+                                                   keep_u = TRUE,
+                                                   verbose = FALSE, ...) {
+  posterior_coefficients_sf4(object, posterior_function, keep_u, verbose)
+}
+
 #' Run the four-component sampler for a prepared model object
 #'
 #' @param object a model object with priors attached.
@@ -110,6 +119,10 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
   warn_augmented_size(2 * object$data$n_units + object$n, n_keep_u)
 
   sel <- varsel_args(object)
+  d_se <- determinant_args(object, "scale_eta")
+  d_me <- determinant_args(object, "mean_eta")
+  d_su <- determinant_args(object, "scale_u")
+  d_mu <- determinant_args(object, "mean_u")
 
   out <- .with_model_seed(
     object$model$seed,
@@ -140,7 +153,23 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
               mu_init = object$initial$mu,
               eta_init = object$initial$eta,
               u_init = object$initial$u,
-              ineff = if (object$model$ineff == "halfnormal") 0L else 1L,
+              Zs_eta = d_se$Z,
+              Zm_eta = d_me$Z,
+              Zs_u = d_su$Z,
+              Zm_u = d_mu$Z,
+              g0_eta = d_se$mu,
+              G0i_eta = d_se$v_i,
+              d0_eta = d_me$mu,
+              D0i_eta = d_me$v_i,
+              g0_u = d_su$mu,
+              G0i_u = d_su$v_i,
+              d0_u = d_mu$mu,
+              D0i_u = d_mu$v_i,
+              gamma_eta_init = d_se$init,
+              delta_eta_init = d_me$init,
+              gamma_u_init = d_su$init,
+              delta_u_init = d_mu$init,
+              ineff = ineff_code(object),
               s = if (object$model$type == "production") -1 else 1,
               draws = as.integer(object$iterations),
               burnin = as.integer(object$burnin),
@@ -168,6 +197,7 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
     coeffs = .mcmc_draws(object, named(out$par_u, object$model$par_u_name)))
 
   posterior <- add_inclusion_draws(object, posterior, out$inclusion)
+  posterior <- add_determinant_draws(object, posterior, out)
 
   if (!is.null(out$u)) {
     colnames(out$mu) <- object$data$unit_labels
@@ -178,6 +208,7 @@ posterior_coefficients_sf4 <- function(object, posterior_function, keep_u,
     posterior$u <- list(coeffs = mcmc_augmented(object, out$u, u_thin))
   }
 
+  object$acceptance <- out$acceptance
   object$posterior <- posterior
   class(object) <- class_of_object
   object

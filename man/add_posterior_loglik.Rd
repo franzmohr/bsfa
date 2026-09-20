@@ -4,6 +4,7 @@
 \name{add_posterior_loglik.sfmodel4}
 \alias{add_posterior_loglik.sfmodel4}
 \alias{add_posterior_loglik}
+\alias{add_posterior_loglik.sfmodel_tn}
 \alias{add_posterior_loglik.sfmodel_exp}
 \alias{add_posterior_loglik.sfmodel_hn}
 \title{Add log-likelihood}
@@ -11,6 +12,8 @@
 \method{add_posterior_loglik}{sfmodel4}(object, ...)
 
 add_posterior_loglik(object, ...)
+
+\method{add_posterior_loglik}{sfmodel_tn}(object, ...)
 
 \method{add_posterior_loglik}{sfmodel_exp}(object, ...)
 

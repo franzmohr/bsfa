@@ -4,7 +4,17 @@
 \alias{prior_four}
 \title{Assemble the prior blocks of a four-component model}
 \usage{
-prior_four(object, coef, sigma, sigma_mu, eta, u, r_star, varsel = NULL)
+prior_four(
+  object,
+  coef,
+  sigma,
+  sigma_mu,
+  eta,
+  u,
+  r_star,
+  varsel = NULL,
+  determinants = list()
+)
 }
 \arguments{
 \item{object}{a model object.}
@@ -22,6 +32,9 @@ prior_four(object, coef, sigma, sigma_mu, eta, u, r_star, varsel = NULL)
 \item{r_star}{the two prior median efficiencies, named.}
 
 \item{varsel}{the variable selection specification, or \code{NULL}.}
+
+\item{determinants}{a named list of the determinant prior specifications
+the calling method offers.}
 }
 \value{
 The model object with \code{priors} attached.

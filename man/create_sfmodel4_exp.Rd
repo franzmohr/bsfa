@@ -3,6 +3,7 @@
 \name{create_sfmodel4_exp}
 \alias{create_sfmodel4_exp}
 \alias{create_sfmodel4_hn}
+\alias{create_sfmodel4_tn}
 \title{Specify a four-component stochastic frontier model}
 \usage{
 create_sfmodel4_exp(
@@ -13,7 +14,11 @@ create_sfmodel4_exp(
   varsel = NULL,
   iterations = 20000,
   burnin = 2000,
-  thin = 1
+  thin = 1,
+  scale_eta = NULL,
+  mean_eta = NULL,
+  scale_u = NULL,
+  mean_u = NULL
 )
 
 create_sfmodel4_hn(
@@ -24,7 +29,26 @@ create_sfmodel4_hn(
   varsel = NULL,
   iterations = 20000,
   burnin = 2000,
-  thin = 1
+  thin = 1,
+  scale_eta = NULL,
+  mean_eta = NULL,
+  scale_u = NULL,
+  mean_u = NULL
+)
+
+create_sfmodel4_tn(
+  formula,
+  data,
+  id,
+  type = c("production", "cost"),
+  varsel = NULL,
+  iterations = 20000,
+  burnin = 2000,
+  thin = 1,
+  scale_eta = NULL,
+  mean_eta = NULL,
+  scale_u = NULL,
+  mean_u = NULL
 )
 }
 \arguments{
@@ -48,6 +72,19 @@ thinning.}
 \item{burnin}{number of discarded iterations.}
 
 \item{thin}{thinning interval. \code{iterations} must be a multiple of it.}
+
+\item{scale_eta, scale_u}{one-sided formulas naming determinants of the
+scale of the persistent and of the transient inefficiency term, or
+\code{NULL}. The scale is multiplied by \eqn{\exp(z'\gamma)}, so a
+coefficient of zero is the model without determinants. The persistent
+term is one per unit, so \code{scale_eta} has to be constant within a
+unit; the transient term is one per observation, so \code{scale_u} need
+not be. Neither set carries an intercept.}
+
+\item{mean_eta, mean_u}{one-sided formulas naming determinants of the
+pre-truncation mean of the two terms, or \code{NULL}. Available only for
+\code{create_sfmodel4_tn}; the other two families are anchored at zero
+and refuse them. Each defaults to \code{~ 1}, a constant mean.}
 }
 \value{
 An object of class \code{"sfmodel4_exp"} or \code{"sfmodel4_hn"},
@@ -104,8 +141,16 @@ worth a prior sensitivity check before reading much into the split. The
 combination itself, and therefore the fitted frontier, is reliable either
 way.
 
-Both one-sided terms follow the same family, half-normal or exponential,
-with separate parameters.
+Both one-sided terms follow the same family, half-normal, exponential or
+truncated normal, with separate parameters.
+
+Either term may carry determinants. The persistent term is one per unit,
+so \code{scale_eta} and \code{mean_eta} have to be properties of the
+unit; the transient term is one per observation, so \code{scale_u} and
+\code{mean_u} may vary within one. That is the same division of labour
+the two terms themselves embody, and it is what lets a business model
+index explain short-run inefficiency while its variability over time
+explains the long-run part.
 }
 \examples{
 set.seed(1234)

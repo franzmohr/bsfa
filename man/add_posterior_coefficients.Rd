@@ -3,12 +3,21 @@
 \name{add_posterior_coefficients}
 \alias{add_posterior_coefficients}
 \alias{add_posterior_coefficients.sfmodel_exp}
+\alias{add_posterior_coefficients.sfmodel_tn}
 \alias{add_posterior_coefficients.sfmodel_hn}
 \title{Posterior simulation of stochastic frontier coefficients}
 \usage{
 add_posterior_coefficients(object, ...)
 
 \method{add_posterior_coefficients}{sfmodel_exp}(
+  object,
+  posterior_function = NULL,
+  keep_u = TRUE,
+  verbose = FALSE,
+  ...
+)
+
+\method{add_posterior_coefficients}{sfmodel_tn}(
   object,
   posterior_function = NULL,
   keep_u = TRUE,

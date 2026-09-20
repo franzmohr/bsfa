@@ -1,5 +1,50 @@
 # bsfa (development version)
 
+## Determinants of inefficiency
+
+* Every model constructor gains `scale_u`, a one-sided formula naming
+  covariates that the scale of the inefficiency term depends on. The scale is
+  multiplied by `exp(z'gamma)`, so a coefficient of zero is the model without
+  determinants and the parameter the scale is measured against keeps the
+  prior `add_priors()` gives it. The set carries no intercept, since that
+  parameter already plays the part of one. This is the heteroskedastic
+  specification of Caudill, Ford and Gropper (1995), and it is what the
+  applied four-component literature uses to let covariates explain
+  inefficiency.
+* `create_sfmodel4_exp()` and `create_sfmodel4_hn()` take `scale_eta` in
+  addition, for the persistent term. The two sets sit at different levels:
+  the persistent term is one per unit, so its determinants have to be
+  constant within a unit and are refused with a message naming the offending
+  variable if they are not, while the transient term's may vary within one.
+* A new inefficiency family, the truncated normal, in
+  `create_sfmodel_tn()` and `create_sfmodel4_tn()`. Its one-sided term is
+  `N+(z'delta, sigma^2)`, whose pre-truncation mean the argument `mean_u`,
+  and `mean_eta` in the four-component model, gives determinants. With the
+  default `~ 1` this is the constant mean of Stevenson (1980); with
+  covariates it is Battese and Coelli (1995); together with `scale_u` it is
+  Wang (2002). The half-normal and the exponential are anchored at zero and
+  refuse `mean_u` rather than ignoring it.
+* `add_priors()` gains the matching arguments. A determinant coefficient
+  takes a normal prior, defaulting to mean zero and precision 0.01, and the
+  prior has to be proper: the coefficient acts through an exponential, so a
+  flat prior leaves the scale of the inefficiency term unbounded.
+* The draws are added to the posterior as the blocks `scale_u`, `mean_u`,
+  `scale_eta` and `mean_eta`, and `summary()` reports them beside the
+  frontier coefficients and names which term each set explains.
+* Neither the scale nor the mean coefficients have a conjugate full
+  conditional, so each is drawn by an adaptive random walk Metropolis step
+  inside the Gibbs sweep, as is the baseline scale of a truncated normal,
+  whose normalising constant carries it. The proposal is tuned during
+  burn-in towards an acceptance rate of 0.234 and then fixed, so the
+  retained draws come from a kernel with the right invariant distribution.
+  The acceptance rates are returned on the model as `acceptance` and printed
+  by `summary()`, with a warning where a block barely moved.
+* The pointwise log-likelihood, and with it `selection_criteria()`, is
+  refused for a model carrying determinants and for the truncated normal
+  family: the closed form the one-sided term is integrated out with assumes
+  a single scale and a half-normal shape. The refusal explains itself rather
+  than returning a number that is not the log-likelihood of the model.
+
 ## Variable selection
 
 * `create_sfmodel_exp()`, `create_sfmodel_hn()`, `create_sfmodel4_exp()` and

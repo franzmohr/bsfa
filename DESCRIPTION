@@ -10,11 +10,16 @@ Authors@R: person(given = c("Franz", "X."),
 Description: Bayesian inference for stochastic frontier models by Markov chain
     Monte Carlo. Gibbs samplers with data augmentation are provided for
     composed-error frontier models in the tradition of van den Broeck, Koop,
-    Osiewalski and Steel (1994), covering exponential and half-normal
-    inefficiency, production and cost frontiers, and cross-sectional,
-    time-invariant panel and four-component panel specifications. A model is
-    built up step by step, by creating a model object and then adding priors,
-    initial values and a seed to it before the posterior is drawn. Posterior
+    Osiewalski and Steel (1994), covering exponential, half-normal and
+    truncated normal inefficiency, production and cost frontiers, and
+    cross-sectional, time-invariant panel and four-component panel
+    specifications. The scale of an inefficiency term may depend on
+    covariates, as in Caudill, Ford and Gropper (1995), and the
+    pre-truncation mean of a truncated normal one may too, as in Battese and
+    Coelli (1995); those coefficients have no conjugate full conditional and
+    are drawn by Metropolis steps within the sweep. A model is built up step
+    by step, by creating a model object and then adding priors, initial
+    values and a seed to it before the posterior is drawn. Posterior
     distributions of unit-specific efficiency scores are obtained directly
     from the augmented draws rather than from point predictors.
 License: GPL (>= 2)

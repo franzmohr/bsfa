@@ -3,12 +3,15 @@
 \name{add_initial_values}
 \alias{add_initial_values}
 \alias{add_initial_values.sfmodel_exp}
+\alias{add_initial_values.sfmodel_tn}
 \alias{add_initial_values.sfmodel_hn}
 \title{Add initial values to a stochastic frontier model}
 \usage{
 add_initial_values(object, ...)
 
 \method{add_initial_values}{sfmodel_exp}(object, method = "ols", ...)
+
+\method{add_initial_values}{sfmodel_tn}(object, method = "ols", ...)
 
 \method{add_initial_values}{sfmodel_hn}(object, method = "ols", ...)
 }

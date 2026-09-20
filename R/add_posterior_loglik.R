@@ -55,6 +55,18 @@ add_posterior_loglik <- function(object, ...) {
 
 #' @rdname add_posterior_loglik
 #' @export
+add_posterior_loglik.sfmodel_tn <- function(object, ...) {
+  stop("The pointwise log-likelihood is not available for the truncated ",
+       "normal family. Integrating the one-sided term out of a composed ",
+       "error whose two halves are a normal and a truncated normal gives a ",
+       "closed skew normal rather than the skew normal the half-normal ",
+       "yields, and this package does not implement it. Use ",
+       "create_sfmodel_hn() or create_sfmodel_exp() if the criteria in ",
+       "?selection_criteria are what the model is for.")
+}
+
+#' @rdname add_posterior_loglik
+#' @export
 add_posterior_loglik.sfmodel_exp <- function(object, ...) {
   loglik_over_draws(object)
 }
@@ -73,6 +85,19 @@ add_posterior_loglik.sfmodel_hn <- function(object, ...) {
 #'
 #' @keywords internal
 loglik_over_draws <- function(object) {
+
+  # A determinant makes the scale of the one-sided term vary across
+  # observations. The closed form below is written for one scale shared by
+  # all of them, so rather than return a number that looks like a
+  # log-likelihood and is not one, the case is refused.
+  if (length(determinant_blocks(object)) > 0) {
+    stop("The pointwise log-likelihood is not available for a model whose ",
+         "inefficiency term carries determinants: its scale differs from ",
+         "one observation to the next, and the closed form this package ",
+         "integrates the term out with assumes a single scale. Drop the ",
+         "determinants, or compare models on the efficiency scores instead.")
+  }
+
 
   check_posterior_blocks(object, c("beta", sf_scalar_blocks(object)))
 

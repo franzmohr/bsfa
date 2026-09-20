@@ -3,6 +3,7 @@
 \name{add_posterior_coefficients.sfmodel4_exp}
 \alias{add_posterior_coefficients.sfmodel4_exp}
 \alias{add_posterior_coefficients.sfmodel4_hn}
+\alias{add_posterior_coefficients.sfmodel4_tn}
 \title{Posterior simulation of four-component frontier coefficients}
 \usage{
 \method{add_posterior_coefficients}{sfmodel4_exp}(
@@ -14,6 +15,14 @@
 )
 
 \method{add_posterior_coefficients}{sfmodel4_hn}(
+  object,
+  posterior_function = NULL,
+  keep_u = TRUE,
+  verbose = FALSE,
+  ...
+)
+
+\method{add_posterior_coefficients}{sfmodel4_tn}(
   object,
   posterior_function = NULL,
   keep_u = TRUE,

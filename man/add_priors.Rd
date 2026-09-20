@@ -4,6 +4,7 @@
 \alias{add_priors}
 \alias{add_priors.sfmodel_exp}
 \alias{add_priors.sfmodel_hn}
+\alias{add_priors.sfmodel_tn}
 \title{Add priors to a stochastic frontier model}
 \usage{
 add_priors(object, ...)
@@ -14,6 +15,7 @@ add_priors(object, ...)
   sigma = list(shape = 0.01, rate = 0.01),
   lambda = list(r_star = 0.75, shape = 1),
   varsel = NULL,
+  scale_u = NULL,
   ...
 )
 
@@ -23,6 +25,18 @@ add_priors(object, ...)
   sigma = list(shape = 0.01, rate = 0.01),
   sigma_u = list(r_star = 0.75, shape = 2.5),
   varsel = NULL,
+  scale_u = NULL,
+  ...
+)
+
+\method{add_priors}{sfmodel_tn}(
+  object,
+  coef = list(mu = 0, v_i = 0.01),
+  sigma = list(shape = 0.01, rate = 0.01),
+  sigma_u = list(r_star = 0.75, shape = 2.5),
+  varsel = NULL,
+  scale_u = NULL,
+  mean_u = NULL,
   ...
 )
 }
@@ -48,6 +62,16 @@ prior median efficiency, and \code{shape}.}
 \item{varsel}{a named list of prior specifications for the variable
 selection algorithm. Required if the model was created with a
 \code{varsel} algorithm, and not allowed otherwise. See details.}
+
+\item{scale_u, mean_u}{named lists giving the normal prior on the
+coefficients of the determinants of the inefficiency term's scale and,
+for the truncated normal family, of its pre-truncation mean. Each takes
+\code{mu}, one number or one per determinant, and \code{v_i}, a
+precision given as one number, one per determinant or a full matrix.
+The default is a mean of zero and a precision of 0.01. The prior has to
+be proper: the coefficients act through an exponential, so a flat prior
+leaves the scale of the inefficiency term unbounded. Allowed only for a
+model created with the corresponding determinants.}
 
 \item{sigma_u}{a named list of prior specifications for the scale of the
 half-normal inefficiency distribution, with elements \code{r_star} and

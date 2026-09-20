@@ -1,0 +1,296 @@
+---
+title: "Determinants of inefficiency"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Determinants of inefficiency}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library("bsfa")
+```
+
+A frontier model without determinants answers how inefficient each unit is.
+It does not answer why, and a ranking on its own rarely tells anyone what to
+change. Determinants close that gap by letting covariates enter the
+distribution of the inefficiency term itself, so that the posterior says not
+only that a unit is far from the frontier but what it is about the unit that
+puts it there.
+
+There are two places a covariate can enter, and they say different things.
+
+# Where the covariates go
+
+## The scale
+
+The first is the scale. Write the inefficiency term's scale parameter as the
+baseline times a factor,
+
+$$\sigma_{u,i}^2 = \sigma_u^2 \exp(z_i' \gamma),$$
+
+for a half-normal or truncated normal term, and the same factor on the mean
+of an exponential one. A positive $\gamma$ means the term is more spread out
+where the determinant is large, and since the term is one-sided, more spread
+out means larger on average: the distribution stays anchored at zero and
+stretches away from it. This is the heteroskedastic specification of Caudill,
+Ford and Gropper (1995), and it is what the applied four-component literature
+reaches for.
+
+The factor multiplies the baseline rather than replacing it, which has two
+consequences worth knowing. A coefficient of zero returns the model without
+determinants exactly, so nothing is given up by allowing them. And the
+baseline keeps the meaning it has in that model, so the `r_star` elicitation
+of `add_priors()` still anchors the prior median efficiency of a unit whose
+determinants are all zero. That is why the set carries no intercept: the
+baseline already is one, and a column of ones beside it would be the same
+quantity written twice.
+
+## The pre-truncation mean
+
+The second is the mean, and only the truncated normal family has one. A
+half-normal or exponential term is pinned at zero, and the only thing a
+covariate can do to it is change how far it spreads. A truncated normal,
+
+$$u_i \sim N^+(z_i' \delta, \sigma_u^2),$$
+
+is a normal distribution before truncation whose centre can be moved, so a
+covariate can shift the whole distribution rather than only stretch it. With
+nothing but an intercept this is Stevenson (1980); with covariates it is
+Battese and Coelli (1995); with `scale_u` as well it is Wang (2002), where a
+covariate can change the mean and the spread in opposite directions and the
+effect on efficiency need not be monotone.
+
+Which to use is a modelling question and not a technical one. The scale is
+the more conservative choice, since it cannot make the distribution
+anything other than one-sided at zero. The mean is the more direct one, since
+$\delta$ reads as the effect of the covariate on inefficiency in the units of
+the response.
+
+# A scale determinant
+
+Simulated data where inefficiency is more variable, and so larger on average,
+when `z1` is large:
+
+```{r}
+set.seed(1234)
+
+n <- 500
+z1 <- rnorm(n)
+x1 <- rnorm(n)
+x2 <- rnorm(n)
+
+u <- abs(rnorm(n, mean = 0, sd = 0.3 * sqrt(exp(0.8 * z1))))
+y <- 1 + 0.5 * x1 + 0.3 * x2 - u + rnorm(n, sd = 0.2)
+
+d <- data.frame(y, x1, x2, z1)
+```
+
+The determinants are a one-sided formula, given to the constructor, exactly
+as a variable selection algorithm is:
+
+```{r}
+het <- create_sfmodel_hn(y ~ x1 + x2,
+                         data = d,
+                         scale_u = ~ z1,
+                         iterations = 4000,
+                         burnin = 2000)
+
+het <- add_priors(het)
+
+het <- add_posterior_coefficients(add_seed(het, 1234))
+
+summary(het)
+```
+
+The row named `z1` is $\gamma$, and the summary says which term it explains.
+Its band excludes zero, which is the statement that the determinant matters;
+`sigma_u` is what the scale would be at `z1 = 0`.
+
+Read the size of $\gamma$ on the log scale it lives on. A coefficient of 0.8
+means the variance of the inefficiency term is $e^{0.8} \approx 2.2$ times
+larger for a unit one standard deviation above the mean of `z1`, and its
+standard deviation $e^{0.4} \approx 1.5$ times larger. It does not mean
+efficiency falls by 0.8 of anything.
+
+## The acceptance rate
+
+The summary prints something the other models do not have. Neither $\gamma$
+nor $\delta$ has a conjugate full conditional, so they are not drawn in the
+way the rest of the sampler draws its blocks; each is updated by a random
+walk Metropolis step inside the sweep. The proposal is tuned during burn-in
+towards an acceptance rate of 0.234 and then left alone, so the retained
+draws come from a kernel with the right invariant distribution.
+
+The rate is reported because a block that rarely moves produces draws that
+look like a tight posterior and are nothing of the sort. A rate near the
+target and an effective sample size in the hundreds mean the block is
+working; a rate near zero means the chain sat still, and the band on that row
+should not be believed. Give the run a longer burn-in if that happens, so
+that the adaptation has more to work with.
+
+# A mean determinant
+
+The same covariate, now shifting the centre of a truncated normal:
+
+```{r}
+set.seed(4321)
+
+m_u <- 0.2 + 0.45 * z1
+ut <- numeric(n)
+for (i in seq_len(n)) {
+  repeat {
+    v <- rnorm(1, mean = m_u[i], sd = 0.25)
+    if (v > 0) {
+      ut[i] <- v
+      break
+    }
+  }
+}
+
+y2 <- 1 + 0.5 * x1 + 0.3 * x2 - ut + rnorm(n, sd = 0.2)
+d2 <- data.frame(y = y2, x1, x2, z1)
+```
+
+```{r}
+bc <- create_sfmodel_tn(y ~ x1 + x2,
+                        data = d2,
+                        mean_u = ~ z1,
+                        iterations = 4000,
+                        burnin = 2000)
+
+bc <- add_priors(bc)
+
+bc <- add_posterior_coefficients(add_seed(bc, 4321))
+
+summary(bc)
+```
+
+Two rows are now named `(Intercept)`: one in the frontier and one in
+`mean_u`. The second is the pre-truncation mean where `z1` is zero, and it is
+the parameter that makes the truncated normal more than a half-normal. The
+`z1` row beside it is the effect of the covariate on that mean, in the units
+of the response.
+
+The frontier intercept is the coefficient to read with most care here. It is
+identified only jointly with the mean of the inefficiency term, since both
+shift the fitted line by a constant, and its effective sample size will
+usually be the smallest in the table for that reason.
+
+# Two terms, two sets
+
+In the four-component model each one-sided term takes its own set, and they
+sit at different levels. The persistent term is one per unit, so a
+determinant of it has to be a property of the unit; the transient term is one
+per observation, so a determinant of it may vary within one.
+
+```{r}
+set.seed(11)
+
+n_units <- 80
+n_time <- 6
+id <- rep(seq_len(n_units), each = n_time)
+
+ze <- rep(rnorm(n_units), each = n_time)    # unit level
+zu <- rnorm(n_units * n_time)               # varies within a unit
+xp <- rnorm(n_units * n_time)
+
+mu_i <- rep(rnorm(n_units, sd = 0.3), each = n_time)
+eta_i <- rep(abs(rnorm(n_units, sd = 0.25)), each = n_time) * sqrt(exp(0.9 * ze))
+u_it <- abs(rnorm(n_units * n_time, sd = 0.2 * sqrt(exp(0.6 * zu))))
+
+yp <- 1 + 0.5 * xp + mu_i - eta_i - u_it + rnorm(n_units * n_time, sd = 0.15)
+dp <- data.frame(y = yp, x1 = xp, ze, zu, id)
+```
+
+```{r}
+four <- create_sfmodel4_hn(y ~ x1,
+                           data = dp,
+                           id = "id",
+                           scale_eta = ~ ze,
+                           scale_u = ~ zu,
+                           iterations = 4000,
+                           burnin = 2000)
+
+four <- add_posterior_coefficients(add_seed(add_priors(four), 11))
+
+summary(four)
+```
+
+Giving a within-unit variable to the persistent term is refused rather than
+averaged behind your back, because the two are different models and only you
+know which was meant:
+
+```{r, error = TRUE}
+create_sfmodel4_hn(y ~ x1, data = dp, id = "id", scale_eta = ~ zu)
+```
+
+This division is the point of the four-component model carried into the
+determinants. A business model index measured every quarter belongs on the
+transient term; its variability over the whole sample, one number per unit,
+belongs on the persistent one. That pairing is what Badunenko, Kumbhakar and
+Lozano-Vivas (2021) use to separate a bank's short-run adjustments from its
+long-run strategy.
+
+Note how much wider the band on `ze` is than the band on `zu`. That is the
+identification problem the four-component model already has, reappearing
+where you would expect it: the persistent inefficiency term is told apart
+from the unit effect only by its sign restriction, so a covariate explaining
+it is estimated from whatever the data have left to say once that split is
+made. The transient term is identified within a unit and its determinant is
+correspondingly sharper. `prior_sensitivity()` is worth running before
+reading much into a persistent-side coefficient.
+
+# What determinants cost
+
+The pointwise log-likelihood is not available for a model carrying
+determinants, and with it `selection_criteria()` is not either:
+
+```{r, error = TRUE}
+add_posterior_loglik(het)
+```
+
+The closed form that integrates the one-sided term out of the composed error
+assumes one scale shared by every observation, and with determinants there is
+a different scale at each. The same applies to the truncated normal whatever
+its determinants, whose composed error is a closed skew normal rather than
+the skew normal the half-normal gives. Rather than return a number that looks
+like a log-likelihood and is not one, the case is refused.
+
+Everything built on the augmented draws is unaffected. `efficiency()`,
+`plot()` and `prior_sensitivity()` work as they do for any other model, since
+they read the inefficiency terms the sampler produced rather than a
+distribution assumed for them:
+
+```{r}
+head(efficiency(het), 3)
+```
+
+# References
+
+Badunenko, O., Kumbhakar, S. C., & Lozano-Vivas, A. (2021). Achieving a
+sustainable cost-efficient business model in banking: The case of European
+commercial banks. *European Journal of Operational Research*, 293(2),
+773--785.
+
+Battese, G. E., & Coelli, T. J. (1995). A model for technical inefficiency
+effects in a stochastic frontier production function for panel data.
+*Empirical Economics*, 20(2), 325--332.
+
+Caudill, S. B., Ford, J. M., & Gropper, D. M. (1995). Frontier estimation and
+firm-specific inefficiency measures in the presence of heteroscedasticity.
+*Journal of Business & Economic Statistics*, 13(1), 105--111.
+
+Roberts, G. O., & Rosenthal, J. S. (2009). Examples of adaptive MCMC.
+*Journal of Computational and Graphical Statistics*, 18(2), 349--367.
+
+Stevenson, R. E. (1980). Likelihood functions for generalized stochastic
+frontier estimation. *Journal of Econometrics*, 13(1), 57--66.
+
+Wang, H.-J. (2002). Heteroscedasticity and non-monotonic efficiency effects
+of a stochastic frontier model. *Journal of Productivity Analysis*, 18(3),
+241--253.

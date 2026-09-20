@@ -28,8 +28,14 @@
 // excluded regressor leaves the likelihood outright and its coefficient falls
 // back on the prior it was given. The prior is a plain normal throughout.
 
+// The scale of the inefficiency term may depend on covariates, and under the
+// truncated normal family its pre-truncation mean may too. Both are handled
+// in determinants.h, which also carries the Metropolis blocks the two of them
+// need; see there for the parameterisation and for why the blocks exist.
+
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
+#include "determinants.h"
 
 using namespace Rcpp;
 
@@ -160,7 +166,18 @@ static double rtnorm_pos(const double mu, const double sd) {
 //' @param par_u_init starting value of the inefficiency parameter, the scale
 //'   for \code{ineff = 0} and the rate for \code{ineff = 1}.
 //' @param u_init starting values of the inefficiency terms.
-//' @param ineff 0 for half-normal, 1 for exponential inefficiency.
+//' @param Zs matrix of determinants of the scale of the inefficiency term,
+//'   one row per unit; zero columns for none.
+//' @param Zm matrix of determinants of its pre-truncation mean, one row per
+//'   unit; zero columns for a family that has no such mean.
+//' @param g0 prior mean of the scale determinant coefficients.
+//' @param G0i prior precision of the scale determinant coefficients.
+//' @param d0 prior mean of the mean determinant coefficients.
+//' @param D0i prior precision of the mean determinant coefficients.
+//' @param gamma_init starting values of the scale determinant coefficients.
+//' @param delta_init starting values of the mean determinant coefficients.
+//' @param ineff 0 for half-normal, 1 for exponential, 2 for truncated normal
+//'   inefficiency.
 //' @param s -1 for a production frontier, 1 for a cost frontier.
 //' @param draws number of retained iterations before thinning.
 //' @param burnin number of discarded iterations.
@@ -190,6 +207,14 @@ Rcpp::List gibbs_sf(const arma::vec& y,
                     const double sigma_v2_init,
                     const double par_u_init,
                     const arma::vec& u_init,
+                    const arma::mat& Zs,
+                    const arma::mat& Zm,
+                    const arma::vec& g0,
+                    const arma::mat& G0i,
+                    const arma::vec& d0,
+                    const arma::mat& D0i,
+                    const arma::vec& gamma_init,
+                    const arma::vec& delta_init,
                     const int ineff,
                     const double s,
                     const int draws, const int burnin, const int thin,
@@ -229,9 +254,20 @@ Rcpp::List gibbs_sf(const arma::vec& y,
   // Starting values, supplied by add_initial_values().
   arma::vec beta = beta_init;
   double sigma_v2 = sigma_v2_init;
-  double sigma_u2 = par_u_init * par_u_init;  // half-normal scale
-  double lambda = par_u_init;                 // exponential rate
   arma::vec u = u_init;
+
+  // Determinants of the scale and, for the truncated normal, of the
+  // pre-truncation mean. Either matrix may have no columns, in which case the
+  // corresponding multiplier is one and shift zero and no Metropolis block is
+  // ever touched.
+  const arma::uword q_s = Zs.n_cols;
+  const arma::uword q_m = Zm.n_cols;
+  const arma::uword n_u = static_cast<arma::uword>(n_units);
+
+  bsfa_oneside term;
+  term.setup(ineff, Zs, Zm, g0, G0i, d0, D0i, gamma_init, delta_init,
+             (ineff == 1) ? par_u_init : par_u_init * par_u_init,
+             a_u, b_u, n_u);
 
   // Storage.
   arma::mat beta_store(k, n_keep, arma::fill::zeros);
@@ -239,6 +275,8 @@ Rcpp::List gibbs_sf(const arma::vec& y,
   arma::vec par_u_store(n_keep, arma::fill::zeros);
   arma::mat u_store(n_keep_u > 0 ? n_units : 0, n_keep_u, arma::fill::zeros);
   arma::mat inc_store(n_sel, n_keep, arma::fill::zeros);
+  arma::mat gamma_store(q_s, n_keep, arma::fill::zeros);
+  arma::mat delta_store(q_m, n_keep, arma::fill::zeros);
 
   const int n_iter = burnin + draws;
   int store = 0;
@@ -254,13 +292,10 @@ Rcpp::List gibbs_sf(const arma::vec& y,
     }
 
     for (int j = 0; j < n_units; j++) {
+      const arma::uword jj = static_cast<arma::uword>(j);
       double prec = unit_size(j) / sigma_v2;
       double mean = s * unit_sum(j) / sigma_v2;
-      if (ineff == 0) {           // half-normal prior on u
-        prec += 1.0 / sigma_u2;
-      } else {                    // exponential prior on u
-        mean -= lambda;
-      }
+      term.contribute(jj, prec, mean);
       u(j) = rtnorm_pos(mean / prec, std::sqrt(1.0 / prec));
     }
 
@@ -314,14 +349,14 @@ Rcpp::List gibbs_sf(const arma::vec& y,
     sigma_v2 = 1.0 / ::Rf_rgamma(a_v + 0.5 * static_cast<double>(n),
                                  1.0 / (b_v + 0.5 * arma::dot(eps, eps)));
 
-    // --- Inefficiency hyperparameter ---------------------------------------
-    if (ineff == 0) {
-      sigma_u2 = 1.0 / ::Rf_rgamma(a_u + 0.5 * static_cast<double>(n_units),
-                                   1.0 / (b_u + 0.5 * arma::dot(u, u)));
-    } else {
-      lambda = ::Rf_rgamma(a_u + static_cast<double>(n_units),
-                           1.0 / (b_u + arma::accu(u)));
-    }
+    // --- Inefficiency hyperparameter and its determinants ------------------
+    // The baseline scale is the value the distribution's scale takes where
+    // every determinant is zero, and is drawn from the sufficient statistic
+    // of the terms once each has been divided by its own multiplier. The
+    // determinant coefficients follow, by Metropolis; see determinants.h.
+    term.draw_base(u);
+    term.draw_determinants(u);
+    term.adapt(iter, burnin);
 
     // --- Store --------------------------------------------------------------
     // The draw kept is the last sweep of each thinning block, so that the
@@ -337,7 +372,13 @@ Rcpp::List gibbs_sf(const arma::vec& y,
         inc_store.col(store) = inc;
       }
       sigma_v_store(store) = std::sqrt(sigma_v2);
-      par_u_store(store) = (ineff == 0) ? std::sqrt(sigma_u2) : lambda;
+      par_u_store(store) = term.reported();
+      if (q_s > 0) {
+        gamma_store.col(store) = term.mh_gamma.value;
+      }
+      if (q_m > 0) {
+        delta_store.col(store) = term.mh_delta.value;
+      }
       if (n_keep_u > 0 && ((store + 1) % u_thin == 0) && store_u < n_keep_u) {
         u_store.col(store_u) = u;
         store_u++;
@@ -353,11 +394,36 @@ Rcpp::List gibbs_sf(const arma::vec& y,
     }
   }
 
+  // The acceptance rates of the Metropolis blocks are reported alongside the
+  // draws rather than kept to the sampler. A determinant coefficient whose
+  // block almost never moves has an effective sample size near zero, and the
+  // acceptance rate says so before the draws are read as a posterior.
+  Rcpp::NumericVector acc;
+  Rcpp::CharacterVector acc_names;
+  if (q_s > 0) {
+    acc.push_back(term.mh_gamma.acceptance());
+    acc_names.push_back("scale_u");
+  }
+  if (q_m > 0) {
+    acc.push_back(term.mh_delta.acceptance());
+    acc_names.push_back("mean_u");
+  }
+  if (ineff == 2) {
+    acc.push_back(term.mh_scale.acceptance());
+    acc_names.push_back("par_u");
+  }
+  if (acc.size() > 0) {
+    acc.names() = acc_names;
+  }
+
   return Rcpp::List::create(
     Rcpp::Named("beta") = beta_store.t(),
     Rcpp::Named("sigma_v") = sigma_v_store,
     Rcpp::Named("par_u") = par_u_store,
     Rcpp::Named("u") = n_keep_u > 0 ? Rcpp::wrap(u_store.t()) : R_NilValue,
     Rcpp::Named("inclusion") = n_sel > 0 ? Rcpp::wrap(inc_store.t()) :
-                                           R_NilValue);
+                                           R_NilValue,
+    Rcpp::Named("scale_u") = q_s > 0 ? Rcpp::wrap(gamma_store.t()) : R_NilValue,
+    Rcpp::Named("mean_u") = q_m > 0 ? Rcpp::wrap(delta_store.t()) : R_NilValue,
+    Rcpp::Named("acceptance") = acc.size() > 0 ? Rcpp::wrap(acc) : R_NilValue);
 }

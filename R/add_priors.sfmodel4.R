@@ -41,6 +41,10 @@
 #'   \code{varsel} algorithm, and not allowed otherwise. It takes the same
 #'   elements as in \code{\link{add_priors}} for the two-component models, and
 #'   applies to the frontier coefficients only.
+#' @param scale_eta,mean_eta,scale_u,mean_u named lists giving the normal
+#'   prior on the determinant coefficients of the persistent and the
+#'   transient term, taking the same elements as in \code{\link{add_priors}}.
+#'   The \code{mean_} arguments exist only for the truncated normal family.
 #' @param ... unused, for compatibility with the generic.
 #'
 #' @return The model object with the element \code{priors} attached.
@@ -71,6 +75,8 @@ add_priors.sfmodel4_exp <- function(object,
                                     lambda_eta = list(r_star = 0.9, shape = 1),
                                     lambda_u = list(r_star = 0.9, shape = 1),
                                     varsel = NULL,
+                                    scale_eta = NULL,
+                                    scale_u = NULL,
                                     ...) {
 
   defaults <- list(r_star = 0.9, shape = 1)
@@ -79,7 +85,8 @@ add_priors.sfmodel4_exp <- function(object,
 
   prior_four(object, coef, sigma, sigma_mu,
              elicit_exp(eta, "lambda_eta"), elicit_exp(u, "lambda_u"),
-             c(persistent = eta$r_star, transient = u$r_star), varsel)
+             c(persistent = eta$r_star, transient = u$r_star), varsel,
+             list(scale_eta = scale_eta, scale_u = scale_u))
 }
 
 #' @rdname add_priors.sfmodel4_exp
@@ -92,6 +99,8 @@ add_priors.sfmodel4_hn <- function(object,
                                                     shape = 2.5),
                                    sigma_u = list(r_star = 0.9, shape = 2.5),
                                    varsel = NULL,
+                                   scale_eta = NULL,
+                                   scale_u = NULL,
                                    ...) {
 
   defaults <- list(r_star = 0.9, shape = 2.5)
@@ -100,7 +109,35 @@ add_priors.sfmodel4_hn <- function(object,
 
   prior_four(object, coef, sigma, sigma_mu,
              elicit_hn(eta, "sigma_eta"), elicit_hn(u, "sigma_u"),
-             c(persistent = eta$r_star, transient = u$r_star), varsel)
+             c(persistent = eta$r_star, transient = u$r_star), varsel,
+             list(scale_eta = scale_eta, scale_u = scale_u))
+}
+
+#' @rdname add_priors.sfmodel4_exp
+#' @export
+add_priors.sfmodel4_tn <- function(object,
+                                   coef = list(mu = 0, v_i = 0.01),
+                                   sigma = list(shape = 0.01, rate = 0.01),
+                                   sigma_mu = list(shape = 0.01, rate = 0.01),
+                                   sigma_eta = list(r_star = 0.9,
+                                                    shape = 2.5),
+                                   sigma_u = list(r_star = 0.9, shape = 2.5),
+                                   varsel = NULL,
+                                   scale_eta = NULL,
+                                   mean_eta = NULL,
+                                   scale_u = NULL,
+                                   mean_u = NULL,
+                                   ...) {
+
+  defaults <- list(r_star = 0.9, shape = 2.5)
+  eta <- merge_prior_list(sigma_eta, defaults, "sigma_eta")
+  u <- merge_prior_list(sigma_u, defaults, "sigma_u")
+
+  prior_four(object, coef, sigma, sigma_mu,
+             elicit_hn(eta, "sigma_eta"), elicit_hn(u, "sigma_u"),
+             c(persistent = eta$r_star, transient = u$r_star), varsel,
+             list(scale_eta = scale_eta, mean_eta = mean_eta,
+                  scale_u = scale_u, mean_u = mean_u))
 }
 
 #' Assemble the prior blocks of a four-component model
@@ -113,12 +150,14 @@ add_priors.sfmodel4_hn <- function(object,
 #' @param u the elicited prior on the transient inefficiency parameter.
 #' @param r_star the two prior median efficiencies, named.
 #' @param varsel the variable selection specification, or \code{NULL}.
+#' @param determinants a named list of the determinant prior specifications
+#'   the calling method offers.
 #'
 #' @return The model object with \code{priors} attached.
 #'
 #' @keywords internal
 prior_four <- function(object, coef, sigma, sigma_mu, eta, u, r_star,
-                       varsel = NULL) {
+                       varsel = NULL, determinants = list()) {
 
   sigma_mu <- merge_prior_list(sigma_mu, list(shape = 0.01, rate = 0.01),
                                "sigma_mu")
@@ -139,6 +178,7 @@ prior_four <- function(object, coef, sigma, sigma_mu, eta, u, r_star,
                           rate_eta = eta$rate,
                           shape_u = u$shape,
                           rate_u = u$rate,
-                          r_star = r_star))
+                          r_star = r_star),
+                     prior_determinant_list(object, determinants))
   drop_stale_posterior(object)
 }
