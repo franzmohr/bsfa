@@ -1,0 +1,3 @@
+# The image only needs DESCRIPTION; the sources are piped in at run time.
+*
+!DESCRIPTION

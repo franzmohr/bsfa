@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# Refuses a push whose code has not passed the GitHub check suite locally.
+# Enabled by: git config core.hooksPath tools/hooks
+#
+set -euo pipefail
+
+if [ "${BSFA_SKIP_LOCAL_CHECK:-}" = "1" ]; then
+  echo "pre-push: local Docker check skipped because BSFA_SKIP_LOCAL_CHECK=1" >&2
+  exit 0
+fi
+
+repo=$(git rev-parse --show-toplevel)
+
+echo "pre-push: running the GitHub checks in Docker before pushing" >&2
+echo "pre-push: set BSFA_SKIP_LOCAL_CHECK=1 to skip them for one push" >&2
+
+"$repo/tools/check-local.sh"
