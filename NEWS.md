@@ -1,4 +1,4 @@
-# bsfa (development version)
+# bsfa 0.3.0
 
 ## Determinants of inefficiency
 

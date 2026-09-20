@@ -15,8 +15,8 @@ abstract: >-
   integrated out, posterior distributions of unit-specific efficiency scores
   are obtained directly from the augmented draws rather than from point
   predictors.
-version: 0.2.0
-date-released: "2026-09-19"
+version: 0.3.0
+date-released: "2026-09-20"
 doi: "10.5281/zenodo.22843208"
 identifiers:
   - type: doi
@@ -52,7 +52,7 @@ preferred-citation:
       given-names: "Franz X."
       orcid: "https://orcid.org/0009-0003-8890-7781"
   year: 2026
-  notes: "R package version 0.2.0"
+  notes: "R package version 0.3.0"
   doi: "10.5281/zenodo.22843208"
   url: "https://github.com/franzmohr/bsfa"
 references:
