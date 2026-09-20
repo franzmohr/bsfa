@@ -96,6 +96,13 @@ back as it was afterwards, so a call of \code{set.seed()} between
 \code{add_initial_values()} and this function does not change the draws. A
 model without a seed draws from R's generator as it stands.
 
+That reproducibility holds for a given linear algebra library and thread
+count. The inefficiency terms are drawn by rejection, so a last-bit
+difference in the BLAS or LAPACK result that a sweep is built from can
+change how many deviates it consumes and shift the rest of the chain. The
+draws remain draws from the same posterior; they are simply not the same
+draws. See \code{\link{add_seed}}.
+
 Priors must have been added. Initial values are added with the default
 method if they are missing, since least squares starting values are a safe
 choice where no prior is.

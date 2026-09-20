@@ -45,6 +45,16 @@
   coefficient prior, why a prior too wide for BVS leaves the indicators stuck,
   and which of the two to reach for.
 
+## Documentation
+
+* `add_seed()` and `add_posterior_coefficients()` now state what the seed does
+  and does not guarantee. Draws are reproducible for a given linear algebra
+  library and thread count, but not across them: the samplers draw their
+  one-sided terms by rejection, so a last-bit difference in a BLAS or LAPACK
+  result can change how many random deviates a sweep consumes and shift every
+  draw after it. The chains remain draws from the same posterior. Pin the
+  thread count alongside the seed where bit-identical output is needed.
+
 ## Priors
 
 * `add_priors()` now matches `r_star` on the median of the marginal prior of

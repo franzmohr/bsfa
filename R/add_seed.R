@@ -10,6 +10,23 @@
 #' each model's own seed rather than on the order in which they happen to be
 #' run.
 #'
+#' What the seed guarantees is reproducibility on one machine with one linear
+#' algebra library, which is not quite the same as reproducibility everywhere.
+#' The samplers draw their one-sided terms by rejection, so the number of
+#' random deviates a sweep consumes depends on the values it computes. Those
+#' values pass through the BLAS and LAPACK that R is linked against, and a
+#' different library, or the same library running on a different number of
+#' threads, can return a result that differs in the last bit. That is enough to
+#' change an acceptance somewhere and shift every draw that follows.
+#'
+#' The consequence is narrow but worth knowing. Two runs of the same seed under
+#' the same setup are identical; under a different one they are two different
+#' chains from the same posterior, so every summary agrees to Monte Carlo error
+#' and none of the draws match. Where bit-identical output matters -- a
+#' regression test, a published figure -- pin the thread count as well as the
+#' seed, for instance with \code{OPENBLAS_NUM_THREADS}, and record which
+#' library was used.
+#'
 #' @param object an object of class \code{"sfmodel"}.
 #' @param seed a single number passed to \code{\link[base]{set.seed}}.
 #' @param ... unused, for compatibility with the generic.
