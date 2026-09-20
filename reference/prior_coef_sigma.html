@@ -40,6 +40,9 @@
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -69,7 +72,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">prior_coef_sigma</span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, <span class="va">sigma</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">prior_coef_sigma</span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, <span class="va">sigma</span>, varsel <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -87,10 +90,15 @@
 <dt id="arg-sigma">sigma<a class="anchor" aria-label="anchor" href="#arg-sigma"></a></dt>
 <dd><p>a named list with elements <code>shape</code> and <code>rate</code>.</p></dd>
 
+
+<dt id="arg-varsel">varsel<a class="anchor" aria-label="anchor" href="#arg-varsel"></a></dt>
+<dd><p>the variable selection specification, or <code>NULL</code>.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A list with <code>b0</code>, <code>B0i</code>, <code>shape_v</code> and <code>rate_v</code>.</p>
+    <p>A list with <code>b0</code>, <code>B0i</code>, <code>shape_v</code>,
+  <code>rate_v</code> and <code>varsel</code>.</p>
     </div>
 
   </div>

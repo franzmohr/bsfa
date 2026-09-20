@@ -40,6 +40,9 @@
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -69,7 +72,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">prior_four</span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, <span class="va">sigma</span>, <span class="va">sigma_mu</span>, <span class="va">eta</span>, <span class="va">u</span>, <span class="va">r_star</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">prior_four</span><span class="op">(</span><span class="va">object</span>, <span class="va">coef</span>, <span class="va">sigma</span>, <span class="va">sigma_mu</span>, <span class="va">eta</span>, <span class="va">u</span>, <span class="va">r_star</span>, varsel <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -102,6 +105,10 @@
 
 <dt id="arg-r-star">r_star<a class="anchor" aria-label="anchor" href="#arg-r-star"></a></dt>
 <dd><p>the two prior median efficiencies, named.</p></dd>
+
+
+<dt id="arg-varsel">varsel<a class="anchor" aria-label="anchor" href="#arg-varsel"></a></dt>
+<dd><p>the variable selection specification, or <code>NULL</code>.</p></dd>
 
 </dl></div>
     <div id="value">

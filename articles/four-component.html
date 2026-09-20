@@ -57,6 +57,9 @@
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -159,18 +162,18 @@ observations.</p>
 <span><span class="co">#&gt; Draws:              4000 after 1000 burn-in, thinning 1</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
-<span><span class="co">#&gt;               mean     sd   2.5% median   97.5%  ESS</span></span>
-<span><span class="co">#&gt; (Intercept) 0.9676 0.0539 0.8285 0.9739  1.0584   19</span></span>
-<span><span class="co">#&gt; x1          0.4824 0.0088 0.4655 0.4825  0.4995 1921</span></span>
-<span><span class="co">#&gt; x2          0.3003 0.0088 0.2829 0.3002  0.3171 1919</span></span>
-<span><span class="co">#&gt; sigma_v     0.2148 0.0169 0.1874 0.2125  0.2566   27</span></span>
-<span><span class="co">#&gt; sigma_mu    0.1304 0.0325 0.0696 0.1295  0.1993   44</span></span>
-<span><span class="co">#&gt; lambda_eta  3.9610 0.6706 2.8917 3.8850  5.4828   50</span></span>
-<span><span class="co">#&gt; lambda_u    8.1224 4.4699 5.3766 6.7509 23.5517    5</span></span>
+<span><span class="co">#&gt;               mean     sd   2.5% median  97.5%  ESS</span></span>
+<span><span class="co">#&gt; (Intercept) 0.9816 0.0393 0.8921 0.9839 1.0531   45</span></span>
+<span><span class="co">#&gt; x1          0.4830 0.0086 0.4667 0.4830 0.5002 1715</span></span>
+<span><span class="co">#&gt; x2          0.3008 0.0087 0.2835 0.3007 0.3181 1726</span></span>
+<span><span class="co">#&gt; sigma_v     0.2097 0.0112 0.1872 0.2096 0.2312  157</span></span>
+<span><span class="co">#&gt; sigma_mu    0.1287 0.0300 0.0730 0.1288 0.1944   49</span></span>
+<span><span class="co">#&gt; lambda_eta  3.9105 0.6676 2.8769 3.8236 5.4275   67</span></span>
+<span><span class="co">#&gt; lambda_u    6.6850 0.8275 5.3456 6.5785 8.6489   83</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior mean overall efficiency, per observation:</span></span>
 <span><span class="co">#&gt;   mean    min median    max </span></span>
-<span><span class="co">#&gt; 0.6980 0.1554 0.7350 0.8928</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.6885 0.1491 0.7263 0.8903</span></span></code></pre></div>
 <p>The two one-sided terms are elicited separately, each from its own
 prior median efficiency. Note that those anchors apply per component:
 with <code>r_star = 0.9</code> for each, the prior median of the overall
@@ -211,7 +214,7 @@ inefficiency.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>four_component_persistent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">pers</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span>,</span>
 <span>  two_component <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="../reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">two</span><span class="op">)</span><span class="op">$</span><span class="va">mean</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; four_component_persistent             two_component </span></span>
-<span><span class="co">#&gt;                 0.7952616                 0.7494072</span></span></code></pre></div>
+<span><span class="co">#&gt;                 0.7927724                 0.7493041</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="what-is-identified-and-what-is-not">What is identified, and what is not<a class="anchor" aria-label="anchor" href="#what-is-identified-and-what-is-not"></a>
@@ -234,7 +237,7 @@ has the wider spread.</p>
 <span>  unit_effect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">mu_hat</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">d</span>, <span class="st">"mu"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  persistent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">eta_hat</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">d</span>, <span class="st">"eta"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; combination unit_effect  persistent </span></span>
-<span><span class="co">#&gt;   0.9629172   0.4747065   0.8804201</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.9627892   0.4871381   0.8825839</span></span></code></pre></div>
 <p>Repeating the exercise with a unit effect twice as wide and a
 persistent term half as large reverses which of the two comes out well,
 while leaving the combination untouched:</p>
@@ -252,7 +255,7 @@ while leaving the combination untouched:</p>
 <span>  unit_effect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">mu2</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">d2</span>, <span class="st">"mu"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  persistent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">eta2</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">d2</span>, <span class="st">"eta"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; combination unit_effect  persistent </span></span>
-<span><span class="co">#&gt;   0.9620027   0.8915641   0.2717041</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.9618337   0.8928555   0.2906048</span></span></code></pre></div>
 <p>This is a property of the model rather than of the sampler, and it is
 the reason to run a prior sensitivity check on <code>sigma_mu</code> and
 on the persistent inefficiency parameter before reading much into the
@@ -281,9 +284,9 @@ from the prior is worth the time here.</p>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">chains</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      sigma_mu lambda_eta lambda_u</span></span>
-<span><span class="co">#&gt; [1,]    4.930      0.543    6.718</span></span>
-<span><span class="co">#&gt; [2,]    0.124      3.827    7.091</span></span>
-<span><span class="co">#&gt; [3,]    0.125      3.906    6.881</span></span></code></pre></div>
+<span><span class="co">#&gt; [1,]    4.827      0.757    6.681</span></span>
+<span><span class="co">#&gt; [2,]    0.118      3.813    8.127</span></span>
+<span><span class="co">#&gt; [3,]    0.119      3.820    6.863</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="what-is-not-available">What is not available<a class="anchor" aria-label="anchor" href="#what-is-not-available"></a>

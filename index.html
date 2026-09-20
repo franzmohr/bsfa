@@ -58,6 +58,9 @@
     <li>
       <a href="articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul>
 </li>
 <li>
@@ -132,15 +135,15 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
 <span><span class="co">#&gt;               mean     sd   2.5% median  97.5%  ESS</span></span>
-<span><span class="co">#&gt; (Intercept) 1.0460 0.0210 1.0041 1.0467 1.0861  290</span></span>
-<span><span class="co">#&gt; x1          0.5087 0.0128 0.4826 0.5087 0.5340 1304</span></span>
-<span><span class="co">#&gt; x2          0.2889 0.0136 0.2616 0.2888 0.3165 1438</span></span>
-<span><span class="co">#&gt; sigma_v     0.1876 0.0148 0.1613 0.1867 0.2186  296</span></span>
-<span><span class="co">#&gt; lambda      3.3359 0.2644 2.8624 3.3156 3.8956  328</span></span>
+<span><span class="co">#&gt; (Intercept) 1.0443 0.0200 1.0050 1.0442 1.0823  320</span></span>
+<span><span class="co">#&gt; x1          0.5082 0.0125 0.4833 0.5083 0.5326 1239</span></span>
+<span><span class="co">#&gt; x2          0.2883 0.0135 0.2615 0.2883 0.3141 1314</span></span>
+<span><span class="co">#&gt; sigma_v     0.1890 0.0140 0.1634 0.1884 0.2188  362</span></span>
+<span><span class="co">#&gt; lambda      3.3527 0.2564 2.8989 3.3388 3.8862  418</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Posterior mean efficiency, per observation:</span></span>
 <span><span class="co">#&gt;   mean    min median    max </span></span>
-<span><span class="co">#&gt; 0.7681 0.1995 0.8229 0.9549</span></span></code></pre></div>
+<span><span class="co">#&gt; 0.7691 0.2007 0.8256 0.9556</span></span></code></pre></div>
 <p>The data were simulated with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0.5</mn><mo>,</mo><mn>0.3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\beta = (1, 0.5, 0.3)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>v</mi></msub><mo>=</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">\sigma_v = 0.2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">\lambda = 4</annotation></semantics></math>. The slopes come back sharply; the intercept is the loose one, because it has to be separated from the mean of the one-sided term using only the asymmetry of the residuals.</p>
 <p>The draws are attached to the same object rather than returned as a separate result, and are stored as <code>coda</code> objects, one block per parameter. Printing the model reports which blocks have been set, which is worth a glance before committing to a long run.</p>
 <p>Before reading any of it, ask whether the sample supports a one-sided term at all. A production frontier skews the residuals to the left; if they are not skewed, there is no inefficiency in the data to estimate.</p>
@@ -172,11 +175,11 @@
 <span><span class="co">#&gt; Inefficiency: exponential</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;           mean    median    qlower    qupper</span></span>
-<span><span class="co">#&gt; LL   -145.4157 -145.0797 -149.4518 -143.2591</span></span>
-<span><span class="co">#&gt; AIC   295.7543        NA        NA        NA</span></span>
-<span><span class="co">#&gt; BIC   316.8274        NA        NA        NA</span></span>
-<span><span class="co">#&gt; HQ    304.0234        NA        NA        NA</span></span>
-<span><span class="co">#&gt; WAIC  296.3049        NA  220.6911  371.9188</span></span></code></pre></div>
+<span><span class="co">#&gt; LL   -145.3482 -145.0101 -149.3054 -143.2755</span></span>
+<span><span class="co">#&gt; AIC   295.7794        NA        NA        NA</span></span>
+<span><span class="co">#&gt; BIC   316.8524        NA        NA        NA</span></span>
+<span><span class="co">#&gt; HQ    304.0484        NA        NA        NA</span></span>
+<span><span class="co">#&gt; WAIC  295.9733        NA  220.4779  371.4686</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="model-variants-are-classes">Model variants are classes<a class="anchor" aria-label="anchor" href="#model-variants-are-classes"></a>
@@ -246,6 +249,10 @@
 <td>cross-section, time-invariant panel (Pitt and Lee, 1981), four-component panel (Kumbhakar, Lien and Hjalmarsson, 2014)</td>
 </tr>
 <tr>
+<td>Variable selection</td>
+<td>SSVS (George, Sun and Ni, 2008) and BVS (Korobilis, 2013) on the frontier coefficients</td>
+</tr>
+<tr>
 <td>Output</td>
 <td>posterior draws of coefficients, variances and unit-level efficiency</td>
 </tr>
@@ -269,17 +276,74 @@
 <span><span class="va">m4</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">m4</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">m4</span>, type <span class="op">=</span> <span class="st">"persistent"</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>   <span class="co"># one score per unit</span></span>
-<span><span class="co">#&gt;   unit      mean         sd        5%       50%       95%</span></span>
-<span><span class="co">#&gt; 1    1 0.8858415 0.11329293 0.6481284 0.9245224 0.9954616</span></span>
-<span><span class="co">#&gt; 2    2 0.9518964 0.04757242 0.8545106 0.9663032 0.9975351</span></span>
-<span><span class="co">#&gt; 3    3 0.8761482 0.12016605 0.6233711 0.9179951 0.9950433</span></span>
+<span><span class="co">#&gt;   unit      mean         sd       5%       50%       95%</span></span>
+<span><span class="co">#&gt; 1    1 0.7945873 0.15701652 0.505467 0.8254475 0.9892329</span></span>
+<span><span class="co">#&gt; 2    2 0.9356330 0.06169995 0.806458 0.9538089 0.9966346</span></span>
+<span><span class="co">#&gt; 3    3 0.7658228 0.17435764 0.448957 0.7971668 0.9883174</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="reference/efficiency.html">efficiency</a></span><span class="op">(</span><span class="va">m4</span>, type <span class="op">=</span> <span class="st">"transient"</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>    <span class="co"># one per observation</span></span>
 <span><span class="co">#&gt;   unit obs      mean         sd        5%       50%       95%</span></span>
-<span><span class="co">#&gt; 1    1   1 0.9320171 0.06035318 0.8064664 0.9489696 0.9955470</span></span>
-<span><span class="co">#&gt; 2    1   2 0.9207973 0.06993010 0.7780322 0.9408335 0.9957468</span></span>
-<span><span class="co">#&gt; 3    1   3 0.8695045 0.10475741 0.6639280 0.8961324 0.9912256</span></span></code></pre></div>
+<span><span class="co">#&gt; 1    1   1 0.9292819 0.06252166 0.8025554 0.9471838 0.9956866</span></span>
+<span><span class="co">#&gt; 2    1   2 0.9192284 0.06996841 0.7789144 0.9386785 0.9949919</span></span>
+<span><span class="co">#&gt; 3    1   3 0.8638980 0.10265547 0.6657852 0.8824033 0.9908603</span></span></code></pre></div>
 <p>The unit effect enters none of the three scores, which is the point: in the time-invariant panel model every persistent difference between units — funding structure, soil quality, vintage of equipment — has nowhere to go but into inefficiency.</p>
 <p>The combination <code>mu_i - eta_i</code> is determined sharply by the data, but how it divides between the two depends on which of them has the wider spread: where the unit effect dominates it is recovered well and the persistent term is not, and where it is small the reverse holds. That is a property of the model rather than of the sampler, so a prior sensitivity check on <code>sigma_mu</code> and the persistent inefficiency parameter is worth running before reading much into the split. The frontier and the transient scores are unaffected. See the <code>four-component</code> vignette.</p>
+</div>
+<div class="section level2">
+<h2 id="variable-selection">Variable selection<a class="anchor" aria-label="anchor" href="#variable-selection"></a>
+</h2>
+<p><code>varsel</code> puts the frontier coefficients under one of the two variable selection algorithms of <a href="https://github.com/franzmohr/bvartools" class="external-link">bvartools</a>. Either way the sampler draws an inclusion indicator per selected coefficient in every sweep, and its posterior mean is the probability that the regressor belongs in the frontier.</p>
+<p><code>"ssvs"</code> is the stochastic search variable selection of George, Sun and Ni (2008): the coefficient carries a mixture of two normal priors centred on zero, a tight one standing for the regressor being absent from the frontier and a loose one for its being present, and the indicator says which is in force.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d</span><span class="op">$</span><span class="va">z1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">500</span><span class="op">)</span>   <span class="co"># a regressor the frontier has no use for</span></span>
+<span></span>
+<span><span class="va">ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_sfmodel_exp.html">create_sfmodel_exp</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">z1</span>, data <span class="op">=</span> <span class="va">d</span>, varsel <span class="op">=</span> <span class="st">"ssvs"</span>,</span>
+<span>                           iterations <span class="op">=</span> <span class="fl">5000</span>, burnin <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<span><span class="va">ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">ssvs</span>, varsel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>semiautomatic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ssvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="reference/add_seed.html">add_seed</a></span><span class="op">(</span><span class="va">ssvs</span>, <span class="fl">1234</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ssvs</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Bayesian stochastic frontier model</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Call:</span></span>
+<span><span class="co">#&gt; create_sfmodel_exp(formula = y ~ x1 + x2 + z1, data = d, varsel = "ssvs", </span></span>
+<span><span class="co">#&gt;     iterations = 5000, burnin = 2000)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Frontier:           production</span></span>
+<span><span class="co">#&gt; Variable selection: SSVS</span></span>
+<span><span class="co">#&gt; Inefficiency:       exponential</span></span>
+<span><span class="co">#&gt; Observations:       500</span></span>
+<span><span class="co">#&gt; Units:              500</span></span>
+<span><span class="co">#&gt; Draws:              5000 after 2000 burn-in, thinning 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Posterior summary, 95% credible bands:</span></span>
+<span><span class="co">#&gt;                mean     sd    2.5% median  97.5%   PIP  ESS</span></span>
+<span><span class="co">#&gt; (Intercept)  1.0429 0.0204  1.0011 1.0432 1.0826    NA  314</span></span>
+<span><span class="co">#&gt; x1           0.5055 0.0125  0.4811 0.5055 0.5297 1.000 1365</span></span>
+<span><span class="co">#&gt; x2           0.2868 0.0135  0.2589 0.2872 0.3131 1.000 1418</span></span>
+<span><span class="co">#&gt; z1          -0.0001 0.0046 -0.0098 0.0000 0.0085 0.096 2115</span></span>
+<span><span class="co">#&gt; sigma_v      0.1894 0.0145  0.1616 0.1893 0.2181    NA  306</span></span>
+<span><span class="co">#&gt; lambda       3.3660 0.2572  2.9013 3.3504 3.9089    NA  432</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Posterior mean efficiency, per observation:</span></span>
+<span><span class="co">#&gt;   mean    min median    max </span></span>
+<span><span class="co">#&gt; 0.7699 0.2014 0.8256 0.9550</span></span></code></pre></div>
+<p>The <code>PIP</code> column is the posterior probability that the regressor belongs in the frontier, and the mean and band on the same row are averages over both states, so a coefficient with a low <code>PIP</code> has a posterior concentrated near zero.</p>
+<p><code>semiautomatic</code> scales each coefficient’s least squares standard error by the two factors given, which is what to use when the regressors are on scales that differ; <code>tau = c(tau0, tau1)</code> sets the two standard deviations directly. <code>inprior</code> sets the prior inclusion probability, 0.5 by default, and <code>include</code> and <code>exclude_intercept</code> choose which coefficients are candidates. The intercept is left out by default, since it is the level of the frontier rather than the effect of a regressor and selecting it away would move every efficiency score.</p>
+<p><code>"bvs"</code> is the Bayesian variable selection of Korobilis (2013), which switches the regressor itself off rather than tightening its prior, so an excluded coefficient is stored as an exact zero:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_sfmodel_exp.html">create_sfmodel_exp</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">z1</span>, data <span class="op">=</span> <span class="va">d</span>, varsel <span class="op">=</span> <span class="st">"bvs"</span>,</span>
+<span>                          iterations <span class="op">=</span> <span class="fl">5000</span>, burnin <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
+<span><span class="va">bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_priors.html">add_priors</a></span><span class="op">(</span><span class="va">bvs</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mu <span class="op">=</span> <span class="fl">0</span>, v_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>                  varsel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>inprior <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">bvs</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/add_posterior_coefficients.html">add_posterior_coefficients</a></span><span class="op">(</span><span class="fu"><a href="reference/add_seed.html">add_seed</a></span><span class="op">(</span><span class="va">bvs</span>, <span class="fl">1234</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">bvs</span><span class="op">$</span><span class="va">posterior</span><span class="op">$</span><span class="va">beta</span><span class="op">$</span><span class="va">coeffs</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; (Intercept)          x1          x2          z1 </span></span>
+<span><span class="co">#&gt;        0.00        0.00        0.00        0.99</span></span></code></pre></div>
+<p>BVS needs a proper prior on the coefficients it selects on, because the sweeps that exclude a regressor draw its coefficient from that prior. The wider the prior, the further the coefficient wanders while it is out and the less readily the likelihood admits it back, so <code><a href="reference/add_priors.html">add_priors()</a></code> reports a prior that is wide enough to leave the indicator stuck. The package default is one of them, which is why <code>coef$v_i</code> is set above; SSVS has no such requirement, since its excluded coefficients never leave the neighbourhood of zero.</p>
+<p>The selection touches the frontier only. The inefficiency term, the error and the efficiency scores are drawn exactly as they are without it, except that they are now averaged over the frontiers the selection admits. The same holds for the four-component model, which takes <code>varsel</code> in the same place.</p>
+<p>Note that AIC, BIC and HQ charge the model for every coefficient it was written with. The number the selection keeps is not the same in every draw, so there is no whole number to subtract. WAIC reads the effective number of parameters off the draws and accounts for the selection by itself.</p>
+<p>What the two algorithms ask of the prior, how far apart their answers can fall and how to read an inclusion probability are set out in the <code>variable-selection</code> vignette.</p>
 </div>
 <div class="section level2">
 <h2 id="roadmap">Roadmap<a class="anchor" aria-label="anchor" href="#roadmap"></a>
@@ -313,8 +377,10 @@
 <p>Aigner, D., Lovell, C. A. K., &amp; Schmidt, P. (1977). Formulation and estimation of stochastic frontier production function models. <em>Journal of Econometrics</em>, 6(1), 21–37.</p>
 <p>Battese, G. E., &amp; Coelli, T. J. (1995). A model for technical inefficiency effects in a stochastic frontier production function for panel data. <em>Empirical Economics</em>, 20(2), 325–332.</p>
 <p>Colombi, R., Kumbhakar, S. C., Martini, G., &amp; Vittadini, G. (2014). Closed-skew normality in stochastic frontiers with individual effects and long/short-run efficiency. <em>Journal of Productivity Analysis</em>, 42(2), 123–136.</p>
+<p>George, E. I., Sun, D., &amp; Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. <em>Journal of Econometrics</em>, 142(1), 553–580.</p>
 <p>Jondrow, J., Lovell, C. A. K., Materov, I. S., &amp; Schmidt, P. (1982). On the estimation of technical inefficiency in the stochastic frontier production function model. <em>Journal of Econometrics</em>, 19(2–3), 233–238.</p>
 <p>Koop, G. (2003). <em>Bayesian Econometrics</em>. Chichester: Wiley.</p>
+<p>Korobilis, D. (2013). VAR forecasting using Bayesian variable selection. <em>Journal of Applied Econometrics</em>, 28(2), 204–230.</p>
 <p>Kumbhakar, S. C., Lien, G., &amp; Hjalmarsson, L. (2014). Technical efficiency in competing panel data models: A study of Norwegian grain farming. <em>Journal of Productivity Analysis</em>, 41(2), 321–337.</p>
 <p>Pitt, M. M., &amp; Lee, L.-F. (1981). The measurement and sources of technical inefficiency in the Indonesian weaving industry. <em>Journal of Development Economics</em>, 9(1), 43–64.</p>
 <p>Robert, C. P. (1995). Simulation of truncated normal variables. <em>Statistics and Computing</em>, 5(2), 121–125.</p>
@@ -323,7 +389,7 @@
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"bsfa"</span><span class="op">)</span></span></code></pre></div>
 <p>Released versions are archived on Zenodo. The concept DOI, <a href="https://doi.org/10.5281/zenodo.22843208" class="external-link">10.5281/zenodo.22843208</a>, always resolves to the most recent release and is the one to cite unless a particular version matters; each release also has its own DOI, on its own record.</p>
 <p>Please cite the software alongside van den Broeck, Koop, Osiewalski and Steel (1994), whose sampler it follows.</p>

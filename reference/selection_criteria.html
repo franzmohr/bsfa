@@ -40,6 +40,9 @@
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -130,6 +133,12 @@ inefficiency terms themselves are latent variables rather than parameters and
 are not counted, which is the convention but is worth stating: a model with
 one \(u\) per observation has as many latent variables as observations, and
 a count that included them would be meaningless.</p>
+<p>Under either <code>varsel</code> algorithm that count is the number of coefficients
+the frontier was written with, not the number the selection kept. The number
+kept is not the same in every draw, so there is no whole number to subtract,
+and AIC, BIC and HQ therefore charge the model for every coefficient it
+could have used. WAIC does not: it reads the effective number of parameters
+off the draws, and so accounts for the selection by itself.</p>
 <p>AIC, BIC and HQ are point estimates rather than quantities with a posterior
 distribution, so their credible bands are <code>NA</code>. WAIC is a point estimate
 as well, and its band is a normal interval built from its standard error,
@@ -161,11 +170,11 @@ condition under which the pointwise log-likelihood exists; see
 <span class="r-in"><span>                              iterations <span class="op">=</span> <span class="fl">500</span>, burnin <span class="op">=</span> <span class="fl">200</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">selection_criteria</span><span class="op">(</span><span class="va">m_exp</span><span class="op">)</span><span class="op">$</span><span class="va">WAIC</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      mean median   qlower   qupper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 81.8026     NA 38.03697 125.5682</span>
-<span class="r-in"><span><span class="fu">selection_criteria</span><span class="op">(</span><span class="va">m_hn</span><span class="op">)</span><span class="op">$</span><span class="va">WAIC</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       mean median   qlower   qupper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 81.92439     NA 38.29417 125.5546</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 81.80103     NA 38.28522 125.3168</span>
+<span class="r-in"><span><span class="fu">selection_criteria</span><span class="op">(</span><span class="va">m_hn</span><span class="op">)</span><span class="op">$</span><span class="va">WAIC</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      mean median   qlower   qupper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 84.2293     NA 39.73042 128.7282</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

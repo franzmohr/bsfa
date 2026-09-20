@@ -43,6 +43,9 @@ methods that apply to it."><!-- mathjax --><script src="https://cdnjs.cloudflare
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -80,6 +83,7 @@ methods that apply to it.</p>
 <span>  <span class="va">data</span>,</span>
 <span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"production"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span>
+<span>  varsel <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  iterations <span class="op">=</span> <span class="fl">20000</span>,</span>
 <span>  burnin <span class="op">=</span> <span class="fl">2000</span>,</span>
 <span>  thin <span class="op">=</span> <span class="fl">1</span></span>
@@ -90,6 +94,7 @@ methods that apply to it.</p>
 <span>  <span class="va">data</span>,</span>
 <span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"production"</span>, <span class="st">"cost"</span><span class="op">)</span>,</span>
+<span>  varsel <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  iterations <span class="op">=</span> <span class="fl">20000</span>,</span>
 <span>  burnin <span class="op">=</span> <span class="fl">2000</span>,</span>
 <span>  thin <span class="op">=</span> <span class="fl">1</span></span>
@@ -116,6 +121,12 @@ inefficiency terms. See details.</p></dd>
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>either <code>"production"</code> or <code>"cost"</code>.</p></dd>
+
+
+<dt id="arg-varsel">varsel<a class="anchor" aria-label="anchor" href="#arg-varsel"></a></dt>
+<dd><p>either <code>NULL</code> for no variable selection, <code>"ssvs"</code>
+for stochastic search variable selection, or <code>"bvs"</code> for the Bayesian
+variable selection of Korobilis (2013). See details.</p></dd>
 
 
 <dt id="arg-iterations">iterations<a class="anchor" aria-label="anchor" href="#arg-iterations"></a></dt>
@@ -166,6 +177,36 @@ coefficient fixed at one, as it does in <code><a href="https://rdrr.io/r/stats/l
 a known quantity is imposed rather than estimated: a capacity that the
 frontier cannot exceed, or a scale factor whose elasticity is known to be
 one. The efficiency scores are measured from the frontier including it.</p>
+<p>The argument <code>varsel</code> places the frontier coefficients under one of the
+two variable selection algorithms of the <span class="pkg">bvartools</span> package. Either way
+the sampler draws an inclusion indicator per selected coefficient in every
+sweep, and the posterior mean of that indicator is the posterior probability
+that the regressor belongs in the frontier, which
+<code><a href="summary.sfmodel.html">summary.sfmodel</a></code> reports beside the coefficient. The prior is
+set through the <code>varsel</code> argument of <code><a href="add_priors.html">add_priors</a></code>, which is
+required for such a model and not allowed for any other.</p>
+<p><code>"ssvs"</code> is the stochastic search variable selection of George, Sun and
+Ni (2008). The coefficient carries a mixture of two normal priors centred on
+zero, a tight one standing for its absence from the frontier and a loose one
+for its presence, and the indicator says which of the two is in force. The
+regressor never leaves the design, and an excluded coefficient is held near
+zero rather than at it.</p>
+<p><code>"bvs"</code> is the Bayesian variable selection of Korobilis (2013). The
+frontier is \(x_i' \Lambda \beta\) with \(\Lambda\) the diagonal matrix
+of indicators, so an excluded regressor leaves the likelihood outright and
+the coefficient the sampler stores for it is an exact zero. Its coefficient
+keeps the ordinary normal prior of <code>coef</code>, which is the only prior to
+set, but that prior has to be proper: the sweeps in which the regressor is
+out draw the coefficient from it, and the vaguer it is the further the
+coefficient wanders and the less readily the likelihood admits it back.</p>
+<p>Which to prefer is mostly a question of what the coefficients are for.
+<code>"bvs"</code> gives exact zeros and a cleaner reading of the indicator, and
+<code>"ssvs"</code> mixes better when the regressors are correlated, since nothing
+has to travel between the prior and the data to change state.</p>
+<p>Variable selection applies to the frontier only. The inefficiency term and
+the error are untouched by it, so the efficiency scores are read off the
+draws as they always are, but they are now averaged over the frontiers the
+selection admits rather than conditioned on one.</p>
 <p>If <code>id</code> is supplied, one inefficiency term is drawn per unit and held
 fixed over that unit's observations, which is the time-invariant panel model
 of Pitt and Lee (1981). This attributes all persistent heterogeneity between
@@ -175,7 +216,11 @@ at <code>NULL</code> gives every observation its own inefficiency term.</p>
     </div>
     <div id="references">
     <h2>References</h2>
-    <p>Pitt, M. M., &amp; Lee, L.-F. (1981). The measurement and sources of technical
+    <p>George, E. I., Sun, D., &amp; Ni, S. (2008). Bayesian stochastic search for VAR
+model restrictions. <em>Journal of Econometrics</em>, 142(1), 553–580.</p>
+<p>Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+<em>Journal of Applied Econometrics</em>, 28(2), 204–230.</p>
+<p>Pitt, M. M., &amp; Lee, L.-F. (1981). The measurement and sources of technical
 inefficiency in the Indonesian weaving industry. <em>Journal of
 Development Economics</em>, 9(1), 43–64.</p>
     </div>

@@ -41,6 +41,9 @@ create_sfmodel4_exp or create_sfmodel4_hn."><!-- mathjax --><script src="https:/
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -79,6 +82,7 @@ create_sfmodel4_exp or create_sfmodel4_hn."><!-- mathjax --><script src="https:/
 <span>  sigma_mu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">0.01</span>, rate <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>  lambda_eta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.9</span>, shape <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  lambda_u <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.9</span>, shape <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  varsel <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -90,6 +94,7 @@ create_sfmodel4_exp or create_sfmodel4_hn."><!-- mathjax --><script src="https:/
 <span>  sigma_mu <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">0.01</span>, rate <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>  sigma_eta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.9</span>, shape <span class="op">=</span> <span class="fl">2.5</span><span class="op">)</span>,</span>
 <span>  sigma_u <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.9</span>, shape <span class="op">=</span> <span class="fl">2.5</span><span class="op">)</span>,</span>
+<span>  varsel <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -127,6 +132,14 @@ of persistent inefficiency, with elements <code>r_star</code> and <code>shape</c
 <dt id="arg-lambda-u">lambda_u<a class="anchor" aria-label="anchor" href="#arg-lambda-u"></a></dt>
 <dd><p>a named list for the rate of the exponential distribution of
 transient inefficiency, with elements <code>r_star</code> and <code>shape</code>.</p></dd>
+
+
+<dt id="arg-varsel">varsel<a class="anchor" aria-label="anchor" href="#arg-varsel"></a></dt>
+<dd><p>a named list of prior specifications for the variable
+selection algorithm. Required if the model was created with a
+<code>varsel</code> algorithm, and not allowed otherwise. It takes the same
+elements as in <code><a href="add_priors.html">add_priors</a></code> for the two-component models, and
+applies to the frontier coefficients only.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

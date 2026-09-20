@@ -40,6 +40,9 @@
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -65,6 +68,25 @@
 
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.2.0" id="bsfa-020">bsfa 0.2.0<a class="anchor" aria-label="anchor" href="#bsfa-020"></a></h2>
+<div class="section level3">
+<h3 id="variable-selection-0-2-0">Variable selection<a class="anchor" aria-label="anchor" href="#variable-selection-0-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/create_sfmodel_exp.html">create_sfmodel_exp()</a></code>, <code><a href="../reference/create_sfmodel_exp.html">create_sfmodel_hn()</a></code>, <code><a href="../reference/create_sfmodel4_exp.html">create_sfmodel4_exp()</a></code> and <code><a href="../reference/create_sfmodel4_exp.html">create_sfmodel4_hn()</a></code> gain the argument <code>varsel</code>, which places the frontier coefficients under one of the two variable selection algorithms of the bvartools package. Either way the sampler draws an inclusion indicator per selected coefficient in every sweep.</li>
+<li>
+<code>varsel = "ssvs"</code> is the stochastic search variable selection of George, Sun and Ni (2008). Each selected coefficient carries a mixture of two normal priors centred on zero, a tight one standing for the regressor being absent from the frontier and a loose one for its being present, and the indicator says which is in force. The regressor never leaves the design.</li>
+<li>
+<code>varsel = "bvs"</code> is the Bayesian variable selection of Korobilis (2013). The frontier is <code>X %*% diag(lambda) %*% beta</code>, so an excluded regressor leaves the likelihood outright and the coefficient stored for it is an exact zero. Its prior is the ordinary normal in <code>coef</code>, which has to be proper, since the sweeps that exclude the regressor draw the coefficient from it. A prior precision of zero is refused, and one wide enough that the likelihood would never admit the coefficient back is reported: measured against the least squares standard error of the same coefficient, a prior standard deviation of two hundred times it left the indicator of an irrelevant regressor stuck for a whole run of 2000 sweeps.</li>
+<li>
+<code><a href="../reference/add_priors.html">add_priors()</a></code> gains the matching argument <code>varsel</code>. Both algorithms take <code>inprior</code>, the prior inclusion probability, and <code>include</code> and <code>exclude_intercept</code> to choose the candidates; SSVS takes in addition either <code>tau</code>, the two prior standard deviations, or <code>semiautomatic</code>, the two factors to scale the least squares standard error of each coefficient by. It is required for a model created with a <code>varsel</code> algorithm and not allowed for any other.</li>
+<li>The draws of the indicators are added to the posterior as the block <code>inclusion</code>, one column per selected coefficient, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports their means as <code>PIP</code>, the posterior probability that the regressor belongs in the frontier, beside the coefficient it belongs to.</li>
+<li>The selection applies to the frontier only. The inefficiency term, the error and the efficiency scores are drawn exactly as they are without it, except that they are now averaged over the frontiers the selection admits. AIC, BIC and HQ still charge the model for every coefficient the frontier was written with, because the number the selection keeps is not the same in every draw and there is no whole number to subtract; WAIC reads the effective number of parameters off the draws and accounts for it.</li>
+<li>A new <code>variable-selection</code> vignette covers both algorithms: what an inclusion probability means and how it should not be read, what each of them asks of the coefficient prior, why a prior too wide for BVS leaves the indicators stuck, and which of the two to reach for.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-2-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/add_seed.html">add_seed()</a></code> and <code><a href="../reference/add_posterior_coefficients.html">add_posterior_coefficients()</a></code> now state what the seed does and does not guarantee. Draws are reproducible for a given linear algebra library and thread count, but not across them: the samplers draw their one-sided terms by rejection, so a last-bit difference in a BLAS or LAPACK result can change how many random deviates a sweep consumes and shift every draw after it. The chains remain draws from the same posterior. Pin the thread count alongside the seed where bit-identical output is needed.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="priors-0-2-0">Priors<a class="anchor" aria-label="anchor" href="#priors-0-2-0"></a></h3>
 <ul><li>

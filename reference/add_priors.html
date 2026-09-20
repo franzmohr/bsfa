@@ -41,6 +41,9 @@ create_sfmodel_exp or create_sfmodel_hn."><!-- mathjax --><script src="https://c
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -79,6 +82,7 @@ create_sfmodel_exp or create_sfmodel_hn."><!-- mathjax --><script src="https://c
 <span>  coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mu <span class="op">=</span> <span class="fl">0</span>, v_i <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>  sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">0.01</span>, rate <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>  lambda <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.75</span>, shape <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  varsel <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -88,6 +92,7 @@ create_sfmodel_exp or create_sfmodel_hn."><!-- mathjax --><script src="https://c
 <span>  coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mu <span class="op">=</span> <span class="fl">0</span>, v_i <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>  sigma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">0.01</span>, rate <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>  sigma_u <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.75</span>, shape <span class="op">=</span> <span class="fl">2.5</span><span class="op">)</span>,</span>
+<span>  varsel <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -124,6 +129,12 @@ exponential inefficiency distribution, with elements <code>r_star</code>, the
 prior median efficiency, and <code>shape</code>.</p></dd>
 
 
+<dt id="arg-varsel">varsel<a class="anchor" aria-label="anchor" href="#arg-varsel"></a></dt>
+<dd><p>a named list of prior specifications for the variable
+selection algorithm. Required if the model was created with a
+<code>varsel</code> algorithm, and not allowed otherwise. See details.</p></dd>
+
+
 <dt id="arg-sigma-u">sigma_u<a class="anchor" aria-label="anchor" href="#arg-sigma-u"></a></dt>
 <dd><p>a named list of prior specifications for the scale of the
 half-normal inefficiency distribution, with elements <code>r_star</code> and
@@ -132,7 +143,10 @@ half-normal inefficiency distribution, with elements <code>r_star</code> and
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>The model object with the element <code>priors</code> attached.</p>
+    <p>The model object with the element <code>priors</code> attached. With
+  variable selection it also holds <code>varsel</code>, the positions under
+  selection and the \(\tau_0\), \(\tau_1\) and prior inclusion
+  probability of each.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -175,10 +189,64 @@ implied prior median efficiency was \((r^*)^{0.834}\), so that asking for
 0.75 gave 0.787 and asking for 0.5 gave 0.561. The exponential model was
 matched exactly at shape 1 but not at any other, where the error was larger
 still: at shape 2, \(r^* = 0.75\) implied 0.888.</p>
+<p>A model created with a <code>varsel</code> algorithm takes one further argument of
+that name, which every other model refuses. Both algorithms take</p><dl><dt><code>inprior</code></dt>
+<dd><p>the prior probability that a regressor belongs in
+    the frontier, one number or one per coefficient under selection.
+    Defaults to 0.5.</p></dd>
+
+  <dt><code>include</code></dt>
+<dd><p>the columns of the design matrix to place under
+    selection, by name or by position. Defaults to all of them.</p></dd>
+
+  <dt><code>exclude_intercept</code></dt>
+<dd><p>whether to leave the intercept out of
+    the selection, which it is by default. The intercept is the level of the
+    frontier rather than the effect of a regressor, and selecting it away
+    would move every efficiency score rather than drop a variable.</p></dd>
+
+
+</dl><p>Under <code>varsel = "ssvs"</code> each selected coefficient carries the two-point
+mixture prior of George, Sun and Ni (2008): a normal centred on zero with
+standard deviation \(\tau_0\) when the regressor is absent from the
+frontier and one with \(\tau_1 &gt; \tau_0\) when it is present. Exactly one
+of</p><dl><dt><code>tau</code></dt>
+<dd><p>two positive numbers, \(\tau_0\) and
+    \(\tau_1\), in that order;</p></dd>
+
+  <dt><code>semiautomatic</code></dt>
+<dd><p>two positive factors by which the least
+    squares standard error of each coefficient is multiplied to obtain its
+    \(\tau_0\) and \(\tau_1\). This is the semiautomatic approach of
+    George, Sun and Ni (2008), and it is the choice to make when the
+    regressors are on scales that differ, since the two standard deviations
+    then follow the scale of each coefficient instead of being the same for
+    all of them;</p></dd>
+
+
+</dl><p>must be given. A coefficient under selection takes its prior precision from
+<code>varsel</code> rather than from <code>coef$v_i</code>, and its prior mean has to be
+zero, since the excluded half of the mixture stands for the regressor being
+absent from the frontier rather than for its coefficient sitting at some
+other value.</p>
+<p>Under <code>varsel = "bvs"</code> the selection of Korobilis (2013) switches the
+regressor itself off, so there is no mixture and neither <code>tau</code> nor
+<code>semiautomatic</code> applies. The coefficient keeps the normal prior in
+<code>coef</code>, which may have any mean and may tie it to the other
+coefficients, but which has to be proper: the sweeps in which the regressor
+is excluded draw its coefficient from that prior rather than from the data.
+A prior precision of zero is refused for that reason, and a very vague one
+is reported, since the further an excluded coefficient wanders the less
+readily the likelihood admits it back and the more slowly the indicators
+mix.</p>
     </div>
     <div id="references">
     <h2>References</h2>
-    <p>van den Broeck, J., Koop, G., Osiewalski, J., &amp; Steel, M. F. J. (1994).
+    <p>George, E. I., Sun, D., &amp; Ni, S. (2008). Bayesian stochastic search for VAR
+model restrictions. <em>Journal of Econometrics</em>, 142(1), 553–580.</p>
+<p>Korobilis, D. (2013). VAR forecasting using Bayesian variable selection.
+<em>Journal of Applied Econometrics</em>, 28(2), 204–230.</p>
+<p>van den Broeck, J., Koop, G., Osiewalski, J., &amp; Steel, M. F. J. (1994).
 Stochastic frontier models: A Bayesian perspective. <em>Journal of
 Econometrics</em>, 61(2), 273–303.</p>
     </div>
@@ -193,6 +261,23 @@ Econometrics</em>, 61(2), 273–303.</p>
 <span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">add_priors</span><span class="op">(</span><span class="va">model</span>, lambda <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>r_star <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">model</span><span class="op">$</span><span class="va">priors</span><span class="op">$</span><span class="va">rate_u</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1625189</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Stochastic search variable selection on the frontier coefficients.</span></span></span>
+<span class="r-in"><span><span class="va">selected</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_sfmodel_exp.html">create_sfmodel_exp</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, data <span class="op">=</span> <span class="va">d</span>, varsel <span class="op">=</span> <span class="st">"ssvs"</span>,</span></span>
+<span class="r-in"><span>                               iterations <span class="op">=</span> <span class="fl">500</span>, burnin <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">selected</span> <span class="op">&lt;-</span> <span class="fu">add_priors</span><span class="op">(</span><span class="va">selected</span>,</span></span>
+<span class="r-in"><span>                       varsel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>semiautomatic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">selected</span><span class="op">$</span><span class="va">priors</span><span class="op">$</span><span class="va">varsel</span><span class="op">$</span><span class="va">names</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "x1" "x2"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The Bayesian variable selection of Korobilis (2013) instead, which needs</span></span></span>
+<span class="r-in"><span><span class="co"># a proper prior on the coefficients it selects on.</span></span></span>
+<span class="r-in"><span><span class="va">switched</span> <span class="op">&lt;-</span> <span class="fu"><a href="create_sfmodel_exp.html">create_sfmodel_exp</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, data <span class="op">=</span> <span class="va">d</span>, varsel <span class="op">=</span> <span class="st">"bvs"</span>,</span></span>
+<span class="r-in"><span>                               iterations <span class="op">=</span> <span class="fl">500</span>, burnin <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">switched</span> <span class="op">&lt;-</span> <span class="fu">add_priors</span><span class="op">(</span><span class="va">switched</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mu <span class="op">=</span> <span class="fl">0</span>, v_i <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                       varsel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>inprior <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">switched</span><span class="op">$</span><span class="va">priors</span><span class="op">$</span><span class="va">varsel</span><span class="op">$</span><span class="va">inprior</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.5 0.5</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

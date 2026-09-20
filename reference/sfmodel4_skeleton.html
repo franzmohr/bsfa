@@ -40,6 +40,9 @@
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -69,7 +72,18 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sfmodel4_skeleton</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span>, <span class="va">id</span>, <span class="va">type</span>, <span class="va">iterations</span>, <span class="va">burnin</span>, <span class="va">thin</span>, <span class="va">ineff</span>, <span class="va">cl</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sfmodel4_skeleton</span><span class="op">(</span></span>
+<span>  <span class="va">formula</span>,</span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">id</span>,</span>
+<span>  <span class="va">type</span>,</span>
+<span>  <span class="va">varsel</span>,</span>
+<span>  <span class="va">iterations</span>,</span>
+<span>  <span class="va">burnin</span>,</span>
+<span>  <span class="va">thin</span>,</span>
+<span>  <span class="va">ineff</span>,</span>
+<span>  <span class="va">cl</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -90,6 +104,10 @@
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p><code>"production"</code> or <code>"cost"</code>.</p></dd>
+
+
+<dt id="arg-varsel">varsel<a class="anchor" aria-label="anchor" href="#arg-varsel"></a></dt>
+<dd><p><code>NULL</code>, <code>"ssvs"</code> or <code>"bvs"</code>.</p></dd>
 
 
 <dt id="arg-iterations-burnin-thin">iterations, burnin, thin<a class="anchor" aria-label="anchor" href="#arg-iterations-burnin-thin"></a></dt>

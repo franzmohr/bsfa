@@ -42,6 +42,9 @@ called directly, since it performs no input checking.'><!-- mathjax --><script s
     <li>
       <a href="../articles/koop-exercise.html">Reproducing the panel frontier exercise of Koop, Poirier and Tobias</a>
     </li>
+    <li>
+      <a href="../articles/variable-selection.html">Variable selection</a>
+    </li>
   </ul></li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -80,6 +83,11 @@ called directly, since it performs no input checking.</p>
 <span>  <span class="va">n_units</span>,</span>
 <span>  <span class="va">b0</span>,</span>
 <span>  <span class="va">B0i</span>,</span>
+<span>  <span class="va">ssvs_idx</span>,</span>
+<span>  <span class="va">tau0</span>,</span>
+<span>  <span class="va">tau1</span>,</span>
+<span>  <span class="va">prob_prior</span>,</span>
+<span>  <span class="va">varsel</span>,</span>
 <span>  <span class="va">a_v</span>,</span>
 <span>  <span class="va">b_v</span>,</span>
 <span>  <span class="va">a_mu</span>,</span>
@@ -132,6 +140,30 @@ called directly, since it performs no input checking.</p>
 
 <dt id="arg-b-i">B0i<a class="anchor" aria-label="anchor" href="#arg-b-i"></a></dt>
 <dd><p>prior precision matrix of the frontier coefficients.</p></dd>
+
+
+<dt id="arg-ssvs-idx">ssvs_idx<a class="anchor" aria-label="anchor" href="#arg-ssvs-idx"></a></dt>
+<dd><p>zero-based positions of the coefficients placed under
+stochastic search variable selection; empty for no variable selection.</p></dd>
+
+
+<dt id="arg-tau-">tau0<a class="anchor" aria-label="anchor" href="#arg-tau-"></a></dt>
+<dd><p>prior standard deviations of those coefficients when they are
+excluded from the frontier.</p></dd>
+
+
+<dt id="arg-tau-">tau1<a class="anchor" aria-label="anchor" href="#arg-tau-"></a></dt>
+<dd><p>prior standard deviations of those coefficients when they are
+included.</p></dd>
+
+
+<dt id="arg-prob-prior">prob_prior<a class="anchor" aria-label="anchor" href="#arg-prob-prior"></a></dt>
+<dd><p>prior inclusion probabilities of those coefficients.</p></dd>
+
+
+<dt id="arg-varsel">varsel<a class="anchor" aria-label="anchor" href="#arg-varsel"></a></dt>
+<dd><p>0 for no variable selection, 1 for stochastic search variable
+selection and 2 for the Bayesian variable selection of Korobilis (2013).</p></dd>
 
 
 <dt id="arg-a-v">a_v<a class="anchor" aria-label="anchor" href="#arg-a-v"></a></dt>
