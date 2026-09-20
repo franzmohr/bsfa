@@ -202,24 +202,60 @@ test_that("the run is reproducible from the seed", {
 
 test_that("the rest of the sampler is untouched by the selection", {
   d <- sim_with_noise(n = 400)
-  # With every regressor certain to be included, the frontier is the full one
-  # in every sweep and the draws have to match a model without selection.
-  m <- create_sfmodel_exp(y ~ x1 + x2, data = d, varsel = "bvs",
-                          iterations = 500, burnin = 200)
-  m <- add_priors(m, coef = bvs_coef, varsel = list(inprior = 1 - 1e-12))
-  m <- add_posterior_coefficients(add_seed(add_initial_values(m), 21))
 
-  plain <- create_sfmodel_exp(y ~ x1 + x2, data = d, iterations = 500,
-                              burnin = 200)
-  plain <- add_priors(plain, coef = bvs_coef)
-  plain <- add_posterior_coefficients(add_seed(add_initial_values(plain), 21))
+  # With every regressor certain to be included the frontier is the full one
+  # in every sweep, so the two runs are sampling one and the same posterior.
+  #
+  # They cannot be compared draw for draw. The selection draws an indicator
+  # per coefficient in every sweep, so the two chains take different paths
+  # through the generator and are two independent samples of that posterior
+  # rather than one sample repeated. What has to agree is therefore the
+  # posterior itself, and the scale on which a gap between two sample means
+  # is small or large is the Monte Carlo error of those means.
+  #
+  # A fixed percentage is not that scale. This test used to allow two per
+  # cent, which on its chains was a little over one standard error, so it
+  # passed or failed on which way the generator happened to fall. Any change
+  # that reshuffled the stream -- including one that altered no arithmetic
+  # anyone could see -- could tip it, and one eventually did.
+  fit <- function(varsel) {
+    m <- create_sfmodel_exp(y ~ x1 + x2, data = d, varsel = varsel,
+                            iterations = 4000, burnin = 1000)
+    m <- add_priors(m, coef = bvs_coef,
+                    varsel = if (is.null(varsel)) NULL else
+                      list(inprior = 1 - 1e-12))
+    add_posterior_coefficients(add_seed(add_initial_values(m), 21))
+  }
+
+  m <- fit("bvs")
+  plain <- fit(NULL)
 
   expect_true(all(as.matrix(m$posterior$inclusion$coeffs) == 1))
-  # Not identical draw for draw, since the selection consumes random numbers
-  # of its own, but the same posterior.
-  expect_equal(coef(m), coef(plain), tolerance = 0.02)
-  expect_equal(mean(efficiency(m)$mean), mean(efficiency(plain)$mean),
-               tolerance = 0.02)
+
+  # The standard error of a mean over autocorrelated draws, which is what
+  # the effective sample size is for. Six of them, on the difference of two
+  # independent means, leaves room for the effective sample size itself
+  # being estimated rather than known, and still fails long before a real
+  # difference between the two posteriors could hide.
+  mcse <- function(x) stats::sd(x) / sqrt(coda::effectiveSize(x))
+  within_mcse <- function(a, b) {
+    abs(mean(a) - mean(b)) < 6 * sqrt(mcse(a)^2 + mcse(b)^2)
+  }
+
+  ba <- as.matrix(m$posterior$beta$coeffs)
+  bb <- as.matrix(plain$posterior$beta$coeffs)
+  for (j in colnames(ba)) {
+    expect_true(within_mcse(ba[, j], bb[, j]),
+                label = paste("coefficient", j))
+  }
+
+  # The efficiency scores are compared per draw rather than through the
+  # single number efficiency() reports, so that the quantity has a spread to
+  # be judged against. Its mean is the same number either way, since
+  # averaging over draws and over units commutes.
+  ea <- rowMeans(exp(-as.matrix(m$posterior$u$coeffs)))
+  eb <- rowMeans(exp(-as.matrix(plain$posterior$u$coeffs)))
+  expect_true(within_mcse(ea, eb), label = "mean efficiency")
 })
 
 test_that("the log-likelihood follows the selected frontier", {
